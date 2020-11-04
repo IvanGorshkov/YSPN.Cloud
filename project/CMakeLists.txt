@@ -1,0 +1,5 @@
+INCLUDE_DIRECTORIES(include)
+ADD_LIBRARY(libysnp STATIC
+        src/main.cpp)
+
+ADD_SUBDIRECTORY(tests)
