@@ -13,9 +13,9 @@ if [ "${1}" == "--local" ]; then
 else
   CPPCHECK="./linters/cppcheck/cppcheck"
 fi
-${CPPCHECK} project --enable=all --error-exitcode=1 -I project/include -I project/tests/include --suppress=missingIncludeSystem
+${CPPCHECK} project --enable=all --error-exitcode=1 -I project/* --suppress=missingIncludeSystem
 
 print_header "RUN cpplint.py"
-python2.7 ./linters/cpplint/cpplint.py --extensions=cpp --headers=h,hpp --filter=-runtime/references,-legal/copyright,-build/include_subdir,-whitespace/line_length project/include/* project/src/* project/tests/include/* project/tests/src/*
+python2.7 ./linters/cpplint/cpplint.py --extensions=cpp --headers=h,hpp --filter=-runtime/references,-legal/copyright,-build/include_subdir,-whitespace/line_length project/*
 
 print_header "SUCCESS"

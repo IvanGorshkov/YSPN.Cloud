@@ -1,7 +1,11 @@
 #include "UsersDB.h"
 
 void UsersDB::CreateDB() {
+  if (!dbExist())  {
+	CreateDB();
+  }
 
+  connect();
 }
 
 void UsersDB::Login() {
@@ -21,5 +25,5 @@ void UsersDB::ChangePassword() {
 }
 
 UsersDB::~UsersDB() {
-
+  close();
 }
