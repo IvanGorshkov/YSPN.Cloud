@@ -1,5 +1,5 @@
 #include "gtest_utils.h"
-#include "gmock/gmock.h"
+#include <gmock/gmock.h>
 #include "InternalDB.h"
 
 using ::testing::AtLeast;
