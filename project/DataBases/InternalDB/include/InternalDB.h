@@ -29,7 +29,7 @@ class InternalDB {
   int selectDeviceId();
   int selectUserId();
   std::string selectFolder();
-  virtual void creatTable();
+  void creatTable();
   virtual bool connect();
   virtual void close();
   bool dbExist();
