@@ -1,6 +1,5 @@
 #include "PostgreSQLDB.h"
 
-
 void PostgreSQLDB::close() {
 }
 
