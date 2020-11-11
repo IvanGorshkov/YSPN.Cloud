@@ -6,9 +6,6 @@ before_script:
   - apt-get install --yes libgtest-dev
   - apt-get install libgmock-dev
 
-variables:
-  BIN_PATH: ./project/tests/UtilsTests
-
 stages:
   - test_style
   - build
@@ -40,7 +37,12 @@ test_bin:
 test_mem:
   stage: test_mem
   script:
-    - apt-get install -y valgrind
-    - cd build
-    - ./valgrind/run.sh ${BIN_PATH}
+    - apt-get update && apt-get install -y valgrind
+    - cd build/project/tests/
+    - valgrind --tool=memcheck --leak-check=summary --log-file=${VALGRIND_LOG} --leak-check=full --show-leak-kinds=all ./UtilsTests
+    - export NO_LOST=$(grep "${NO_LOST_PATTERN}" ${VALGRIND_LOG})
+    - export NO_ERROR=$(grep "${NO_ERROR_PATTERN}" ${VALGRIND_LOG})
+    - if [ -z "${NO_LOST}" ] || [ -z "${NO_ERROR}" ]; then cat ${VALGRIND_LOG}; exit 1; fi
+
+
 
