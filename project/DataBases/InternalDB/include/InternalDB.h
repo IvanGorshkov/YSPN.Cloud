@@ -3,8 +3,7 @@
 
 class InternalDB {
  public:
-  InternalDB(std::string databaseName);
-  void CreateDB();
+  InternalDB(const std::string& databaseName);
   int GetUserId();
   int GetDeviceId();
   std::string GetSyncFolder();
@@ -20,7 +19,7 @@ class InternalDB {
   void InsertChunk();
   void SelectChunk();
   void UpdateChunk();
-  bool dbExist();
+
 
  private:
   int _userId;
@@ -31,8 +30,10 @@ class InternalDB {
   int selectDeviceId();
   int selectUserId();
   std::string selectFolder();
-  void creatTable();
+  virtual void creatTable();
   bool isConnect();
   void close();
-  void connect();
+  virtual void connect();
+  virtual bool dbExist();
+  void createDB();
 };

@@ -1,10 +1,7 @@
 #include "InternalDB.h"
-
-#include <utility>
-
-InternalDB::InternalDB(std::string databaseName): _databaseName(std::move(databaseName)) {
+InternalDB::InternalDB(const std::string& databaseName): _databaseName(databaseName) {
   if (!dbExist())  {
-    CreateDB();
+    createDB();
   }
   if (!isConnect()) { return; }
   _userId = selectUserId();
@@ -13,12 +10,15 @@ InternalDB::InternalDB(std::string databaseName): _databaseName(std::move(databa
   close();
 }
 
-void InternalDB::CreateDB() {
+void InternalDB::createDB() {
   creatTable();
 }
 
 bool InternalDB::isConnect() {
-  if (false) {
+  if (true) {
+	if (!dbExist()) {
+	  createDB();
+	}
 	connect();
 	return true;
   }
@@ -110,7 +110,7 @@ void InternalDB::connect() { }
 void InternalDB::close() { }
 
 bool InternalDB::dbExist() {
-  return false;
+  return true;
 }
 
 int InternalDB::selectDeviceId() {
