@@ -3,3 +3,4 @@ ADD_LIBRARY(libysnp STATIC
         src/main.cpp)
 
 ADD_SUBDIRECTORY(tests)
+ADD_SUBDIRECTORY(DataBases)
