@@ -3,7 +3,7 @@ InternalDB::InternalDB(const std::string& databaseName): _databaseName(databaseN
   if (!dbExist())  {
     createDB();
   }
-  if (!isConnect()) { return; }
+  if (!connect()) { return; }
   _userId = selectUserId();
   _deviceId = selectDeviceId();
   _syncFolder = selectFolder();
@@ -14,98 +14,89 @@ void InternalDB::createDB() {
   creatTable();
 }
 
-bool InternalDB::isConnect() {
-  if (true) {
-	if (!dbExist()) {
-	  createDB();
-	}
-	connect();
-	return true;
-  }
+bool InternalDB::connect() {
   return true;
 }
 
 void InternalDB::creatTable() {}
 
 int InternalDB::GetUserId() {
-  if (!isConnect()) { return -1; }
+  if (connect()) { return -1; }
   close();
   return 1;
 }
 
 int InternalDB::GetDeviceId() {
-  if (!isConnect()) { return -1; }
+  if (connect()) { return -1; }
   close();
   return 1;
 }
 
 std::string InternalDB::GetSyncFolder() {
-  if (!isConnect()) { return ""; }
+  if (connect()) { return ""; }
   close();
   return "path";
 }
 
 void InternalDB::InsertUser() {
-  if (!isConnect()) { return; }
+  if (connect()) { return; }
   close();
 }
 
 void InternalDB::DeleteUser() {
-  if (!isConnect()) { return; }
+  if (connect()) { return; }
   close();
 }
 
 void InternalDB::ExistUser() {
-  if (!isConnect()) { return; }
+  if (connect()) { return; }
   close();
 }
 
 void InternalDB::UpdateSyncFolder() {
-  if (!isConnect()) { return; }
+  if (connect()) { return; }
   close();
 }
 
 void InternalDB::UpdatePassword() {
-  if (!isConnect()) { return; }
+  if (connect()) { return; }
   close();
 }
 
 void InternalDB::SelectUserPassword() {
-  if (!isConnect()) { return; }
+  if (connect()) { return; }
   close();
 }
 
 void InternalDB::InsertFile() {
-  if (!isConnect()) { return; }
+  if (connect()) { return; }
   close();
 }
 
 void InternalDB::SelectFile() {
-  if (!isConnect()) { return; }
+  if (connect()) { return; }
   close();
 }
 
 void InternalDB::UpdateFile() {
-  if (!isConnect()) { return; }
+  if (connect()) { return; }
   close();
 }
 
 void InternalDB::InsertChunk() {
-  if (!isConnect()) { return; }
+  if (connect()) { return; }
   close();
 }
 
 void InternalDB::SelectChunk() {
-  if (!isConnect()) { return; }
+  if (connect()) { return; }
   close();
 }
 
 void InternalDB::UpdateChunk() {
-  if (!isConnect()) { return; }
+  if (connect()) { return; }
   close();
 }
-
-void InternalDB::connect() { }
 
 void InternalDB::close() { }
 
@@ -114,19 +105,19 @@ bool InternalDB::dbExist() {
 }
 
 int InternalDB::selectDeviceId() {
-  if (!isConnect()) { return -1; }
+  if (connect()) { return -1; }
   close();
   return 1;
 }
 
 int InternalDB::selectUserId() {
-  if (!isConnect()) { return -1; }
+  if (connect()) { return -1; }
   close();
   return 1;
 }
 
 std::string InternalDB::selectFolder() {
-  if (!isConnect()) { return ""; }
+  if (connect()) { return ""; }
   close();
   return "path";
 }

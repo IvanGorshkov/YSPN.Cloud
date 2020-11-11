@@ -20,7 +20,6 @@ class InternalDB {
   void SelectChunk();
   void UpdateChunk();
 
-
  private:
   int _userId;
   int _deviceId;
@@ -31,9 +30,8 @@ class InternalDB {
   int selectUserId();
   std::string selectFolder();
   virtual void creatTable();
-  bool isConnect();
-  void close();
-  virtual void connect();
-  virtual bool dbExist();
+  virtual bool connect();
+  virtual void close();
+  bool dbExist();
   void createDB();
 };
