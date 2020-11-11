@@ -6,6 +6,8 @@ before_script:
   - apt-get install --yes libgtest-dev
   - apt-get install libgmock-dev
 
+variables:
+  BIN_PATH: ./project/tests/UtilsTests
 
 stages:
   - test_style
@@ -38,6 +40,7 @@ test_bin:
 test_mem:
   stage: test_mem
   script:
+    - apt-get install -y valgrind
     - cd build
-    - ./valgrind/run.sh
+    - ./valgrind/run.sh ${BIN_PATH}
 
