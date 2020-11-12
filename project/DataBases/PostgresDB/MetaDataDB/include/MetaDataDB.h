@@ -3,10 +3,11 @@
 #include "PostgreSQLDB.h"
 
 class MetaDataDB: public PostgreSQLDB {
+ protected:
+  void createDB() override;
   public:
   	MetaDataDB();
   	~MetaDataDB();
-	void CreateDB() override;
 	void InsertFile();
 	void InsertChunk();
 	void InsertFileChunk();

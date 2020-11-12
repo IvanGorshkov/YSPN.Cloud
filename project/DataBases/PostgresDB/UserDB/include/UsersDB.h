@@ -3,10 +3,11 @@
 #include "PostgreSQLDB.h"
 
 class UsersDB: public PostgreSQLDB {
+ protected:
+  void createDB() override;
 public:
   UsersDB();
   ~UsersDB();
-  void CreateDB();
   void Login();
   void Registration();
   void CheckLogin();

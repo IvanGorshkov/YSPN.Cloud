@@ -1,11 +1,14 @@
 #include "UsersDB.h"
 
-void UsersDB::CreateDB() {
+UsersDB::UsersDB() {
   if (!dbExist())  {
-	CreateDB();
+	createDB();
   }
 
   connect();
+}
+
+void UsersDB::createDB() {
 }
 
 void UsersDB::Login() {

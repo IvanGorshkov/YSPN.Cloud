@@ -2,7 +2,7 @@
 
 MetaDataDB::MetaDataDB(): PostgreSQLDB() {
   if (!dbExist())  {
-	CreateDB();
+	createDB();
   }
 
   connect();
@@ -10,10 +10,6 @@ MetaDataDB::MetaDataDB(): PostgreSQLDB() {
 
 MetaDataDB::~MetaDataDB() {
   close();
-}
-
-void MetaDataDB::CreateDB() {
-
 }
 
 void MetaDataDB::InsertFile() {
@@ -41,5 +37,8 @@ void MetaDataDB::SelectFileChunk() {
 }
 
 void MetaDataDB::SelectFilesByUser() {
+
+}
+void MetaDataDB::createDB() {
 
 }

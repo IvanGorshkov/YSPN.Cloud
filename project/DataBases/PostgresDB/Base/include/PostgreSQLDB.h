@@ -5,10 +5,10 @@
 class PostgreSQLDB {
  public:
   PostgreSQLDB();
-  virtual void CreateDB() = 0;
   virtual ~PostgreSQLDB() = default;
  protected:
   int _port;
+  virtual void createDB() = 0;
   std::string _user;
   std::string _databaseName;
   std::string _password;
