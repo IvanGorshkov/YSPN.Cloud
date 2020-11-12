@@ -15,7 +15,7 @@ class PostgreSQLDB {
   std::string _ip;
   void *_database;
   bool dbExist();
-  void connect();
+  virtual bool connect();
   void close();
  private:
   void parseJSON();

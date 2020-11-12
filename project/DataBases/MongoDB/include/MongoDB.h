@@ -13,7 +13,7 @@ class MongoDB {
   std::string _uri;
   std::string _client;
   std::string _database;
-  void parseJSON();
+  virtual void parseJSON();
   void connect();
   void close();
   void createDB();

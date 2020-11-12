@@ -10,7 +10,7 @@ bool PostgreSQLDB::dbExist() {
 	return false;
 }
 
-void PostgreSQLDB::connect() {
+bool PostgreSQLDB::connect() {
 
 }
 

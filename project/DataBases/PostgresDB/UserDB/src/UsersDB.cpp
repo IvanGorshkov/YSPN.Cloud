@@ -12,19 +12,21 @@ void UsersDB::createDB() {
 }
 
 void UsersDB::Login() {
+  if (!connect()) { return; }
 
 }
 
 void UsersDB::Registration() {
+ if (!connect()) { return; }
 
 }
 
 void UsersDB::CheckLogin() {
-
+  if (!connect()) { return; }
 }
 
 void UsersDB::ChangePassword() {
-
+  if (!connect()) { return; }
 }
 
 UsersDB::~UsersDB() {
