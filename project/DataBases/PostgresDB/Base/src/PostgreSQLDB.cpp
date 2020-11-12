@@ -11,7 +11,7 @@ bool PostgreSQLDB::dbExist() {
 }
 
 bool PostgreSQLDB::connect() {
-
+	return true;
 }
 
 PostgreSQLDB::PostgreSQLDB() {
