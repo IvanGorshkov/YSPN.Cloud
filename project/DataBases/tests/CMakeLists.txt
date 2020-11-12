@@ -11,8 +11,9 @@ ADD_EXECUTABLE(${PROJECT_NAME}
         src/main.cpp
         src/test_internaldb.cpp
         src/test_userdb.cpp
-        src/test_mongodb.cpp)
+        src/test_mongodb.cpp
+        src/test_metadb.cpp)
 
-TARGET_LINK_LIBRARIES(${PROJECT_NAME}  ${GTEST_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} libinternalDB libUserDB libMongoDB -lgmock)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME}  ${GTEST_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} libinternalDB libUserDB libMongoDB libMetDataDB -lgmock)
 
 ADD_TEST(NAME Tests COMMAND ${PROJECT_NAME})
