@@ -38,7 +38,7 @@ test_mem:
   stage: test_mem
   script:
     - apt-get update && apt-get install -y valgrind
-    - cd build/project/tests
+    - cd build/project/DataBasestests
     - ls
     - valgrind --tool=memcheck --leak-check=summary --log-file=${VALGRIND_LOG} --leak-check=full --show-leak-kinds=all ./UtilsTests
     - export NO_LOST=$(grep "${NO_LOST_PATTERN}" ${VALGRIND_LOG})
