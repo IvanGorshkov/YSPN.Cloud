@@ -1,17 +1,29 @@
 #pragma once
 
+class NetworkServer {
+ public:
+  virtual void GetRequest() {}
+  virtual void PutResponce() {}
+};
+
+class MongoDB {
+ public:
+  void InsertChunk() {}
+  void GetChunk() {}
+};
+
 class StorageServer {
  public:
-  StorageServer();
+  explicit StorageServer(NetworkServer *server, MongoDB *_db);
+  virtual void listeningConnection();
+  virtual void onConnect();
+  virtual void uploadChunk();
+  virtual void downloadChunk();
 
  private:
-  void runNetworkServer();
-  void listeningConnection();
-  void onConnect();
-  void uploadChunk();
-  void downloadChunk();
+  virtual void runNetworkServer();
 
  private:
-//  MongoDB _mongoDB;
-//  NetworkSever _networkServer;
+  MongoDB *_mongoDB;
+  NetworkServer *_networkServer;
 };
