@@ -1,8 +1,7 @@
 #include "SyncServer.h"
 
-SyncServer::SyncServer(NetworkServer *_network, MetaDataDB *_db)
-    : _networkServer(_network),
-      _metaDataDB(_db) {
+SyncServer::SyncServer(MetaDataDB *_db)
+    : _metaDataDB(_db) {
 }
 
 void SyncServer::runNetworkServer() {
@@ -11,7 +10,7 @@ void SyncServer::runNetworkServer() {
 void SyncServer::listeningConnection() {
 }
 
-void SyncServer::onConnect() {
+void SyncServer::onConnect(UserSession *session) {
 }
 
 void SyncServer::uploadFileMeta() {

@@ -1,9 +1,13 @@
 #pragma once
 
-class NetworkServer {
+class UserSession {
  public:
   virtual void GetRequest() {}
   virtual void PutResponce() {}
+};
+
+class NetworkServer {
+  UserSession session;
 };
 
 class MetaDataDB {
@@ -19,9 +23,9 @@ class MetaDataDB {
 
 class SyncServer {
  public:
-  explicit SyncServer(NetworkServer *_network, MetaDataDB *_db);
+  explicit SyncServer(MetaDataDB *_db);
   virtual void listeningConnection();
-  virtual void onConnect();
+  virtual void onConnect(UserSession *session);
   virtual void uploadFileMeta();
   virtual void downloadFileMeta();
   virtual void uploadChunkMeta();

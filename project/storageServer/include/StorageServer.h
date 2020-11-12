@@ -1,9 +1,13 @@
 #pragma once
 
-class NetworkServer {
+class UserSession {
  public:
   virtual void GetRequest() {}
   virtual void PutResponce() {}
+};
+
+class NetworkServer {
+  UserSession session;
 };
 
 class MongoDB {
@@ -14,9 +18,9 @@ class MongoDB {
 
 class StorageServer {
  public:
-  explicit StorageServer(NetworkServer *server, MongoDB *_db);
+  explicit StorageServer(MongoDB *_db);
   virtual void listeningConnection();
-  virtual void onConnect();
+  virtual void onConnect(UserSession *session);
   virtual void uploadChunk();
   virtual void downloadChunk();
 

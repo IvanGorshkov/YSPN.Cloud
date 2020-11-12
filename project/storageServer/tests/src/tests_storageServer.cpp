@@ -7,15 +7,15 @@ using ::testing::SetArgReferee;
 
 class StorageServerMock : public StorageServer {
  public:
-  explicit StorageServerMock(NetworkServer *server, MongoDB *db) : StorageServer(server, db) {}
+  explicit StorageServerMock(MongoDB *db) : StorageServer(db) {}
   MOCK_METHOD0(runNetworkServer, void());
   MOCK_METHOD0(listeningConnection, void());
-  MOCK_METHOD0(onConnect, void());
+  MOCK_METHOD1(onConnect, void(UserSession *session));
   MOCK_METHOD0(uploadChunk, void());
   MOCK_METHOD0(downloadChunk, void());
 };
 
-class NetworkServerMock : public NetworkServer {
+class UserSessionMock : public UserSession {
  public:
   MOCK_METHOD0(GetRequest, void());
   MOCK_METHOD0(PutResponce, void());
@@ -28,65 +28,62 @@ class MongoDBMock : public MongoDB {
 };
 
 TEST(StorageServer, startServer) {
-  NetworkServer network;
   MongoDB db;
-  StorageServerMock mock(&network, &db);
+  StorageServerMock mock(&db);
   EXPECT_CALL(mock, runNetworkServer());
   EXPECT_CALL(mock, listeningConnection());
 }
 
 TEST(StorageServer, onConnect) {
-  NetworkServer network;
   MongoDB db;
-  StorageServerMock mock(&network, &db);
-  EXPECT_CALL(mock, onConnect());
+  StorageServerMock mock(&db);
+  UserSession session;
+  EXPECT_CALL(mock, onConnect(&session));
   mock.listeningConnection();
 }
 
 TEST(StorageServer, GetRequest) {
-  NetworkServerMock mock;
   MongoDB db;
+  UserSessionMock mock;
   EXPECT_CALL(mock, GetRequest());
-  StorageServer server(&mock, &db);
-  server.onConnect();
+  StorageServer server(&db);
+  server.onConnect(&mock);
 }
 
 TEST(StorageServer, PutResponce) {
-  NetworkServerMock mock;
   MongoDB db;
+  UserSessionMock mock;
   EXPECT_CALL(mock, PutResponce());
-  StorageServer server(&mock, &db);
-  server.onConnect();
+  StorageServer server(&db);
+  server.onConnect(&mock);
 }
 
 TEST(StorageServer, uploadChunk) {
-  NetworkServer network;
   MongoDB db;
-  StorageServerMock mock(&network, &db);
+  StorageServerMock mock(&db);
   EXPECT_CALL(mock, uploadChunk());
-  mock.onConnect();
+  UserSession session;
+  mock.onConnect(&session);
 }
 
 TEST(StorageServer, downloadChunk) {
-  NetworkServer network;
   MongoDB db;
-  StorageServerMock mock(&network, &db);
+  StorageServerMock mock(&db);
   EXPECT_CALL(mock, downloadChunk());
-  mock.onConnect();
+  UserSession session;
+  mock.onConnect(&session);
 }
 
 TEST(StorageServer, MongoInsertChunk) {
-  NetworkServer network;
   MongoDBMock mock;
   EXPECT_CALL(mock, InsertChunk());
-  StorageServer server(&network, &mock);
+  StorageServer server(&mock);
   server.uploadChunk();
 }
 
 TEST(StorageServer, MongoGetChunk) {
-  NetworkServer network;
   MongoDBMock mock;
   EXPECT_CALL(mock, GetChunk());
-  StorageServer server(&network, &mock);
+  StorageServer server(&mock);
   server.downloadChunk();
 }

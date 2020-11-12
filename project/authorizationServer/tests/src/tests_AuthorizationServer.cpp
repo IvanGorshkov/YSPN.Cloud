@@ -7,9 +7,9 @@ using ::testing::SetArgReferee;
 
 class AuthorizationServerMock : public AuthorizationServer {
  public:
-  explicit AuthorizationServerMock(NetworkServer *server, UsersDB *db) : AuthorizationServer(server, db) {}
+  explicit AuthorizationServerMock(UsersDB *db) : AuthorizationServer(db) {}
   MOCK_METHOD0(runNetworkServer, void());
-  MOCK_METHOD0(onConnect, void());
+  MOCK_METHOD1(onConnect, void(UserSession *session));
   MOCK_METHOD0(listeningConnection, void());
   MOCK_METHOD0(checkLogin, void());
   MOCK_METHOD0(changePassword, void());
@@ -17,7 +17,7 @@ class AuthorizationServerMock : public AuthorizationServer {
   MOCK_METHOD0(registration, void());
 };
 
-class NetworkServerMock : public NetworkServer {
+class UserSessionMock : public UserSession {
  public:
   MOCK_METHOD0(GetRequest, void());
   MOCK_METHOD0(PutResponce, void());
@@ -32,97 +32,92 @@ class UsersDBMock : public UsersDB {
 };
 
 TEST(AuthorizationServer, startServer) {
-  NetworkServer network;
   UsersDB db;
-  AuthorizationServerMock mock(&network, &db);
+  AuthorizationServerMock mock(&db);
   EXPECT_CALL(mock, runNetworkServer());
   EXPECT_CALL(mock, listeningConnection());
 }
 
 TEST(AuthorizationServer, onConnect) {
-  NetworkServer network;
   UsersDB db;
-  AuthorizationServerMock mock(&network, &db);
-  EXPECT_CALL(mock, onConnect());
+  AuthorizationServerMock mock(&db);
+  UserSession session;
+  EXPECT_CALL(mock, onConnect(&session));
   mock.listeningConnection();
 }
 
 TEST(AuthorizationServer, GetRequest) {
-  NetworkServerMock mock;
+  UserSessionMock mock;
   UsersDB db;
   EXPECT_CALL(mock, GetRequest());
-  AuthorizationServer server(&mock, &db);
-  server.onConnect();
+  AuthorizationServer server(&db);
+  server.onConnect(&mock);
 }
 
 TEST(AuthorizationServer, PutResponce) {
-  NetworkServerMock mock;
+  UserSessionMock mock;
   UsersDB db;
   EXPECT_CALL(mock, GetRequest());
-  AuthorizationServer server(&mock, &db);
-  server.onConnect();
+  AuthorizationServer server(&db);
+  server.onConnect(&mock);
 }
 
 TEST(AuthorizationServer, checkLogin) {
-  NetworkServer network;
   UsersDB db;
-  AuthorizationServerMock mock(&network, &db);
+  AuthorizationServerMock mock(&db);
   EXPECT_CALL(mock, checkLogin());
-  mock.onConnect();
+  UserSession session;
+  mock.onConnect(&session);
 }
 
 TEST(AuthorizationServer, changePassword) {
-  NetworkServer network;
   UsersDB db;
-  AuthorizationServerMock mock(&network, &db);
+  AuthorizationServerMock mock(&db);
   EXPECT_CALL(mock, changePassword());
-  mock.onConnect();
+  UserSession session;
+  mock.onConnect(&session);
 }
 
 TEST(AuthorizationServer, login) {
-  NetworkServer network;
   UsersDB db;
-  AuthorizationServerMock mock(&network, &db);
+  AuthorizationServerMock mock(&db);
   EXPECT_CALL(mock, login());
-  mock.onConnect();
+  UserSession session;
+  mock.onConnect(&session);
 }
 
 TEST(AuthorizationServer, registration) {
-  NetworkServer network;
   UsersDB db;
-  AuthorizationServerMock mock(&network, &db);
+  AuthorizationServerMock mock(&db);
   EXPECT_CALL(mock, registration());
-  mock.onConnect();
+  UserSession session;
+  mock.onConnect(&session);
 }
 
 TEST(AuthorizationServer, UserCheckLogin) {
-  NetworkServer network;
   UsersDBMock mock;
-  AuthorizationServer server(&network, &mock);
+  AuthorizationServer server(&mock);
   EXPECT_CALL(mock, CheckLogin());
   server.checkLogin();
 }
 
 TEST(AuthorizationServer, UsersChangePassword) {
-  NetworkServer network;
   UsersDBMock mock;
-  AuthorizationServer server(&network, &mock);
+  AuthorizationServer server(&mock);
   EXPECT_CALL(mock, ChangePassword());
   server.changePassword();
 }
 
 TEST(AuthorizationServer, UsersLogin) {
-  NetworkServer network;
   UsersDBMock mock;
-  AuthorizationServer server(&network, &mock);
+  AuthorizationServer server(&mock);
   EXPECT_CALL(mock, Login());
   server.login();
 }
 
 TEST(AuthorizationServer, USersRegistration) {
-  NetworkServer network;
   UsersDBMock mock;
-  AuthorizationServer server(&network, &mock);
+  AuthorizationServer server(&mock);
   EXPECT_CALL(mock, Registration());
   server.registration();
 }
