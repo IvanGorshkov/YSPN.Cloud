@@ -5,6 +5,12 @@ before_script:
   - apt-get install --yes cmake
   - apt-get install --yes libgtest-dev
   - apt-get install libgmock-dev
+variables:
+  BIN_NAME: YSNP
+
+  VALGRIND_LOG: "valgrind.log"
+  NO_LOST_PATTERN: "All heap blocks were freed -- no leaks are possible"
+  NO_ERROR_PATTERN: "ERROR SUMMARY: 0 errors"
 
 stages:
   - test_style
@@ -38,9 +44,7 @@ test_mem:
   stage: test_mem
   script:
     - apt-get update && apt-get install -y valgrind
-    - cd build/project/DataBases/
-    - ls
-    - cd tests
+    - cd build/project/DataBases/tests
     - valgrind --tool=memcheck --leak-check=summary --log-file=${VALGRIND_LOG} --leak-check=full --show-leak-kinds=all ./UtilsTests
     - export NO_LOST=$(grep "${NO_LOST_PATTERN}" ${VALGRIND_LOG})
     - export NO_ERROR=$(grep "${NO_ERROR_PATTERN}" ${VALGRIND_LOG})
