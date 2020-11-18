@@ -9,4 +9,8 @@ SET(CMAKE_CXX_STANDARD 17)
 
 INCLUDE_DIRECTORIES(include)
 
-ADD_LIBRARY(${PROJECT_NAME}-dev src/Serializer.cpp)
+ADD_EXECUTABLE(${PROJECT_NAME}
+        src/main.cpp
+        src/SerializerChunk.cpp)
+
+#ADD_LIBRARY(${PROJECT_NAME}-dev src/Serializer.cpp)
