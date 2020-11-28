@@ -14,3 +14,8 @@ ADD_SUBDIRECTORY(project)
 ADD_SUBDIRECTORY(project/Network)
 ADD_SUBDIRECTORY(project/Application)
 ADD_SUBDIRECTORY(project/testsNetwork)
+ADD_SUBDIRECTORY(project/authorizationServer)
+ADD_SUBDIRECTORY(project/storageServer)
+ADD_SUBDIRECTORY(project/syncServer)
+ADD_SUBDIRECTORY(project/utils)
+
