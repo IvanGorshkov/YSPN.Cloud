@@ -1,19 +1,15 @@
 #pragma once
 
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <string>
-#include <utility>
-#include <memory>
 #include "SerializerInterface.h"
-
-#define COMMAND "AddChunk"
+#include "SerializerExceptions.h"
+#include <boost/property_tree/ptree.hpp>
+#include <string>
+#include <vector>
 
 namespace pt = boost::property_tree;
 
 struct Chunk {
   Chunk() = default;
-
   Chunk(int userId, int chunkId, std::string sHash, std::string rHash, std::string data)
       : userId(userId),
         chunkId(chunkId),
@@ -32,19 +28,17 @@ struct Chunk {
 class SerializerChunk : public SerializerInterface {
  public:
   SerializerChunk() = default;
-  explicit SerializerChunk(std::vector<Chunk> val) noexcept;
-  explicit SerializerChunk(const pt::ptree& val) noexcept;
+  explicit SerializerChunk(std::vector<Chunk> val);
+  explicit SerializerChunk(const pt::ptree &val);
 
-  std::vector<Chunk> GetChunk();
+  std::vector<Chunk> GetChunk() noexcept(false);
   pt::ptree GetJson();
 
  private:
   void serialize() override;
   void deserialize() override;
-  void printVector();
-  void printJson();
 
  private:
-  std::vector<Chunk> chunkVector;
-  pt::ptree json;
+  std::vector<Chunk> _chunkVector;
+  pt::ptree _json;
 };

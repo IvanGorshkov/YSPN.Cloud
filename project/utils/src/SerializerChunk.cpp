@@ -1,36 +1,42 @@
 #include "SerializerChunk.h"
-#include <iostream>
+#include <boost/log/trivial.hpp>
 
-SerializerChunk::SerializerChunk(std::vector<Chunk> val) noexcept
-    : chunkVector(std::move(val)) {
+SerializerChunk::SerializerChunk(std::vector<Chunk> val)
+    : _chunkVector(std::move(val)) {
+  BOOST_LOG_TRIVIAL(debug) << "SerializerChunk: create serializer chunk from vector";
 }
 
-SerializerChunk::SerializerChunk(const pt::ptree& val) noexcept
-    : json(val) {
+SerializerChunk::SerializerChunk(const pt::ptree &val)
+    : _json(val) {
+  BOOST_LOG_TRIVIAL(debug) << "SerializerChunk: create serializer chunk from json";
 }
 
 std::vector<Chunk> SerializerChunk::GetChunk() {
-  if (chunkVector.empty()) {
+  BOOST_LOG_TRIVIAL(debug) << "SerializerChunk: GetChunk";
+  if (_chunkVector.empty()) {
     deserialize();
-    printVector();
   }
 
-  return std::move(chunkVector);
+  BOOST_LOG_TRIVIAL(debug) << "SerializerChunk: return chunk vector";
+  return std::move(_chunkVector);
 }
 
 pt::ptree SerializerChunk::GetJson() {
-  if (json.empty()) {
+  BOOST_LOG_TRIVIAL(debug) << "SerializerChunk: GetJson";
+  if (_json.empty()) {
     serialize();
-    printJson();
   }
 
-  return json;
+  BOOST_LOG_TRIVIAL(debug) << "SerializerChunk: return json";
+  return _json;
 }
 
 void SerializerChunk::serialize() {
-  json.put("command", COMMAND);
+  BOOST_LOG_TRIVIAL(debug) << "SerializerChunk: serialize start";
+
+  _json.put("command", "UploadChunk");
   pt::ptree data;
-  for (auto &el : chunkVector) {
+  for (auto &el : _chunkVector) {
     pt::ptree child;
     child.put("userId", el.userId);
     child.put("chunkId", el.chunkId);
@@ -41,41 +47,26 @@ void SerializerChunk::serialize() {
     data.push_back(std::make_pair("", child));
   }
 
-  json.add_child("data", data);
+  _json.add_child("data", data);
+  BOOST_LOG_TRIVIAL(debug) << "SerializerChunk: serialize stop";
 }
 
 void SerializerChunk::deserialize() {
-  for (auto &val : json.get_child("data")) {
-    try {
-      chunkVector.emplace_back(val.second.get<int>("userId"),
-                               val.second.get<int>("chunkId"),
-                               val.second.get<std::string>("sHash"),
-                               val.second.get<std::string>("rHash"),
-                               val.second.get<std::string>("data"));
-    } catch (pt::ptree_error &er) {
-      std::cout << er.what() << std::endl;
+  BOOST_LOG_TRIVIAL(debug) << "SerializerChunk: deserialize start";
+  try {
+    for (auto &val : _json.get_child("data")) {
+      _chunkVector.emplace_back(val.second.get<int>("userId"),
+                                val.second.get<int>("chunkId"),
+                                val.second.get<std::string>("sHash"),
+                                val.second.get<std::string>("rHash"),
+                                val.second.get<std::string>("data"));
+
     }
+  } catch (pt::ptree_error &er) {
+    BOOST_LOG_TRIVIAL(error) << "SerializerChunk: " << er.what();
+    _chunkVector.clear();
+    throw SerializerParseException(er.what());
   }
-}
 
-void SerializerChunk::printVector() {
-  for (auto &el : chunkVector) {
-    std::cout << "UserId = " << el.userId << std::endl;
-    std::cout << "chinkId = " << el.chunkId << std::endl;
-    std::cout << "sHash = " << el.sHash << std::endl;
-    std::cout << "rHash = " << el.rHash << std::endl;
-    std::cout << "data = " << el.data << std::endl;
-    std::cout << std::endl;
-  }
-}
-
-void SerializerChunk::printJson() {
-  for (auto &val : json.get_child("data")) {
-    std::cout << "UserId = " << val.second.get<int>("userId") << std::endl;
-    std::cout << "chinkId = " << val.second.get<int>("chunkId") << std::endl;
-    std::cout << "sHash = " << val.second.get<std::string>("sHash") << std::endl;
-    std::cout << "rHash = " << val.second.get<std::string>("rHash") << std::endl;
-    std::cout << "data = " << val.second.get<std::string>("data") << std::endl;
-    std::cout << std::endl;
-  }
+  BOOST_LOG_TRIVIAL(debug) << "SerializerChunk: deserialize stop";
 }

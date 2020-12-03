@@ -1,4 +1,4 @@
-#pragma onсe
+#pragma once
 
 class SerializerInterface {
  private:
