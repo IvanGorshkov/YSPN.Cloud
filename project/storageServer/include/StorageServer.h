@@ -1,33 +1,56 @@
 #pragma once
 
-class UserSession {
- public:
-  virtual void GetRequest() {}
-  virtual void PutResponce() {}
-};
+#include "Worker.h"
+#include "Net.h"
+#include "Config.h"
+#include <boost/property_tree/ptree.hpp>
+#include <boost/log/trivial.hpp>
+#include <queue>
+#include <utility>
+#include <thread>
 
-class NetworkServer {
-  UserSession session;
-};
-
-class MongoDB {
- public:
-  void InsertChunk() {}
-  void GetChunk() {}
-};
+namespace pt = boost::property_tree;
 
 class StorageServer {
  public:
-  explicit StorageServer(MongoDB *_db);
-  virtual void listeningConnection();
-  virtual void onConnect(UserSession *session);
-  virtual void uploadChunk();
-  virtual void downloadChunk();
+  explicit StorageServer();
+  ~StorageServer();
+
+  void Run();
+  void Stop();
+
+  void put() {
+    int id = std::rand() % 100;
+    UserSession user(id);
+    pt::ptree root;
+
+    root.put("command", "UploadChunk");
+    pt::ptree data;
+    for (int i = 0; i < 4; i++) {
+      pt::ptree child;
+      child.put("userId", id);
+      child.put("chunkId", i + 1);
+      child.put("sHash", "shash");
+      child.put("rHash", "rhash");
+      child.put("data", "data");
+
+      data.push_back(std::make_pair("", child));
+    }
+
+    root.add_child("data", data);
+
+    auto pair = std::make_pair(user, root);
+    auto share = std::make_shared<std::pair<UserSession, pt::ptree>>(pair);
+    networkServer.PutConnection(share);
+  }
 
  private:
-  virtual void runNetworkServer();
+  void startWorkers();
+  void stopWorkers();
 
  private:
-  MongoDB *_mongoDB;
-  NetworkServer *_networkServer;
+  std::vector<std::thread> _workerThreads;
+  bool _isWorkingWorker;
+  Config &_config;
+  NetworkServer networkServer;
 };
