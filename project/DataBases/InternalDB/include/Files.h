@@ -1,8 +1,13 @@
-//
-// Created by Ivan Gorshkov on 26.11.2020.
-//
+#pragma once
 
-#ifndef YSNP_CLOUD_PROJECT_DATABASES_INTERNALDB_INCLUDE_FILE_H_
-#define YSNP_CLOUD_PROJECT_DATABASES_INTERNALDB_INCLUDE_FILE_H_
-
-#endif //YSNP_CLOUD_PROJECT_DATABASES_INTERNALDB_INCLUDE_FILE_H_
+struct Files {
+  std::string file_name;
+  std::string file_extention;
+  size_t file_size;
+  std::string file_path;
+  size_t count_chunks;
+  size_t version;
+  bool is_download;
+  std::string update_date;
+  std::string create_date;
+};

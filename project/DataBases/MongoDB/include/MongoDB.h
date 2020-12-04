@@ -9,10 +9,10 @@ class MongoDB {
   void InsertChunk();
   void GetChunk();
  private:
-  std::string _instance;
-  std::string _uri;
-  std::string _client;
-  std::string _database;
+  //mongocxx::instance _instance{};
+  //mongocxx::database _database;
+  //mongocxx::uri _uri;
+  //mongocxx::client _client;
   virtual void parseJSON();
   void connect();
   void close();

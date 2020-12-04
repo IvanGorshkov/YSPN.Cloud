@@ -1,8 +1,6 @@
 #include "MongoDB.h"
 
 MongoDB::MongoDB() {
-  createDB();
-  connect();
 }
 
 MongoDB::~MongoDB() {

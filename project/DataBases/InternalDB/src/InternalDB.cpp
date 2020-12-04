@@ -1,41 +1,58 @@
 #include "InternalDB.h"
+#include "SQLiteQuery.h"
+#include <iostream>
+#include <boost/lexical_cast.hpp>
+
 InternalDB::InternalDB(const std::string& databaseName): _databaseName(databaseName) {
-  if (!dbExist())  {
-    createDB();
+  if (connect()) {
+    creatTable();
+	_userId = selectUserId();
+	_deviceId = selectDeviceId();
+	_syncFolder = selectFolder();
+	close();
   }
-  if (!connect()) { return; }
-  _userId = selectUserId();
-  _deviceId = selectDeviceId();
-  _syncFolder = selectFolder();
-  close();
 }
 
-void InternalDB::createDB() {
-  creatTable();
-}
 
 bool InternalDB::connect() {
+  auto pDB = _database.get();
+  if (SQLITE_OK != sqlite3_open_v2(_databaseName.c_str(), &pDB, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr)) {
+	printf("Failed to open conn:\n");
+	return false;
+  }
+  _database.reset(pDB);
   return true;
 }
 
-void InternalDB::creatTable() {}
-
-int InternalDB::GetUserId() {
-  if (connect()) { return -1; }
-  close();
-  return 1;
+void InternalDB::creatTable() {
+  auto pStmt = _stmt.get();
+  sqlite3_prepare(_database.get(), createQueryFiles.c_str(), createQueryFiles.size(), &pStmt, nullptr);
+  _stmt.reset(pStmt);
+  if (sqlite3_step(_stmt.get()) != SQLITE_DONE) {
+    std::cout << "Didn't Create Table Files!" << std::endl;
+  }
+  sqlite3_prepare(_database.get(), createQueryChunks.c_str(), createQueryChunks.size(), &pStmt, nullptr);
+  _stmt.reset(pStmt);
+  if (sqlite3_step(_stmt.get()) != SQLITE_DONE) {
+    std::cout << "Didn't Create Table Chunks!" << std::endl;
+  }
+  sqlite3_prepare(_database.get(), createQueryUser.c_str(), createQueryUser.size(), &pStmt, nullptr);
+  _stmt.reset(pStmt);
+  if (sqlite3_step(_stmt.get()) != SQLITE_DONE) {
+    std::cout << "Didn't Create Table User!" << std::endl;
+  }
 }
 
-int InternalDB::GetDeviceId() {
-  if (connect()) { return -1; }
-  close();
-  return 1;
+int InternalDB::GetUserId() const {
+  return _userId;
 }
 
-std::string InternalDB::GetSyncFolder() {
-  if (connect()) { return ""; }
-  close();
-  return "path";
+int InternalDB::GetDeviceId() const {
+  return  _deviceId;
+}
+
+std::string InternalDB::GetSyncFolder() const {
+  return _syncFolder;
 }
 
 void InternalDB::InsertUser() {
@@ -43,81 +60,197 @@ void InternalDB::InsertUser() {
   close();
 }
 
-void InternalDB::DeleteUser() {
-  if (connect()) { return; }
+void InternalDB::DeleteUser(size_t id) {
+  if (!connect()) { return; }
+  std::string query = "DELETE FROM User WHERE user_id = " +  std::to_string(id) + ";";
+  auto pStmt = _stmt.get();
+  sqlite3_prepare_v2(_database.get(), query.c_str(), query.size(), &pStmt, nullptr);
+  _stmt.reset(pStmt);
+  if (sqlite3_step(_stmt.get()) != SQLITE_DONE) {
+	std::cout << "Don't Deleted" << std::endl;
+  }
   close();
 }
 
-void InternalDB::ExistUser() {
-  if (connect()) { return; }
+bool InternalDB::ExistUser() {
+  if (!connect()) { return false; }
+  std::string query = "SELECT count(*) FROM User;";
+  int count = 0;
+  auto pStmt = _stmt.get();
+  sqlite3_prepare_v2(_database.get(), query.c_str(), query.size(), &pStmt, nullptr);
+  _stmt.reset(pStmt);
+  while(sqlite3_step(_stmt.get()) == SQLITE_ROW) {
+	count = sqlite3_column_int(_stmt.get(), 0);
+  }
+  std::cout << count << std::endl;
+  close();
+  return count != 0;
+}
+
+void InternalDB::UpdateSyncFolder(const std::string& newFolder) {
+  if (!connect()) { return; }
+  std::string query = "Update User set sync_folder = \"" + newFolder + "\" where user_id = " +  std::to_string(_userId) + ";";
+  if (update(query)) {
+	_syncFolder = newFolder;
+  }
   close();
 }
 
-void InternalDB::UpdateSyncFolder() {
-  if (connect()) { return; }
+bool InternalDB::update(const std::string& query) {
+  auto pStmt = _stmt.get();
+  sqlite3_prepare_v2(_database.get(), query.c_str(), query.size(), &pStmt, nullptr);
+  _stmt.reset(pStmt);
+  if (sqlite3_step(_stmt.get()) != SQLITE_DONE) {
+	std::cout << "Don't Update" << std::endl;
+	return false;
+  }
+  return true;
+}
+
+void InternalDB::UpdatePassword(const std::string& newPassword) {
+  if (!connect()) { return; }
+  std::string query = "Update User set password = \"" + newPassword + "\" where user_id = " +  std::to_string(_userId) + ";";
+  update(query);
   close();
 }
 
-void InternalDB::UpdatePassword() {
-  if (connect()) { return; }
+std::string InternalDB::SelectUserPassword() {
+  std::string password = "";
+  if (!connect()) { return password; }
+  std::string query = "Select password from User where user_id = " +  std::to_string(_userId) + ";";
+  auto pStmt = _stmt.get();
+  sqlite3_prepare_v2(_database.get(), query.c_str(), query.size(), &pStmt, nullptr);
+  _stmt.reset(pStmt);
+  while(sqlite3_step(_stmt.get()) == SQLITE_ROW) {
+	password = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 0));
+  }
   close();
+  return  password;
 }
 
-void InternalDB::SelectUserPassword() {
-  if (connect()) { return; }
-  close();
+int InternalDB::callbackFile(void* data, int argc, char** argv, char** azColName) {
+  auto* file = (Files *)data;
+  for (int i = 0; i < argc; i++) {
+    std::string col(azColName[i]);
+	if (col == "file_name") {
+	  (*file).file_name = argv[i];
+	}
+	if (col == "file_extention") {
+	  (*file).file_extention = argv[i];
+	}
+	if (col == "file_size") {
+	  (*file).file_size = boost::lexical_cast<int>(argv[i]);
+	}
+	if (col == "file_path") {
+	  (*file).file_path = argv[i];
+	}
+	if (col == "count_chunks") {
+	  (*file).count_chunks = boost::lexical_cast<int>(argv[i]);
+	}
+	if (col == "is_download") {
+	  (*file).is_download = argv[i];
+	}
+	if (col == "create_date") {
+	  (*file).is_download = argv[i];
+	}
+	if (col == "update_date") {
+	  (*file).is_download = argv[i];
+	}
+  }
+
+  return 0;
 }
 
-void InternalDB::InsertFile() {
-  if (connect()) { return; }
+Files InternalDB::SelectFile(size_t idFile) {
+  Files file;
+  if (!connect()) { return file; }
+  std::string query = "SELECT * FROM Files Where id = " + std::to_string(idFile) + ";";
+  sqlite3_exec(_database.get(), query.c_str(), callbackFile, &file, nullptr);
+  std::cout << file.file_name;
   close();
-}
-
-void InternalDB::SelectFile() {
-  if (connect()) { return; }
-  close();
+  return file;
 }
 
 void InternalDB::UpdateFile() {
-  if (connect()) { return; }
+  if (!connect()) { return; }
   close();
 }
 
-void InternalDB::InsertChunk() {
-  if (connect()) { return; }
+void InternalDB::insert(const std::string& query) {
+  auto pStmt = _stmt.get();
+  sqlite3_prepare_v2(_database.get(), query.c_str(), query.size(), &pStmt, nullptr);
+  _stmt.reset(pStmt);
+  if (sqlite3_step(_stmt.get()) != SQLITE_DONE) {
+	std::cout << "Don't Insert" << std::endl;
+  }
+}
+
+void InternalDB::InsertChunk(const Chunks& chunks) {
+  if (!connect()) { return; }
+  std::string query = "INSERT INTO Chunks (id_file, chunk_size, rapid_hash, static_hash) VALUES (" + std::to_string(chunks.idFile) + ", " + std::to_string(chunks.chunkSize) + ", '" + chunks.rapidHash + "', '" +
+	  chunks.staticHash + "');";
+  insert(query);
+  close();
+}
+
+void InternalDB::InsertFile(const Files& file) {
+  if (!connect()) { return; }
+  std::string query = "INSERT INTO Files (file_name, file_extention, file_size, file_path, count_chunks, version, is_download, update_date, create_date) VALUES ('" + file.file_name + "', '" + file.file_extention + "', " + std::to_string(file.file_size) + ", '" +
+	  file.file_path + "', " + std::to_string(file.count_chunks) + ", " + std::to_string(file.version) + ", " + std::to_string(file.is_download) + ", '" +
+	  file.update_date + "', '" + file.create_date + "');";
+  insert(query);
   close();
 }
 
 void InternalDB::SelectChunk() {
-  if (connect()) { return; }
+  if (!connect()) { return; }
   close();
 }
 
 void InternalDB::UpdateChunk() {
-  if (connect()) { return; }
+  if (!connect()) { return; }
   close();
 }
 
-void InternalDB::close() { }
+void InternalDB::close() {
+  sqlite3_shutdown();
+}
 
-bool InternalDB::dbExist() {
-  return true;
+
+int InternalDB::selectId(const std::string& query) {
+  int id = -1;
+  auto pStmt = _stmt.get();
+  sqlite3_prepare_v2(_database.get(), query.c_str(), query.size(), &pStmt, nullptr);
+  _stmt.reset(pStmt);
+  while(sqlite3_step(_stmt.get()) == SQLITE_ROW) {
+	id = sqlite3_column_int(_stmt.get(), 0);
+  }
+  return  id;
 }
 
 int InternalDB::selectDeviceId() {
-  if (connect()) { return -1; }
-  close();
-  return 1;
+  std::string query = "SELECT device_id FROM User;";
+  int id = selectId(query);
+  std::cout << id << std::endl;
+  return id;
 }
 
 int InternalDB::selectUserId() {
-  if (connect()) { return -1; }
-  close();
-  return 1;
+  std::string query = "SELECT user_id FROM User;";
+  int id = selectId(query);
+  std::cout << id << std::endl;
+  return id;
 }
 
 std::string InternalDB::selectFolder() {
-  if (connect()) { return ""; }
-  close();
-  return "path";
+  std::string query = "SELECT sync_folder FROM User;";
+  auto pStmt = _stmt.get();
+  sqlite3_prepare_v2(_database.get(), query.c_str(), query.size(), &pStmt, nullptr);
+  _stmt.reset(pStmt);
+  std::string folder = "";
+  while(sqlite3_step(_stmt.get()) == SQLITE_ROW) {
+	folder = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 0));
+  }
+  std::cout << folder << std::endl;
+  return folder;
 }

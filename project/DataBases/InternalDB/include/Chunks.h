@@ -1,8 +1,10 @@
-//
-// Created by Ivan Gorshkov on 26.11.2020.
-//
+#pragma once
+#include <string>
 
-#ifndef YSNP_CLOUD_PROJECT_DATABASES_INTERNALDB_INCLUDE_CHUNKS_H_
-#define YSNP_CLOUD_PROJECT_DATABASES_INTERNALDB_INCLUDE_CHUNKS_H_
-
-#endif //YSNP_CLOUD_PROJECT_DATABASES_INTERNALDB_INCLUDE_CHUNKS_H_
+struct Chunks {
+  size_t id;
+  size_t idFile;
+  size_t chunkSize;
+  std::string rapidHash;
+  std::string staticHash;
+};

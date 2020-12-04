@@ -1,8 +1,12 @@
-//
-// Created by Ivan Gorshkov on 26.11.2020.
-//
+#pragma once
+#include <string>
 
-#ifndef YSNP_CLOUD_PROJECT_DATABASES_INTERNALDB_INCLUDE_USER_H_
-#define YSNP_CLOUD_PROJECT_DATABASES_INTERNALDB_INCLUDE_USER_H_
-
-#endif //YSNP_CLOUD_PROJECT_DATABASES_INTERNALDB_INCLUDE_USER_H_
+struct User {
+	size_t userId;
+	std::string login;
+	std::string password;
+	size_t deviceId;
+	std::string deviceName;
+	std::string syncFolder;
+	std::string lastUpdate;
+};

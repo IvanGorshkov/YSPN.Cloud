@@ -7,6 +7,11 @@ PROJECT(UtilsTests)
 SET(CMAKE_CXX_STANDARD 17)
 
 INCLUDE_DIRECTORIES(include)
+
+if(COMMAND cmake_policy)
+    cmake_policy(SET CMP0003 NEW)
+endif(COMMAND cmake_policy)
+
 ADD_EXECUTABLE(${PROJECT_NAME}
         src/main.cpp
         src/test_internaldb.cpp
