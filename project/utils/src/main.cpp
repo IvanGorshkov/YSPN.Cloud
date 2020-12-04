@@ -20,10 +20,9 @@ int main() {
   pt::write_json("ok.json", jsonOK);
 
 
-  std::vector<std::pair<int, std::string>> err;
-  err.reserve(2);
+  std::map<int, std::string> err;
   for (int i = 0; i < 2; ++i) {
-    err.emplace_back(std::rand() % 100, "Ny tyt error");
+    err.emplace(std::rand() % 100, "Ny tyt error");
   }
   auto sendERROR = SerializerAnswer(1, err);
   auto jsonERROR = sendERROR.GetJson();

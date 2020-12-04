@@ -6,7 +6,7 @@ SerializerAnswer::SerializerAnswer(int id)
   BOOST_LOG_TRIVIAL(debug) << "SerializerAnswer: create serializer answer with OK status";
 }
 
-SerializerAnswer::SerializerAnswer(int id, std::vector<std::pair<int, std::string>> errs)
+SerializerAnswer::SerializerAnswer(int id, std::map<int, std::string> errs)
     : _status(StatusError(id, std::move(errs))) {
   BOOST_LOG_TRIVIAL(debug) << "SerializerAnswer: create serializer answer with ERROR status";
 }
@@ -76,12 +76,12 @@ void SerializerAnswer::deserialize() {
 
     } else {
       auto id = _json.get<int>("requestId");
-      std::vector<std::pair<int, std::string>> errs;
+      std::map<int, std::string> errs;
 
       for (auto &val : _json.get_child("errors")) {
         auto erId = val.second.get<int>("id");
         auto erMsg = val.second.get<std::string>("msg");
-        errs.emplace_back(erId, erMsg);
+        errs.emplace(erId, erMsg);
       }
 
       _status = StatusError(id, errs);
