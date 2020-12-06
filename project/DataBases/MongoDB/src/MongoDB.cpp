@@ -1,6 +1,5 @@
 #include "MongoDB.h"
 #include <bsoncxx/types.hpp>
-#include <boost/lexical_cast.hpp>
 #include <iterator>
 
 MongoDB::MongoDB() : _client(_uri) {
