@@ -1,19 +1,39 @@
 #pragma once
 
 #include <string>
+#include <vector>
+#include "Chunks.h"
+#include <chrono>
+#include <iostream>
+#include <bsoncxx/builder/stream/document.hpp>
+#include <bsoncxx/types.hpp>
+#include <bsoncxx/json.hpp>
+#include <mongocxx/client.hpp>
+#include <mongocxx/instance.hpp>
+#include <mongocxx/uri.hpp>
 
+using bsoncxx::builder::stream::document;
+using bsoncxx::builder::stream::open_document;
+using bsoncxx::builder::stream::close_document;
+using bsoncxx::builder::stream::open_array;
+using bsoncxx::builder::stream::close_array;
+using bsoncxx::builder::stream::finalize;
 class MongoDB {
  public:
-  MongoDB();
+  static MongoDB& shared();
   ~MongoDB();
-  void InsertChunk();
+  void InsertChunk(std::vector<Chunks> chunks);
   void GetChunk();
  private:
-  //mongocxx::instance _instance{};
-  //mongocxx::database _database;
-  //mongocxx::uri _uri;
-  //mongocxx::client _client;
-  virtual void parseJSON();
+  MongoDB();
+  MongoDB(const MongoDB& mongo_db) = delete;
+  MongoDB& operator=(const MongoDB& mongo_db) = delete;
+
+  mongocxx::instance _instance{};
+  mongocxx::database _database;
+  mongocxx::uri _uri{};
+  mongocxx::client _client;
+
   void connect();
   void close();
   void createDB();
