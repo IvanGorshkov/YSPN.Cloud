@@ -4,16 +4,21 @@
 
 int main(int, char**)
 {
-  Chunks chunks;
-  chunks.chunkSize = 23;
-  chunks.idFile =1;
-  chunks.rapidHash = "JR7udj)Hdjj@f;d";
-  chunks.staticHash =  "JR7udjJR7udjJR7udjJR7udj";
-  chunks.id = 9;
-  std::vector<Chunks> hhh;
+  Chunk chunks;
+  chunks.chunkId =1;
+  chunks.rHash = "JR7udj)Hdjj@f;d";
+  chunks.sHash =  "JR7udjJR7udjJR7udjJR7udj";
+  chunks.userId = 9;
+  chunks.data = "9asdasd";
+  std::vector<Chunk> hhh;
   hhh.push_back(chunks);
   auto& mongo_db = MongoDB::shared();
   mongo_db.InsertChunk(hhh);
-  mongo_db.GetChunk();
+  UserChunk chunk;
+  chunk.chunkId =1;
+  chunk.userId=9;
+  std::vector<UserChunk> hhhs;
+  hhhs.push_back(chunk);
+  mongo_db.GetChunk(hhhs);
 
 }

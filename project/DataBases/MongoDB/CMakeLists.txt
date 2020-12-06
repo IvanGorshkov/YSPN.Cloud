@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 11)
 project(Test)
 
 include_directories(include)
+include_directories(../../utils/include)
 option(${PROJECT_NAME}_SUPERBUILD "Build ${PROJECT_NAME} and the projects it depends on." ON)
 
 if(${PROJECT_NAME}_SUPERBUILD)
