@@ -25,8 +25,8 @@ class MongoDB {
  public:
   static MongoDB& shared();
   ~MongoDB();
-  void InsertChunk(const std::vector<Chunk>& chunks);
-  const std::vector<Chunk> GetChunk(const std::vector<UserChunk>& userChunks) const;
+  void InsertChunk(const std::vector<Chunk>& chunks) const;
+  std::vector<Chunk> GetChunk(const std::vector<UserChunk>& userChunks) const;
  private:
   MongoDB();
   MongoDB(const MongoDB& mongo_db) = delete;
@@ -36,8 +36,4 @@ class MongoDB {
   mongocxx::database _database;
   mongocxx::uri _uri{};
   mongocxx::client _client;
-
-  void connect();
-  void close();
-  void createDB();
 };

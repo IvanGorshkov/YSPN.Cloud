@@ -5,7 +5,11 @@ set(CMAKE_CXX_STANDARD 11)
 project(Test)
 
 include_directories(include)
-include_directories(../../utils/include)
+include_directories(../../utils/include
+        )
+FIND_PACKAGE(Boost COMPONENTS log REQUIRED)
+INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
+
 option(${PROJECT_NAME}_SUPERBUILD "Build ${PROJECT_NAME} and the projects it depends on." ON)
 
 if(${PROJECT_NAME}_SUPERBUILD)
@@ -100,6 +104,6 @@ message(STATUS "Configuring inner-build")
 
 find_package(libmongocxx REQUIRED)
 add_executable(test_mongocxx src/main.cpp src/MongoDB.cpp)
-target_link_libraries(test_mongocxx PUBLIC ${LIBMONGOCXX_LIBRARIES})
+target_link_libraries(test_mongocxx PUBLIC ${LIBMONGOCXX_LIBRARIES} ${Boost_LIBRARIES})
 target_include_directories(test_mongocxx PUBLIC ${LIBMONGOCXX_INCLUDE_DIRS})
 target_compile_definitions(test_mongocxx PUBLIC ${LIBMONGOCXX_DEFINITIONS})
