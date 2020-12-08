@@ -1,6 +1,7 @@
 #include "MongoDB.h"
 #include <memory>
 #include <boost/log/trivial.hpp>
+#include "MongoExceptions.h"
 
 MongoDB::MongoDB() : _client(_uri) {
   _database = _client["cloud"];
@@ -19,6 +20,14 @@ void MongoDB::InsertChunk(const std::vector<Chunk>& chunks) const {
   std::vector<bsoncxx::document::value> inChunks;
 
   for (const auto &chunk : chunks) {
+	bsoncxx::stdx::optional<bsoncxx::document::value> cursor =
+		_database["chunks"].find_one(
+			document{} << "id_user" << chunk.userId
+					   << "id_chunk" << chunk.chunkId << finalize
+		);
+	if (cursor) {
+	  throw MongoExceptions("This user = " + std::to_string(chunk.userId) + " and this chunk id = " + std::to_string(chunk.chunkId) + "is already exist");
+	}
 	bsoncxx::types::b_binary b_binary{bsoncxx::binary_sub_type::k_binary, uint32_t(chunk.data.size()),
 									  (uint8_t *) chunk.data.data()};
 	inChunks.push_back(
@@ -50,12 +59,14 @@ std::vector<Chunk> MongoDB::GetChunk(const std::vector<UserChunk>& userChunks) c
 	  chunk.sHash = view["static_hash"].get_utf8().value.to_string();
 	  chunk.rHash = view["rapid_hash"].get_utf8().value.to_string();
 	  const unsigned char* data = view["data"].get_binary().bytes;
-	  std::vector<uint8_t> myVector;
-	  myVector.reserve(view["data"].get_binary().size);
-	  std::copy(data, data + view["data"].get_binary().size, std::back_inserter(myVector));
-	  std::string str(myVector.begin(), myVector.end());
+	  std::vector<uint8_t> dataVector;
+	  dataVector.reserve(view["data"].get_binary().size);
+	  std::copy(data, data + view["data"].get_binary().size, std::back_inserter(dataVector));
+	  std::string str(dataVector.begin(), dataVector.end());
 	  chunk.data = str;
 	  users.push_back(chunk);
+	} else {
+	  throw MongoExceptions("This user = " + std::to_string(userChunk.userId) + " and this chunk id = " + std::to_string(userChunk.chunkId) + "is already exist");
 	}
   }
   return users;
