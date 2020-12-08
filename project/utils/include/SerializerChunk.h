@@ -1,10 +1,10 @@
 #pragma once
 
-#include "SerializerInterface.h"
-#include "SerializerExceptions.h"
 #include <boost/property_tree/ptree.hpp>
 #include <string>
 #include <vector>
+#include "SerializerInterface.h"
+#include "SerializerExceptions.h"
 
 namespace pt = boost::property_tree;
 
@@ -28,9 +28,10 @@ struct Chunk {
 class SerializerChunk : public SerializerInterface {
  public:
   SerializerChunk() = default;
-  explicit SerializerChunk(std::vector<Chunk> val);
+  explicit SerializerChunk(int requestId, std::vector<Chunk> val);
   explicit SerializerChunk(const pt::ptree &val);
 
+  int GetRequestId() const;
   std::vector<Chunk> GetChunk() noexcept(false);
   pt::ptree GetJson();
 
@@ -39,6 +40,7 @@ class SerializerChunk : public SerializerInterface {
   void deserialize() override;
 
  private:
+  int _requestId{};
   std::vector<Chunk> _chunkVector;
-  pt::ptree _json;
+  pt::ptree _json{};
 };
