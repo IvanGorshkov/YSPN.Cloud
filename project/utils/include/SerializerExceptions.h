@@ -4,9 +4,9 @@
 #include <string>
 #include <utility>
 
-class SerializerParseException : public std::exception {
+class SerializerExceptions : public std::exception {
  public:
-  explicit SerializerParseException(std::string msg)
+  explicit SerializerExceptions(std::string msg)
       : _msg(std::move(msg)) {
   }
 
@@ -16,4 +16,11 @@ class SerializerParseException : public std::exception {
 
  private:
   std::string _msg;
+};
+
+class ParseException : public SerializerExceptions {
+ public:
+  explicit ParseException(std::string msg)
+      : SerializerExceptions("ParseException: " + std::move(msg)) {
+  }
 };

@@ -20,18 +20,16 @@ int main() {
   pt::write_json("ok.json", jsonOK);
 
 
-  std::map<int, std::string> err;
-  for (int i = 0; i < 2; ++i) {
-    err.emplace(std::rand() % 100, "Ny tyt error");
-  }
-  auto sendERROR = SerializerAnswer(1, err);
+//  std::map<int, std::string> err;
+//  for (int i = 0; i < 2; ++i) {
+//    err.emplace(std::rand() % 100, "Ny tyt error");
+//  }
+  auto sendERROR = SerializerAnswer(1, "Error in chunks");
   auto jsonERROR = sendERROR.GetJson();
 
   pt::write_json("error.json", jsonERROR);
 
-
   std::cout << std::endl;
-
 
   pt::ptree rootOK;
   pt::read_json("ok.json", rootOK);

@@ -1,8 +1,9 @@
 #include "SerializerChunk.h"
 #include <boost/log/trivial.hpp>
 
-SerializerChunk::SerializerChunk(std::vector<Chunk> val)
-    : _chunkVector(std::move(val)) {
+SerializerChunk::SerializerChunk(int requestId, std::vector<Chunk> val)
+    : _requestId(requestId),
+      _chunkVector(std::move(val)) {
   BOOST_LOG_TRIVIAL(debug) << "SerializerChunk: create serializer chunk from vector";
 }
 
@@ -11,13 +12,17 @@ SerializerChunk::SerializerChunk(const pt::ptree &val)
   BOOST_LOG_TRIVIAL(debug) << "SerializerChunk: create serializer chunk from json";
 }
 
+int SerializerChunk::GetRequestId() const {
+  BOOST_LOG_TRIVIAL(debug) << "SerializerChunk: GetRequestId";
+  return _requestId;
+}
+
 std::vector<Chunk> SerializerChunk::GetChunk() {
   BOOST_LOG_TRIVIAL(debug) << "SerializerChunk: GetChunk";
   if (_chunkVector.empty()) {
     deserialize();
   }
 
-  BOOST_LOG_TRIVIAL(debug) << "SerializerChunk: return chunk vector";
   return std::move(_chunkVector);
 }
 
@@ -27,14 +32,14 @@ pt::ptree SerializerChunk::GetJson() {
     serialize();
   }
 
-  BOOST_LOG_TRIVIAL(debug) << "SerializerChunk: return json";
   return _json;
 }
 
 void SerializerChunk::serialize() {
-  BOOST_LOG_TRIVIAL(debug) << "SerializerChunk: serialize start";
+  BOOST_LOG_TRIVIAL(debug) << "SerializerChunk: serialize";
 
   _json.put("command", "UploadChunk");
+  _json.put("requestId", _requestId);
   pt::ptree data;
   for (auto &el : _chunkVector) {
     pt::ptree child;
@@ -48,12 +53,13 @@ void SerializerChunk::serialize() {
   }
 
   _json.add_child("data", data);
-  BOOST_LOG_TRIVIAL(debug) << "SerializerChunk: serialize stop";
 }
 
 void SerializerChunk::deserialize() {
-  BOOST_LOG_TRIVIAL(debug) << "SerializerChunk: deserialize start";
+  BOOST_LOG_TRIVIAL(debug) << "SerializerChunk: deserialize";
+
   try {
+    _requestId = _json.get<int>("requestId");
     for (auto &val : _json.get_child("data")) {
       _chunkVector.emplace_back(val.second.get<int>("userId"),
                                 val.second.get<int>("chunkId"),
@@ -63,10 +69,7 @@ void SerializerChunk::deserialize() {
 
     }
   } catch (pt::ptree_error &er) {
-    BOOST_LOG_TRIVIAL(error) << "SerializerChunk: " << er.what();
     _chunkVector.clear();
-    throw SerializerParseException(er.what());
+    throw ParseException(er.what());
   }
-
-  BOOST_LOG_TRIVIAL(debug) << "SerializerChunk: deserialize stop";
 }

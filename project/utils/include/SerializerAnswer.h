@@ -1,12 +1,12 @@
 #pragma once
 
-#include "SerializerInterface.h"
-#include "SerializerExceptions.h"
 #include <boost/property_tree/ptree.hpp>
 #include <string>
 #include <vector>
 #include <variant>
 #include <map>
+#include "SerializerInterface.h"
+#include "SerializerExceptions.h"
 
 template<class... Ts>
 struct overloaded : Ts ... {
@@ -15,7 +15,7 @@ struct overloaded : Ts ... {
 template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
 struct StatusOk {
-  StatusOk() = default;
+  explicit StatusOk() = default;
   explicit StatusOk(int id)
       : requestId(id) {
   }
@@ -25,14 +25,19 @@ struct StatusOk {
 
 struct StatusError {
   StatusError() = default;
-  StatusError(int id, std::map<int, std::string> errs)
+  StatusError(int id, std::string msg)
       : requestId(id),
+        msg(std::move(msg)) {
+  }
+  StatusError(int id, std::string msg, std::map<int, std::string> errs)
+      : requestId(id),
+        msg(std::move(msg)),
         errs(std::move(errs)) {
   }
 
   int requestId{};
+  std::string msg;
   std::map<int, std::string> errs;
-//  std::vector<std::pair<int, std::string>> errs;
 };
 
 namespace pt = boost::property_tree;
@@ -40,7 +45,8 @@ namespace pt = boost::property_tree;
 class SerializerAnswer : public SerializerInterface {
  public:
   explicit SerializerAnswer(int id);
-  explicit SerializerAnswer(int id, std::map<int, std::string> errs);
+  explicit SerializerAnswer(int id, std::string msg);
+  explicit SerializerAnswer(int id, std::string msg, std::map<int, std::string> errs);
   explicit SerializerAnswer(const pt::ptree &json);
 
   std::variant<StatusOk, StatusError> GetStatus() noexcept(false);
