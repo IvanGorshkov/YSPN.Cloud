@@ -1,22 +1,16 @@
 #pragma once
 
 #include <string>
+#include <libpq-fe.h>
 
-class PostgreSQLDB {
+class PostgresSQLDB {
  public:
-  PostgreSQLDB();
-  virtual ~PostgreSQLDB() = default;
+  virtual ~PostgresSQLDB();
+  void Connect();
  protected:
-  int _port;
-  virtual void createDB() = 0;
-  std::string _user;
-  std::string _databaseName;
-  std::string _password;
-  std::string _ip;
-  void *_database;
-  bool dbExist();
-  virtual bool connect();
-  void close();
+  explicit PostgresSQLDB(std::string_view info);
+  PGconn *_conn{};
+  std::string _connInfo;
  private:
-  void parseJSON();
+  void close();
 };

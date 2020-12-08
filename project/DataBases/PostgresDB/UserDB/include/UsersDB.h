@@ -1,15 +1,16 @@
 #pragma once
 
 #include "PostgreSQLDB.h"
-
-class UsersDB: public PostgreSQLDB {
+/*
+class UsersDB: public PostgresSQLDB {
  protected:
-  void createDB() override;
 public:
-  UsersDB();
   ~UsersDB();
   void Login();
   void Registration();
   void CheckLogin();
   void ChangePassword();
+ private:
+  UsersDB();
 };
+*/

@@ -1,18 +1,19 @@
 #include "PostgreSQLDB.h"
-
-void PostgreSQLDB::close() {
+#include "PostgresExceptions.h"
+void PostgresSQLDB::close() {
+  PQfinish(_conn);
 }
 
-void PostgreSQLDB::parseJSON() {
+void PostgresSQLDB::Connect() {
+  _conn = PQconnectdb(_connInfo.c_str());
+  if (PQstatus(_conn) == CONNECTION_BAD) {
+    close();
+    throw PostgresExceptions("invalid to connect to DB");
+  }
 }
 
-bool PostgreSQLDB::dbExist() {
-	return false;
+PostgresSQLDB::~PostgresSQLDB() {
+  close();
 }
 
-bool PostgreSQLDB::connect() {
-	return true;
-}
-
-PostgreSQLDB::PostgreSQLDB() {
-}
+PostgresSQLDB::PostgresSQLDB(std::string_view info): _connInfo(info) { }
