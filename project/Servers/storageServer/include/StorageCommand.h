@@ -3,6 +3,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include "Command.h"
 #include "MongoDB.h"
+#include "MongoExceptions.h"
 #include "SerializerAnswer.h"
 #include "SerializerChunk.h"
 #include "SerializerUserChunk.h"

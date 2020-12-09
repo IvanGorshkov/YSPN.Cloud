@@ -9,7 +9,7 @@ INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 
 FIND_LIBRARY(Utils-dev REQUIRED)
 FIND_LIBRARY(Server-dev REQUIRED)
-FIND_LIBRARY(Mongo-dev REQUIRED)
+FIND_LIBRARY(MongoDB-dev REQUIRED)
 
 INCLUDE_DIRECTORIES(../server/include)
 INCLUDE_DIRECTORIES(../../utils/include)
@@ -25,7 +25,7 @@ ADD_EXECUTABLE(${PROJECT_NAME}
         src/StorageManager.cpp
         src/StorageServer.cpp
         )
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${Boost_LIBRARIES} Utils-dev Server-dev Mongo-dev)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${Boost_LIBRARIES} Utils-dev Server-dev MongoDB-dev)
 
 #ADD_EXECUTABLE(${PROJECT_NAME}-test
 #        src/main_test.cpp)
