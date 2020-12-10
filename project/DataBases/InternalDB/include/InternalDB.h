@@ -31,7 +31,7 @@ class InternalDB {
   void UpdateSyncFolder(const std::string& newFolder);
   void UpdatePassword(const std::string& newPassword);
   std::string SelectUserPassword();
-  void  InsertFile(std::vector<Files> files);
+  void  InsertFile(const std::vector<Files>& files);
   Files SelectFile(size_t idFile);
   void UpdateFile();
   void InsertChunk(const Chunks& chunks);
@@ -60,4 +60,5 @@ class InternalDB {
   static int callbackFile(void* data, int argc, char** argv, char** azColName);
   void insert(const std::string& query);
   std::string selectLastUpdate();
+  std::string selectStr(const std::string& query);
 };
