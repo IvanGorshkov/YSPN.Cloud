@@ -3,6 +3,7 @@
 //
 #include <iostream>
 #include "InternalDB.h"
+#include <vector>
 
 int main() {
   InternalDB myDB("myDB.sqlite");
@@ -19,7 +20,9 @@ int main() {
   f.count_chunks = 0;
   f.file_path = "fuck";
   f.file_size = 232;
-  myDB.InsertFile(f);
+  std::vector<Files> files;
+  files.push_back(f);
+  myDB.InsertFile(files);
   myDB.SelectFile(2);
   Chunks c;
   c.idFile = 1;

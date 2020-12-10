@@ -31,7 +31,7 @@ class InternalDB {
   void UpdateSyncFolder(const std::string& newFolder);
   void UpdatePassword(const std::string& newPassword);
   std::string SelectUserPassword();
-  void InsertFile(const Files& file);
+  void  InsertFile(std::vector<Files> files);
   Files SelectFile(size_t idFile);
   void UpdateFile();
   void InsertChunk(const Chunks& chunks);
