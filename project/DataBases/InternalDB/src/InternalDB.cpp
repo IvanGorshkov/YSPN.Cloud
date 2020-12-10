@@ -58,8 +58,8 @@ std::string InternalDB::GetSyncFolder() const {
 }
 
 void InternalDB::InsertUser(const User& user) {
-  if (connect()) { return; }
-  std::string query = "INSERT INTO Chunks (user_id, login, password, device_id, device_name, sync_folder, last_update) VALUES ("
+  if (!connect()) { return; }
+  std::string query = "INSERT INTO User (user_id, login, password, device_id, device_name, sync_folder, last_update) VALUES ("
   	+ std::to_string(user.userId)
   	+ ", '" + user.login
   	+ "', '" + user.password
@@ -68,7 +68,6 @@ void InternalDB::InsertUser(const User& user) {
   	+ "', '" + user.syncFolder
   	+ "', '" + user.lastUpdate
   	+ "');";
-
   insert(query);
 
   close();
@@ -96,7 +95,6 @@ bool InternalDB::ExistUser() {
   while(sqlite3_step(_stmt.get()) == SQLITE_ROW) {
 	count = sqlite3_column_int(_stmt.get(), 0);
   }
-  std::cout << count << std::endl;
   close();
   return count != 0;
 }
@@ -183,7 +181,6 @@ Files InternalDB::SelectFile(size_t idFile) {
   if (!connect()) { return file; }
   std::string query = "SELECT * FROM Files Where id = " + std::to_string(idFile) + ";";
   sqlite3_exec(_database.get(), query.c_str(), callbackFile, &file, nullptr);
-  std::cout << file.file_name;
   close();
   return file;
 }
@@ -213,7 +210,7 @@ void InternalDB::InsertChunk(const Chunks& chunks) {
 void InternalDB::InsertFile(const Files& file) {
   if (!connect()) { return; }
   std::string query = "INSERT INTO Files (file_name, file_extention, file_size, file_path, count_chunks, version, is_download, update_date, create_date) VALUES ('" + file.file_name + "', '" + file.file_extention + "', " + std::to_string(file.file_size) + ", '" +
-	  file.file_path + "', " + std::to_string(file.count_chunks) + ", " + std::to_string(file.version) + ", " + ", '" +
+	  file.file_path + "', " + std::to_string(file.count_chunks) + ", " + std::to_string(file.version) + ", " + std::to_string(file.is_download) + ", '" +
 	  file.update_date + "', '" + file.create_date + "');";
   insert(query);
   close();
@@ -248,14 +245,12 @@ int InternalDB::selectId(const std::string& query) {
 int InternalDB::selectDeviceId() {
   std::string query = "SELECT device_id FROM User;";
   int id = selectId(query);
-  std::cout << id << std::endl;
   return id;
 }
 
 int InternalDB::selectUserId() {
   std::string query = "SELECT user_id FROM User;";
   int id = selectId(query);
-  std::cout << id << std::endl;
   return id;
 }
 
@@ -268,7 +263,6 @@ std::string InternalDB::selectFolder() {
   while(sqlite3_step(_stmt.get()) == SQLITE_ROW) {
 	folder = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 0));
   }
-  std::cout << folder << std::endl;
   return folder;
 }
 
@@ -285,8 +279,7 @@ std::string InternalDB::selectLastUpdate() {
 }
 
 std::string InternalDB::GetLastUpdate() {
-  //_lastTMPUpdate = boost::posix_time::second_clock::universal_time();
-
+  _lastTMPUpdate = boost::posix_time::second_clock::universal_time();
   return _lastUpdate;
 }
 

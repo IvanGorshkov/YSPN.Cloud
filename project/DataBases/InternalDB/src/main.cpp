@@ -4,8 +4,7 @@
 #include <iostream>
 #include "InternalDB.h"
 
-int main(int argc, const char** argv) {
-  std::cout << argc << argv << std::endl;
+int main() {
   InternalDB myDB("myDB.sqlite");
   myDB.ExistUser();
   //myDB.DeleteUser(233);
@@ -29,7 +28,18 @@ int main(int argc, const char** argv) {
   c.rapidHash = "asd";
   c.staticHash = "adsd";
   myDB.InsertChunk(c);
-  std::cout << myDB.SelectUserPassword() << std::endl;
+  User u;
+  u.userId = 1;
+  u.lastUpdate = "popusk";
+  u.syncFolder = "popusk";
+  u.deviceName = "popusk";
+  u.deviceId = 3;
+  u.password = "3";
+  u.login = "3";
+  //myDB.InsertUser(u);
 
+  std::cout << myDB.GetLastUpdate() << std::endl;
+  myDB.SaveLastUpdate();
+  std::cout << myDB.GetLastUpdate() << std::endl;
   return 0;
 }

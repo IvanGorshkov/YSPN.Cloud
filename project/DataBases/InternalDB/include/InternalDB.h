@@ -45,7 +45,7 @@ class InternalDB {
   int _deviceId;
   std::string _syncFolder;
   std::string _lastUpdate;
-  std::string _lastTMPUpdate;
+  boost::posix_time::ptime _lastTMPUpdate;
   std::unique_ptr<sqlite3, sqlite3_deleter> _database;
   std::unique_ptr<sqlite3_stmt, sqlite3_stmt_deleter> _stmt;
   std::string _databaseName;
