@@ -5,6 +5,7 @@
 #include "InternalDB.h"
 
 int main(int argc, const char** argv) {
+  std::cout << argc << argv << std::endl;
   InternalDB myDB("myDB.sqlite");
   myDB.ExistUser();
   //myDB.DeleteUser(233);

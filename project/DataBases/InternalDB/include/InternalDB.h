@@ -2,6 +2,7 @@
 #include <string>
 #include <sqlite3.h>
 #include <memory>
+#include <boost/date_time.hpp>
 #include "Chunks.h"
 #include "User.h"
 #include "Files.h"
@@ -20,11 +21,11 @@ struct sqlite3_stmt_deleter {
 
 class InternalDB {
  public:
-  explicit InternalDB(const std::string& databaseName);
+  explicit InternalDB(std::string  databaseName);
   int GetUserId() const;
   int GetDeviceId() const;
   std::string GetSyncFolder() const;
-  void InsertUser();
+  void InsertUser(const User& user);
   void DeleteUser(size_t id);
   bool ExistUser();
   void UpdateSyncFolder(const std::string& newFolder);
@@ -36,11 +37,15 @@ class InternalDB {
   void InsertChunk(const Chunks& chunks);
   void SelectChunk();
   void UpdateChunk();
+  std::string GetLastUpdate();
+  void SaveLastUpdate();
 
  private:
   int _userId;
   int _deviceId;
   std::string _syncFolder;
+  std::string _lastUpdate;
+  std::string _lastTMPUpdate;
   std::unique_ptr<sqlite3, sqlite3_deleter> _database;
   std::unique_ptr<sqlite3_stmt, sqlite3_stmt_deleter> _stmt;
   std::string _databaseName;
@@ -54,4 +59,5 @@ class InternalDB {
   virtual void close();
   static int callbackFile(void* data, int argc, char** argv, char** azColName);
   void insert(const std::string& query);
+  std::string selectLastUpdate();
 };

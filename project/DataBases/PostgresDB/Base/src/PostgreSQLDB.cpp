@@ -7,7 +7,6 @@ void PostgresSQLDB::close() {
 void PostgresSQLDB::Connect() {
   _conn = PQconnectdb(_connInfo.c_str());
   if (PQstatus(_conn) == CONNECTION_BAD) {
-    close();
     throw PostgresExceptions("invalid to connect to DB");
   }
 }

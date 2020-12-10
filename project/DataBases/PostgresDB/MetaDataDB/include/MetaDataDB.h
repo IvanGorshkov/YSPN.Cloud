@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PostgreSQLDB.h"
+#include "FileMeta.h"
 
 class MetaDataDB: public PostgresSQLDB{
  protected:
@@ -8,12 +9,12 @@ class MetaDataDB: public PostgresSQLDB{
   MetaDataDB(std::string_view info);
   static MetaDataDB& shared(std::string_view info);
   ~MetaDataDB();
-  void InsertFile();
+  void InsertFile(const FileMeta& fileMeta) const;
   void InsertChunk();
   void InsertFileChunk();
   void SelectFile();
   void SelectChunk();
-  void SelectFileChunk();
+  void SelectFileChunkVersion();
   void SelectFilesByUser();
  private:
 

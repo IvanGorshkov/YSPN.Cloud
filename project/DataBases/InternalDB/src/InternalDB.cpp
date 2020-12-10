@@ -2,13 +2,15 @@
 #include "SQLiteQuery.h"
 #include <iostream>
 #include <boost/lexical_cast.hpp>
+#include <utility>
 
-InternalDB::InternalDB(const std::string& databaseName): _databaseName(databaseName) {
+InternalDB::InternalDB(std::string  databaseName): _databaseName(std::move(databaseName)) {
   if (connect()) {
     creatTable();
 	_userId = selectUserId();
 	_deviceId = selectDeviceId();
 	_syncFolder = selectFolder();
+	_lastUpdate = selectLastUpdate();
 	close();
   }
 }
@@ -55,8 +57,20 @@ std::string InternalDB::GetSyncFolder() const {
   return _syncFolder;
 }
 
-void InternalDB::InsertUser() {
+void InternalDB::InsertUser(const User& user) {
   if (connect()) { return; }
+  std::string query = "INSERT INTO Chunks (user_id, login, password, device_id, device_name, sync_folder, last_update) VALUES ("
+  	+ std::to_string(user.userId)
+  	+ ", '" + user.login
+  	+ "', '" + user.password
+  	+"', " + std::to_string(user.deviceId)
+  	+ ", '" + user.deviceName
+  	+ "', '" + user.syncFolder
+  	+ "', '" + user.lastUpdate
+  	+ "');";
+
+  insert(query);
+
   close();
 }
 
@@ -132,6 +146,9 @@ int InternalDB::callbackFile(void* data, int argc, char** argv, char** azColName
   auto* file = (Files *)data;
   for (int i = 0; i < argc; i++) {
     std::string col(azColName[i]);
+	if (col == "id") {
+	  (*file).id = boost::lexical_cast<int>(argv[i]);
+	}
 	if (col == "file_name") {
 	  (*file).file_name = argv[i];
 	}
@@ -151,10 +168,10 @@ int InternalDB::callbackFile(void* data, int argc, char** argv, char** azColName
 	  (*file).is_download = argv[i];
 	}
 	if (col == "create_date") {
-	  (*file).is_download = argv[i];
+	  (*file).create_date = argv[i];
 	}
 	if (col == "update_date") {
-	  (*file).is_download = argv[i];
+	  (*file).update_date = argv[i];
 	}
   }
 
@@ -196,7 +213,7 @@ void InternalDB::InsertChunk(const Chunks& chunks) {
 void InternalDB::InsertFile(const Files& file) {
   if (!connect()) { return; }
   std::string query = "INSERT INTO Files (file_name, file_extention, file_size, file_path, count_chunks, version, is_download, update_date, create_date) VALUES ('" + file.file_name + "', '" + file.file_extention + "', " + std::to_string(file.file_size) + ", '" +
-	  file.file_path + "', " + std::to_string(file.count_chunks) + ", " + std::to_string(file.version) + ", " + std::to_string(file.is_download) + ", '" +
+	  file.file_path + "', " + std::to_string(file.count_chunks) + ", " + std::to_string(file.version) + ", " + ", '" +
 	  file.update_date + "', '" + file.create_date + "');";
   insert(query);
   close();
@@ -253,4 +270,30 @@ std::string InternalDB::selectFolder() {
   }
   std::cout << folder << std::endl;
   return folder;
+}
+
+std::string InternalDB::selectLastUpdate() {
+  std::string string;
+  auto pStmt = _stmt.get();
+  std::string query = "SELECT last_update FROM User;";
+  sqlite3_prepare_v2(_database.get(), query.c_str(), query.size(), &pStmt, nullptr);
+  _stmt.reset(pStmt);
+  while(sqlite3_step(_stmt.get()) == SQLITE_ROW) {
+	string =  boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 0));
+  }
+  return  string;
+}
+
+std::string InternalDB::GetLastUpdate() {
+  //_lastTMPUpdate = boost::posix_time::second_clock::universal_time();
+
+  return _lastUpdate;
+}
+
+void InternalDB::SaveLastUpdate() {
+  if (!connect()) { return; }
+  std::string query = "Update User set last_update = \"" + boost::lexical_cast<std::string>(_lastTMPUpdate) + "\" where user_id = " +  std::to_string(_userId) + ";";
+  update(query);
+  _lastUpdate = boost::lexical_cast<std::string>(_lastTMPUpdate);
+  close();
 }
