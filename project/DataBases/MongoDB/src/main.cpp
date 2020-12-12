@@ -5,10 +5,10 @@
 int main(int, char**)
 {
   Chunk chunks;
-  chunks.chunkId =1;
+  chunks.chunkId =45;
   chunks.rHash = "JR7udj)Hdjj@f;d";
   chunks.sHash =  "JR7udjJR7udjJR7udjJR7udj";
-  chunks.userId = 9;
+  chunks.userId = 45;
   chunks.data = "9asdasd";
   std::vector<Chunk> hhh;
   hhh.push_back(chunks);
