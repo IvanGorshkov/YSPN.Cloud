@@ -11,6 +11,6 @@ ADD_EXECUTABLE(${PROJECT_NAME}
         src/main.cpp
         src/tests_storage.cpp)
 
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} GTest::gtest ${CMAKE_THREAD_LIBS_INIT} SyncServer-dev)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} GTest::gtest ${CMAKE_THREAD_LIBS_INIT} Utils-dev)
 
 ADD_TEST(NAME Tests COMMAND ${PROJECT_NAME})
