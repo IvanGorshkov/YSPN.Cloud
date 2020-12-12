@@ -2,34 +2,33 @@
 #define _NETWORKSEVER_H
 
 #include <string>
-#include "Connection.h"
 #include "UserSession.h"
-#include <queue>
+#include "ClientNetwork.h"
 
 class NetworkSever {
 public:
-    std::string host;
 
-    Connection GetConnect();
+    explicit NetworkSever(short port = 5555);
 
-    void RunNetworkServer();
+    void StartServer();
 
-    void ConnectionLoop();
+    void GetResponseFromWorker(const std::shared_ptr<std::pair<std::shared_ptr<UserSession>, boost::property_tree::ptree> > &response);
 
-    void GetConnection();
+    std::shared_ptr<std::pair<std::shared_ptr<UserSession>, boost::property_tree::ptree> > SendRequestToWorker();
 
 private:
-    int _port;
-    Connection _network;
+    ClientNetwork _queue;
 
-    // boost::asio::ip::tcp::socket _socket;
-    boost::asio::ip _ip;
+    boost::asio::io_service _service;
 
-    std::queue<UserSession> _connections;
+    boost::asio::ip::tcp::acceptor _acceptor;
+
+    void onAccept(const std::shared_ptr<UserSession> &user, const boost::system::error_code &e);
 
     void startAccept();
 
-    void onAccept();
+    void run();
+
 };
 
 #endif //_NETWORKSEVER_H

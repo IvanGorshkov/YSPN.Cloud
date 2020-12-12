@@ -9,7 +9,7 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -Wpedantic")
 INCLUDE_DIRECTORIES(include)
 
 ADD_EXECUTABLE(networkTest
-        src/main.cpp)
+        src/main.cpp src/TestServer.cpp)
 
 TARGET_LINK_LIBRARIES(network)
 
