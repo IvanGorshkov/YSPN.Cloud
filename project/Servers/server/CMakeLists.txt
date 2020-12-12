@@ -7,11 +7,13 @@ INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 SET(CMAKE_CXX_STANDARD 17)
 #SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -Wpedantic")
 
-INCLUDE_DIRECTORIES(include)
-
-INCLUDE_DIRECTORIES(../../net)
 INCLUDE_DIRECTORIES(../../DataBases/MongoDB/include)
 INCLUDE_DIRECTORIES(../../utils/include)
+
+INCLUDE_DIRECTORIES(../../net)
+
+
+INCLUDE_DIRECTORIES(include)
 
 ADD_LIBRARY(${PROJECT_NAME}-dev
         src/Config.cpp
