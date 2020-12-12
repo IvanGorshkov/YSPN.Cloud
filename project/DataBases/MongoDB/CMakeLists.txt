@@ -12,8 +12,6 @@ include_directories(../../utils/include)
 option(${PROJECT_NAME}_SUPERBUILD "Build ${PROJECT_NAME} and the projects it depends on." ON)
 
 if(${PROJECT_NAME}_SUPERBUILD)
-
-    message(STATUS "I am here")
     include(ExternalProject)
 
     set(common_cmake_cache_args
@@ -113,3 +111,4 @@ add_library(MongoDB-dev src/MongoDB.cpp)
 target_link_libraries(MongoDB-dev PUBLIC ${LIBMONGOCXX_LIBRARIES} ${Boost_LIBRARIES})
 target_include_directories(MongoDB-dev PUBLIC ${LIBMONGOCXX_INCLUDE_DIRS})
 target_compile_definitions(MongoDB-dev PUBLIC ${LIBMONGOCXX_DEFINITIONS})
+

@@ -26,7 +26,11 @@ void MongoDB::InsertChunk(const std::vector<Chunk>& chunks) const {
 					   << "id_chunk" << chunk.chunkId << finalize
 		);
 	if (cursor) {
+<<<<<<< HEAD
 	  throw MongoExceptions("This user = " + std::to_string(chunk.userId) + " and this chunk id = " + std::to_string(chunk.chunkId) + " is already exist");
+=======
+	  throw MongoExceptions("This user = " + std::to_string(chunk.userId) + " and this chunk id = " + std::to_string(chunk.chunkId) + "is already exist");
+>>>>>>> origin/ivan_dev
 	}
 	bsoncxx::types::b_binary b_binary{bsoncxx::binary_sub_type::k_binary, uint32_t(chunk.data.size()),
 									  (uint8_t *) chunk.data.data()};
@@ -66,7 +70,11 @@ std::vector<Chunk> MongoDB::GetChunk(const std::vector<UserChunk>& userChunks) c
 	  chunk.data = str;
 	  users.push_back(chunk);
 	} else {
+<<<<<<< HEAD
 	  throw MongoExceptions("This user = " + std::to_string(userChunk.userId) + " and this chunk id = " + std::to_string(userChunk.chunkId) + " is not exist");
+=======
+	  throw MongoExceptions("This user = " + std::to_string(userChunk.userId) + " and this chunk id = " + std::to_string(userChunk.chunkId) + "is already exist");
+>>>>>>> origin/ivan_dev
 	}
   }
   return users;
