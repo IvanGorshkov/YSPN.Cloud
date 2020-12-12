@@ -1,0 +1,16 @@
+#FIND_PACKAGE(GTest REQUIRED)
+#FIND_PACKAGE(Threads REQUIRED)
+#INCLUDE_DIRECTORIES("${GTEST_INCLUDE_DIRS}")
+#
+#PROJECT(testsNetwork)
+#SET(CMAKE_CXX_STANDARD 17)
+#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -Wpedantic")
+#
+#INCLUDE_DIRECTORIES(include)
+#
+#ADD_EXECUTABLE(networkTest
+#        src/main.cpp src/TestServer.cpp)
+#
+#TARGET_LINK_LIBRARIES(network)
+#
+#ADD_TEST(NAME Test COMMAND networkTest)
