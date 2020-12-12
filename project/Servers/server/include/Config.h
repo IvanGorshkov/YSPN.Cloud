@@ -25,6 +25,7 @@ class Config {
   Config(const Config &);
   Config &operator=(const Config &);
 
+  static void parseLogConfig(pt::ptree &log);
   void parseStorageConfig(pt::ptree &storage);
   void parseNetworkConfig(pt::ptree &network);
 

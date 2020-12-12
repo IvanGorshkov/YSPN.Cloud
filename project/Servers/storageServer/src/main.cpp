@@ -1,6 +1,5 @@
 #include "StorageServer.h"
 #include "Config.h"
-#include "Log.h"
 #include <boost/program_options.hpp>
 #include <iostream>
 
@@ -15,12 +14,7 @@ int main(int argc, char **argv) {
   configDesc.add_options()
       ("input,i", po::value<std::string>(), "Config file");
 
-  po::options_description logDesc("Log options");
-  logDesc.add_options()
-      ("config,c", po::value<std::string>(), "System config {release, debug}")
-      ("output,o", po::value<std::string>(), "Output log file");
-
-  desc.add(configDesc).add(logDesc);
+  desc.add(configDesc);
 
   po::variables_map vm;
   po::store(po::command_line_parser(argc, argv).options(desc).allow_unregistered().run(), vm);
@@ -34,10 +28,6 @@ int main(int argc, char **argv) {
   if (!vm.count("input")) {
     std::cout << "Choice config file" << std::endl;
     return EXIT_FAILURE;
-  }
-
-  if (vm.count("config") && vm.count("output")) {
-    init_log(vm["output"].as<std::string>(), vm["config"].as<std::string>());
   }
 
   auto &config = Config::GetInstance();

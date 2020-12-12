@@ -1,5 +1,6 @@
 #pragma once
 
+#include "InternalDB.h"
 #include <string>
 
 class CommandInterface {
@@ -10,8 +11,11 @@ class CommandInterface {
 
 class RefreshCommand : public CommandInterface {
  public:
-  explicit RefreshCommand();
+  explicit RefreshCommand(const std::shared_ptr<InternalDB> &db);
   void Do() override;
+
+ private:
+  std::shared_ptr<InternalDB> _internalDB;
 };
 
 class DownloadFileCommand : public CommandInterface {

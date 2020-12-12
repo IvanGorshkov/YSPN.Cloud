@@ -8,38 +8,38 @@
 #include "Files.h"
 
 struct sqlite3_deleter {
-  void operator()(sqlite3* sql) {
-	sqlite3_close_v2(sql);
+  void operator()(sqlite3 *sql) {
+    sqlite3_close_v2(sql);
   }
 };
 
 struct sqlite3_stmt_deleter {
-  void operator()(sqlite3_stmt* sql) {
-	sqlite3_finalize(sql);
+  void operator()(sqlite3_stmt *sql) {
+    sqlite3_finalize(sql);
   }
 };
 
 class InternalDB {
  public:
-  explicit InternalDB(std::string  databaseName);
+  explicit InternalDB(std::string databaseName);
   int GetUserId() const;
   int GetDeviceId() const;
   std::string GetSyncFolder() const;
-  void InsertUser(const User& user);
+  void InsertUser(const User &user);
   void DeleteUser(size_t id);
   bool ExistUser();
-  void UpdateSyncFolder(const std::string& newFolder);
-  void UpdatePassword(const std::string& newPassword);
+  void UpdateSyncFolder(const std::string &newFolder);
+  void UpdatePassword(const std::string &newPassword);
   std::string SelectUserPassword();
-  void  InsertFile(const std::vector<Files>& files);
+  void InsertFile(const std::vector<Files> &files);
   Files SelectFile(size_t idFile);
   void UpdateFile();
-  void InsertChunk(const Chunks& chunks);
+  void InsertChunk(const Chunks &chunks);
   void SelectChunk();
   void UpdateChunk();
   std::string GetLastUpdate();
   void SaveLastUpdate();
-
+  std::vector<Files> SelectAllFiles();
  private:
   int _userId;
   int _deviceId;
@@ -52,13 +52,12 @@ class InternalDB {
   int selectDeviceId();
   int selectUserId();
   std::string selectFolder();
-  int selectId(const std::string& query);
+  int selectId(const std::string &query);
   void creatTable();
-  bool update(const std::string& query);
+  bool update(const std::string &query);
   virtual bool connect();
   virtual void close();
-  static int callbackFile(void* data, int argc, char** argv, char** azColName);
-  void insert(const std::string& query);
+  void insert(const std::string &query);
   std::string selectLastUpdate();
-  std::string selectStr(const std::string& query);
+  std::string selectStr(const std::string &query);
 };

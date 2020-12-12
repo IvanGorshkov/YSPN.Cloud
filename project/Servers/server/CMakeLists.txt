@@ -18,7 +18,6 @@ INCLUDE_DIRECTORIES(include)
 ADD_LIBRARY(${PROJECT_NAME}-dev
         src/Config.cpp
         src/Worker.cpp
-        src/Log.cpp
 
         ../../net/Net.h
         )

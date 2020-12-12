@@ -1,12 +1,18 @@
 #include "Commands.h"
-#include <iostream>
+#include <boost/log/trivial.hpp>
 
-RefreshCommand::RefreshCommand() {
-  std::cout << "RefreshCommand" << std::endl;
+RefreshCommand::RefreshCommand(const std::shared_ptr<InternalDB> &db)
+    : _internalDB(db) {
+  BOOST_LOG_TRIVIAL(debug) << "RefreshCommand: create command";
 }
 
 void RefreshCommand::Do() {
+  BOOST_LOG_TRIVIAL(debug) << "RefreshCommand: do";
+
   // TODO refreshCommand Do
+
+  auto date = _internalDB->GetLastUpdate();
+  auto id = _internalDB->GetUserId();
 
   // GetDate from internal DB
 
@@ -18,10 +24,11 @@ void RefreshCommand::Do() {
 }
 
 DownloadFileCommand::DownloadFileCommand() {
-  std::cout << "DownloadFileCommand" << std::endl;
+  BOOST_LOG_TRIVIAL(debug) << "DownloadFileCommand: create command";
 }
 
 void DownloadFileCommand::Do() {
+  BOOST_LOG_TRIVIAL(debug) << "DownloadFileCommand: do";
   // TODO downloadCommand Do
 
   // GetFileChunks from Internal DB
@@ -34,10 +41,11 @@ void DownloadFileCommand::Do() {
 }
 
 CreateFileCommand::CreateFileCommand() {
-  std::cout << "CreateFileCommand" << std::endl;
+  BOOST_LOG_TRIVIAL(debug) << "CreateFileCommand: create command";
 }
 
 void CreateFileCommand::Do() {
+  BOOST_LOG_TRIVIAL(debug) << "CreateFileCommand: do";
   // TODO createFileCommand Do
 
   // chunk file
@@ -54,10 +62,11 @@ void CreateFileCommand::Do() {
 }
 
 RemoveFileCommand::RemoveFileCommand() {
-  std::cout << "RemoveFileCommand" << std::endl;
+  BOOST_LOG_TRIVIAL(debug) << "RemoveFileCommand: create command";
 }
 
 void RemoveFileCommand::Do() {
+  BOOST_LOG_TRIVIAL(debug) << "RemoveFileCommand: do";
   // TODO removeFileCommand Do
 
   // chunk file
@@ -74,10 +83,11 @@ void RemoveFileCommand::Do() {
 }
 
 RenameFileCommand::RenameFileCommand() {
-  std::cout << "RenameFileCommand" << std::endl;
+  BOOST_LOG_TRIVIAL(debug) << "RenameFileCommand: create command";
 }
 
 void RenameFileCommand::Do() {
+  BOOST_LOG_TRIVIAL(debug) << "RenameFileCommand: do";
   // TODO removeFileCommand Do
 
   // chunk file
@@ -94,10 +104,11 @@ void RenameFileCommand::Do() {
 }
 
 ModifyFileCommand::ModifyFileCommand() {
-  std::cout << "ModifyFileCommand" << std::endl;
+  BOOST_LOG_TRIVIAL(debug) << "ModifyFileCommand: create command";
 }
 
 void ModifyFileCommand::Do() {
+  BOOST_LOG_TRIVIAL(debug) << "ModifyFileCommand: do";
   // TODO modifyFileCommand Do
 
   // chunk file

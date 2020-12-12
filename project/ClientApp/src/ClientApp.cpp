@@ -74,7 +74,16 @@ void ClientApp::showFiles() {
 
   auto files = app.getFiles();
 
-  // TODO print files
+  for (auto &&file: files) {
+    std::cout << file.id << ")";
+    std::cout << " file: " << file.file_name << '.' << file.file_extention;
+    std::cout << " version: " << file.version;
+    std::cout << " size: " << file.file_size;
+    std::cout << " download: " << file.is_download.value();
+    std::cout << " update date: " << file.update_date;
+    std::cout << " create date: " << file.create_date;
+    std::cout << std::endl;
+  }
 }
 
 void ClientApp::downloadFile() {
@@ -85,7 +94,11 @@ void ClientApp::downloadFile() {
   int file;
   std::cin >> file;
 
-  app.downloadFile(file, &ClientApp::downloadFileCallback);
+  try {
+    app.downloadFile(file, &ClientApp::downloadFileCallback);
+  } catch (WrongFileNum &er) {
+    std::cout << er.what() << std::endl;
+  }
 }
 
 void ClientApp::downloadFileCallback(const std::string &msg) {
