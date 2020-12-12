@@ -1,34 +1,27 @@
-#ifndef _NETWORKSEVER_H
-#define _NETWORKSEVER_H
+#pragma once
 
 #include <string>
+#include <boost/property_tree/ptree.hpp>
 #include "UserSession.h"
-#include "ClientNetwork.h"
+#include "ClientWorker.h"
+
+namespace pt = boost::property_tree;
 
 class NetworkSever {
-public:
+ public:
+  explicit NetworkSever(short port = 5555, short backlog = 1024);
+  void StartServer();
+  void PutResponce(const std::shared_ptr<std::pair<std::shared_ptr<UserSession>,
+                                                   pt::ptree> > &response);
+  std::shared_ptr<std::pair<std::shared_ptr<UserSession>, pt::ptree> > GetRequest();
 
-    explicit NetworkSever(short port = 5555, short backlog = 1024);
+ private:
+  void onAccept(const std::shared_ptr<UserSession> &user, const boost::system::error_code &ec);
+  void startAccept();
+  void run();
 
-    void StartServer();
-
-    void GetResponseFromWorker(const std::shared_ptr<std::pair<std::shared_ptr<UserSession>, boost::property_tree::ptree> > &response);
-
-    std::shared_ptr<std::pair<std::shared_ptr<UserSession>, boost::property_tree::ptree> > SendRequestToWorker();
-
-private:
-    ClientNetwork _queue;
-
-    boost::asio::io_service _service;
-
-    boost::asio::ip::tcp::acceptor _acceptor;
-
-    void onAccept(const std::shared_ptr<UserSession> &user, const boost::system::error_code &e);
-
-    void startAccept();
-
-    void run();
-
+ private:
+  ClientWorker _queue;
+  boost::asio::io_service _service;
+  boost::asio::ip::tcp::acceptor _acceptor;
 };
-
-#endif //_NETWORKSEVER_H

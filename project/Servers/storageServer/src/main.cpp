@@ -50,19 +50,19 @@ int main(int argc, char **argv) {
         break;
       }
 
-      case 2: {
-        server.put2();
-        break;
-      }
+//      case 2: {
+//        server.put2();
+//        break;
+//      }
 
       case 0: {
         return EXIT_SUCCESS;
       }
 
-      default: {
-        server.put();
-        break;
-      }
+//      default: {
+//        server.put();
+//        break;
+//      }
     }
   }
 

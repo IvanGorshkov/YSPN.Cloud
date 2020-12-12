@@ -2,7 +2,8 @@
 #include <boost/log/trivial.hpp>
 
 StorageServer::StorageServer()
-    : _config(Config::GetInstance()) {
+    : _config(Config::GetInstance()),
+      _networkServer(std::make_shared<NetworkSever>()) {
   BOOST_LOG_TRIVIAL(debug) << "Storage server: create storage server";
 }
 
@@ -14,6 +15,7 @@ StorageServer::~StorageServer() {
 void StorageServer::Run() {
   BOOST_LOG_TRIVIAL(info) << "Storage server: start server";
   startWorkers();
+  _networkServer->StartServer();
 }
 
 void StorageServer::startWorkers() {
@@ -21,8 +23,7 @@ void StorageServer::startWorkers() {
 
   for (int i = 0; i < _config.GetStorageConfig().workersCount; ++i) {
     _workerThreads.emplace_back(&Worker::Run,
-                                std::move(Worker(std::make_shared<StorageManager>(),
-                                                 std::bind(&NetworkServer::GetConnection, &networkServer))));
+                                std::move(Worker(std::make_shared<StorageManager>(), _networkServer)));
 
     BOOST_LOG_TRIVIAL(info) << "Storage server: add new worker with id = " << _workerThreads[i].get_id();
   }

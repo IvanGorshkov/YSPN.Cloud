@@ -1,21 +1,40 @@
 #include "Client.h"
 #include <iostream>
 
-int main(int argc, char* argv[]) {
-    Client client;
-    client.Connect();
+namespace pt = boost::property_tree;
 
-    std::string message = R"({"root":{"values": [1, 2, 3, 4, 5 ]}})";
-    std::cout << "Send message: " << message << std::endl;
-    boost::property_tree::ptree request;
-    std::stringstream ss(message);
+int main(int argc, char *argv[]) {
+  Client client;
+  client.Connect();
 
-    boost::property_tree::read_json(ss, request);
+  srand(time(0));
 
-    client.SendJSON(request);
+  int id = std::rand() % 1000;
+  pt::ptree root;
 
-    boost::property_tree::ptree response = client.ReceiveJSON();
-    boost::property_tree::write_json(ss, response);
-    std::cout << "Reply is: "<< ss.str() << std::endl;
-    exit(EXIT_SUCCESS);
+  root.put("command", "UploadChunk");
+  root.put("requestId", id);
+  pt::ptree data;
+  for (int i = 0; i < 2; i++) {
+    pt::ptree child;
+    child.put("userId", id);
+    child.put("chunkId", i + 1);
+    child.put("sHash", "shash");
+    child.put("rHash", "rhash");
+    child.put("data", "data");
+
+    data.push_back(std::make_pair("", child));
+  }
+
+  root.add_child("data", data);
+
+  client.SendJSON(root);
+
+  pt::ptree response = client.ReceiveJSON();
+
+  std::stringstream ss;
+  boost::property_tree::write_json(ss, response);
+  std::cout << "Reply is: " << ss.str() << std::endl;
+
+  exit(EXIT_SUCCESS);
 }
