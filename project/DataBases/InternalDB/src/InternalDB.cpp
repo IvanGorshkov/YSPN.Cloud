@@ -71,7 +71,7 @@ void InternalDB::InsertFile(const std::vector<Files>& files) {
   if (!connect()) { return; }
   for(const auto& file: files) {
 	std::string query = "INSERT INTO Files (file_name, file_extention, file_size, file_path, count_chunks, version, is_download, update_date, create_date) VALUES ('" + file.file_name + "', '" + file.file_extention + "', " + std::to_string(file.file_size) + ", '" +
-		file.file_path + "', " + std::to_string(file.count_chunks) + ", " + std::to_string(file.version) + ", " + std::to_string(file.is_download) + ", '" +
+		file.file_path + "', " + std::to_string(file.count_chunks) + ", " + std::to_string(file.version) + ", " + std::to_string(file.is_download.value()) + ", '" +
 		file.update_date + "', '" + file.create_date + "');";
 	insert(query);
   }

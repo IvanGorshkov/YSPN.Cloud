@@ -8,8 +8,8 @@ struct Files {
   std::string file_path;
   size_t count_chunks;
   size_t version;
-  bool is_download;
-  bool is_current;
+  std::optional<bool> is_download;
+  std::optional<bool> is_current;
   std::string update_date;
   std::string create_date;
 };
