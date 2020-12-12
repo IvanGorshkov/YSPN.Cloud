@@ -23,7 +23,8 @@ int main() {
   std::vector<Files> files;
   files.push_back(f);
   myDB.InsertFile(files);
-  myDB.SelectFile(2);
+ auto g = myDB.SelectAllFiles();
+
   Chunks c;
   c.idFile = 1;
   c.chunkSize = 2;
@@ -39,7 +40,7 @@ int main() {
   u.deviceId = 3;
   u.password = "3";
   u.login = "3";
-  //myDB.InsertUser(u);
+//  myDB.InsertUser(u);
 
   std::cout << myDB.GetLastUpdate() << std::endl;
   myDB.SaveLastUpdate();

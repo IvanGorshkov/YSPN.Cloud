@@ -39,7 +39,7 @@ class InternalDB {
   void UpdateChunk();
   std::string GetLastUpdate();
   void SaveLastUpdate();
-
+  std::vector<Files> SelectAllFiles();
  private:
   int _userId;
   int _deviceId;
@@ -57,7 +57,6 @@ class InternalDB {
   bool update(const std::string& query);
   virtual bool connect();
   virtual void close();
-  static int callbackFile(void* data, int argc, char** argv, char** azColName);
   void insert(const std::string& query);
   std::string selectLastUpdate();
   std::string selectStr(const std::string& query);
