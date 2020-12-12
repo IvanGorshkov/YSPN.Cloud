@@ -25,14 +25,14 @@ void UserSession::receiveRequest() {
     boost::system::error_code ec;
     _socket.read_some(boost::asio::buffer(_readBuf, maxLength), ec);
     if (ec) {
-        BOOST_LOG_TRIVIAL(error) << "UserSession: error read from user" << ec.message();
+        BOOST_LOG_TRIVIAL(error) << "UserSession: error read from user" << ec.message().c_str();
         _socket.async_write_some(
                 boost::asio::buffer(ec.message()),
                 [self = shared_from_this()](const boost::system::error_code &e,
                                             std::size_t) -> void {
                     self->receiveRequest();
                     if (e)
-                        BOOST_LOG_TRIVIAL(error) << "UserSession: error send error-response to user: " << e.message();
+                        BOOST_LOG_TRIVIAL(error) << "UserSession: error send error-response to user: " << e.message().c_str();
                 });
         return;
     }
@@ -61,6 +61,6 @@ void UserSession::receiveResponse(const boost::property_tree::ptree &jsonSend) {
             boost::asio::buffer(sendBuf),
             [self = shared_from_this()](const boost::system::error_code &ec,
                                         std::size_t) -> void {
-                BOOST_LOG_TRIVIAL(error) << "UserSession: error send response to user: " << ec.message();
+                BOOST_LOG_TRIVIAL(error) << "UserSession: error send response to user: " << ec.message().c_str();
             });
 }

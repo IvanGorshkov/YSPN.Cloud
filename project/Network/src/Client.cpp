@@ -20,7 +20,7 @@ void Client::SendJSON(const boost::property_tree::ptree &jsonRequest) {
     boost::system::error_code ec;
     boost::asio::write(_socket, boost::asio::buffer(sendBuf, request_length), ec);
     if (ec) {
-        BOOST_LOG_TRIVIAL(error) << "Client: error write to server:" << ec.message();
+        BOOST_LOG_TRIVIAL(error) << "Client: error write to server:" << ec.message().c_str();
         return;
     }
 }
@@ -31,7 +31,7 @@ boost::property_tree::ptree Client::ReceiveJSON() {
     boost::system::error_code ec;
     boost::asio::read(_socket, boost::asio::buffer(*buf), ec);
     if (ec) {
-        BOOST_LOG_TRIVIAL(error) << "Client: error read from server:" << ec.message();
+        BOOST_LOG_TRIVIAL(error) << "Client: error read from server:" << ec.message().c_str();
         std::stringstream ss(R"({"error": "Error occured" })");
         boost::property_tree::ptree jsonError;
         boost::property_tree::read_json(ss, jsonError);
@@ -61,7 +61,7 @@ void Client::Connect(const std::string &localhost, int port) {
     boost::system::error_code ec;
     boost::asio::connect(_socket, resolver.resolve({localhost, sport}), ec);
     if (ec){
-        BOOST_LOG_TRIVIAL(error) << "Client: error connect to server:" << ec.message();
+        BOOST_LOG_TRIVIAL(error) << "Client: error connect to server:" << ec.message().c_str();
         return;
     }
 }

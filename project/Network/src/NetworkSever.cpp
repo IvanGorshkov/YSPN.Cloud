@@ -1,17 +1,17 @@
 #include "NetworkSever.h"
 
-NetworkSever::NetworkSever(short port)
+NetworkSever::NetworkSever(short port, short backlog)
         : _acceptor(_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)) {
     //StartServer();
     _acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+    _acceptor.listen(backlog);
+    BOOST_LOG_TRIVIAL(info) << "NetworkSever: listen on port " << port << ", backlog: " << backlog;
     std::thread threadServerRunning(&ClientNetwork::RunClientNetwork, &_queue);
     threadServerRunning.detach();
 }
 
 void NetworkSever::StartServer() {
     BOOST_LOG_TRIVIAL(debug) << "NetworkSever: start server";
-    _acceptor.listen(1024);
-    std::cerr << "listen on port: 5555" << std::endl;
     startAccept();
     run();
 }
@@ -21,7 +21,7 @@ void NetworkSever::run() {
     boost::system::error_code ec;
     _service.run(ec);
     if (ec){
-        BOOST_LOG_TRIVIAL(fatal) << "NetworkSever: error run service: " << ec.message();
+        BOOST_LOG_TRIVIAL(fatal) << "NetworkSever: error run service: " << ec.message().c_str();
         return;
     }
 }
@@ -36,7 +36,7 @@ void NetworkSever::startAccept() {
 
 void NetworkSever::onAccept(const std::shared_ptr<UserSession> &user, const boost::system::error_code &e) {
     if (e) {
-        BOOST_LOG_TRIVIAL(error) << "NetworkSever: error accept user" << e.message();
+        BOOST_LOG_TRIVIAL(error) << "NetworkSever: error accept user" << e.message().c_str();
         return;
     }
     _queue.PutConnection(user);

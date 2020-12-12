@@ -8,7 +8,7 @@
 class NetworkSever {
 public:
 
-    explicit NetworkSever(short port = 5555);
+    explicit NetworkSever(short port = 5555, short backlog = 1024);
 
     void StartServer();
 
