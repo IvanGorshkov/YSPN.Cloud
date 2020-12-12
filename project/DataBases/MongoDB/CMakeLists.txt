@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 project(Test)
 
-FIND_PACKAGE(Boost COMPONENTS log log_setup REQUIRED)
+FIND_PACKAGE(Boost COMPONENTS log REQUIRED)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 
 include_directories(include)
