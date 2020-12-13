@@ -1,35 +1,34 @@
-/**
- * Project Untitled
- */
+
+#pragma once
+
+#include "File.h"
+#include <openssl/md5.h>
+#include <iomanip>
+#include "zlib.h"
+#include <memory>
 
 
-#ifndef _CHUNKER_H
-#define _CHUNKER_H
-#include "InFile.h"
-#include "OutFile.h"
-#include "ChunkData.h"
+
 
 class Chunker {
 public: 
-    
+    explicit Chunker(File);
 int SentNewChunk();
     
 int SentNewPosition();
     
-InFile* GetFile();
-    
-/**
- * @param ChunkData
- */
-void ChunkCompare(ChunkData data);
+File* GetFile();
+
+std::vector<FileChunk> ChunkFile();
+void MergeFile(std::vector<FileChunk>);
+
+void ChunkCompare(FileChunk data);
 private: 
-    std::string  _path;
+    File  _file;
     
-std::string getCheckSum();
+std::string getSHashSum();
     
 std::string getOldCheckSums();
-    
-ChunkData createChunk();
-};
 
-#endif //_CHUNKER_H
+
+};

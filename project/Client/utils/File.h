@@ -13,15 +13,14 @@
 
 class File {
 public: 
+    File(std::string);
+    ~File();
+    std::ifstream Read();
+    std::ofstream Write();
 
-
-protected: 
-    std::string path;
-    std::vector<FileChunk> Chunks;
-    
-void GetHashInternal();
 private: 
     size_t _chunksCount;
+    std::string _path;
 };
 
 #endif //_FILE_H

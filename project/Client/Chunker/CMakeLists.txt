@@ -3,7 +3,15 @@ project(Chunker)
 
 set(CMAKE_CXX_STANDARD 14)
 
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/../utils)
+ADD_SUBDIRECTORY(tests)
+
+INCLUDE_DIRECTORIES(../utils)
 INCLUDE_DIRECTORIES(include)
 
-add_executable(Chunker Chunker.cpp File.cpp InFile.cpp OutFile.cpp)
+#add_executable(Chunker Chunker.cpp ../utils/File.cpp)
+ADD_LIBRARY(libChunker STATIC
+        include/Chunker.h
+        Chunker.cpp
+        ../utils/FileChunk.h
+        ../utils/File.cpp
+        ../utils/File.h)

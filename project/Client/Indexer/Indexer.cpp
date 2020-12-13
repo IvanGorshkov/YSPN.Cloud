@@ -1,64 +1,62 @@
-/**
- * Project Untitled
- */
 
 
 #include "Indexer.h"
 
 
-/**
- * Indexer implementation
- */
-
-
-/**
- * @param Notification
- * @return void
- */
-void Indexer::GetNotifierEvent(Notification notification) {
+void Indexer::GetWatcherEvent(Notification notification) {
+    switch(notification.event) {
+        case 256:
+            CreateNewFile(notification.path);
+            break;
+        case 512:
+            DeleteFile(notification.path);
+            break;
+        case 2:
+            ModifyFile(notification.path);
+            break;
+        case 64:
+            ChangeMetaData(notification.path);
+    }
     return;
 }
 
-void Indexer::Operation1() {
+void Indexer::CreateNewFile(boost::filesystem::path file){
 
+    // TODO: notifier alert for app notification
+    File new_file(file.string());
+    FileMeta new_file_meta(file.filename().string(),file.extension().string(),boost::filesystem::file_size(file),boost::filesystem::last_write_time(file), boost::filesystem::last_write_time(file));
+
+    // TODO: отправить метаданные в InternalDB
 }
 
-/**
- * @param структура_для_мета_данных
- * @return int
- */
 int Indexer::sentUpdatetoLocalDB(void структура_для_мета_данных) {
     return 0;
 }
 
-/**
- * @param path
- * @param bool
- * @param ChunkData
- * @return int
- */
-int Indexer::invokeChunker(boost::filesystem::path file, bool is_new_file, ChunkData data) {
-    return 0;
+void Indexer::DeleteFile(boost::filesystem::path file){
+
+    // TODO: notifier alert for app notification
+    // get file_meta_id by file_path
+    // sent delete signal to base
 }
 
-/**
- * @param структура_для_мета_данных
- * @return int
- */
+void Indexer::ModifyFile(boost::filesystem::path file) {
+
+    // TODO: notifier alert for app notification
+    // get file_meta_id by file_path
+    File modified_file(file.string());
+}
+
 int Indexer::sentUpdateToQueue(void структура_для_мета_данных) {
     return 0;
 }
 
-/**
- * @return void
- */
+
 void Indexer::updateLocalDB() {
     return;
 }
 
-/**
- * @return json
- */
+
 boost::property_tree::ptree Indexer::createNewMetaData() {
     return {};
 }

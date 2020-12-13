@@ -1,53 +1,48 @@
-/**
- * Project Untitled
- */
 
-
-#ifndef _WATCHER_H
-#define _WATCHER_H
+#pragma once
 #include <boost/filesystem.hpp>
+#include <boost/bimap.hpp>
+#include <boost/optional.hpp>
 #include <string>
 #include <map>
 #include <sys/inotify.h>
+#include <sys/epoll.h>
+#include <queue>
+#include "Notification.h"
+#include "FileSystemEvent.h"
+#include "WatcherExceptions.h"
+
 
 class Watcher {
 public:
-    
-/**
- * @param string
- */
-void WatchFile(boost::filesystem::path file);
-    
-/**
- * @param string
- */
-void WatchDirectory(boost::filesystem::path path);
-    
-void GetNextEvent();
-    
-/**
- * @param payh
- */
-void UnwatcFile(boost::filesystem::path file);
-    
-/**
- * @param uint32_t
- */
-void SetEventMask(uint32_t eventMask);
-private: 
-    uint32_t EventMask;
-    int InotifyFd;
-    std::map<int, boost::filesystem::path> DirectorieMap;
-    
-/**
- * @param int
- */
-void removeWatch(int wd);
-    
-/**
- * @param int
- */
-boost::filesystem::path wdToPath(int wd);
-};
+    Watcher();
+    ~Watcher();
+    void Stop();
+    void Run(const boost::filesystem::path&, std::function<void(Notification)>);
+    std::exception_ptr GetLastException();
 
-#endif //_WATCHER_H
+private: 
+    uint32_t _eventMask;
+    int _inotifyFd;
+    int _epollFd;
+    epoll_event _inotifyEpollEvent;
+    boost::bimap<int, boost::filesystem::path> _directorieMap;
+    std::queue<FileSystemEvent> _eventQueue;
+    std::queue<std::exception_ptr> _exceptionQueue;
+    std::vector<uint8_t> _eventBuffer;
+    bool _stopped;
+    std::chrono::steady_clock::time_point _lastEventTime;
+    epoll_event _epollEvents[1];
+    std::map<Event, std::function<void(Notification)>> _eventCallbacks;
+
+    void removeWatch(int wd) const;
+    boost::filesystem::path wdToPath(int wd);
+    void watchFile(const boost::filesystem::path& file);
+    void watchDirectory(const boost::filesystem::path& path);
+    void UnwatcFile(const boost::filesystem::path& file);
+    boost::optional<FileSystemEvent> getNextEvent();
+    bool hasStopped() const;
+    void runOnce();
+    ssize_t readEventsIntoBuffer(std::vector<uint8_t>&);
+    void readEventsFromBuffer(uint8_t*, int, std::vector<FileSystemEvent> &);
+};
