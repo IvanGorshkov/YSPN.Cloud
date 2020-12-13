@@ -6,7 +6,11 @@
 #include <utility>
 #include "InternalExceptions.h"
 
-InternalDB::InternalDB(std::string  databaseName): _databaseName(std::move(databaseName)) {
+InternalDB::InternalDB(std::string  databaseName): _databaseName(std::move(databaseName)),
+												   _userId(-1),
+												   _deviceId(-1),
+												   _syncFolder(""),
+												   _lastUpdate("") {
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Init DB";
   if (connect()) {
     creatTable();
@@ -60,10 +64,13 @@ void InternalDB::InsertUser(const User& user) {
   	+"', " + std::to_string(user.deviceId)
   	+ ", '" + user.deviceName
   	+ "', '" + user.syncFolder
-  	+ "', '" + user.lastUpdate
+  	+ "', '1970-Dec-31 12:30:02'"
   	+ "');";
   insert(query);
-
+  _userId = user.userId;
+  _deviceId = user.deviceId;
+  _syncFolder = user.syncFolder;
+  _lastUpdate = "1970-Dec-31 12:30:02";
   close();
 }
 
