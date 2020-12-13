@@ -27,7 +27,6 @@ class InternalDB {
   std::string GetSyncFolder() const;
   void InsertUser(const User &user);
   void DeleteUser(size_t id);
-  bool ExistUser();
   void UpdateSyncFolder(const std::string &newFolder);
   void UpdatePassword(const std::string &newPassword);
   std::string SelectUserPassword();
@@ -60,4 +59,6 @@ class InternalDB {
   void insert(const std::string &query);
   std::string selectLastUpdate();
   std::string selectStr(const std::string &query);
+  Files& getOneFile();
+  bool existUser();
 };
