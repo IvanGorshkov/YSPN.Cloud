@@ -5,14 +5,17 @@
 
 App::App()
     : _internalDB(std::make_shared<InternalDB>("myDB.sqlite")),
-      _worker(&Worker::Run, Worker(_commands)) {
+      _storageNetwork(std::make_shared<ClientNetwork>()),
+      _isWorkingWorker(true),
+      _worker(&Worker::Run, std::ref(_commands), std::ref(_isWorkingWorker)) {
   BOOST_LOG_TRIVIAL(debug) << "App: create app";
   ClientConfig::Log();
-  refresh();
+  _storageNetwork->Connect();
 }
 
 App::~App() {
   BOOST_LOG_TRIVIAL(debug) << "App: delete app";
+  _isWorkingWorker = false;
   _worker.join();
 }
 
@@ -27,18 +30,30 @@ std::vector<Files> App::getFiles() {
   return _internalDB->SelectAllFiles();
 }
 
-void App::downloadFile(int fileId, const std::function<void(const std::string &msg)> &callback) {
+void App::downloadFile(int fileId,
+                       const std::function<void(const std::string &msg)> &callbackOk,
+                       const std::function<void(const std::string &msg)> &callbackError) {
   BOOST_LOG_TRIVIAL(debug) << "App: downloadFile";
-  // TODO create downloadFileCommand and sent to queue
 
-  auto file = _internalDB->SelectFile(fileId);
+  Files file;
+  try {
+    file = _internalDB->SelectFile(fileId);
+  } catch (InternalExceptions &er) {
+    throw FileIdException(er.what());
+  }
 
-  callback("dsdsd");
+  if (file.is_download.value()) {
+    throw FileDownloadedException("file is already downloaded");
+  }
+
+  auto sh = std::make_shared<DownloadFileCommand>(callbackOk, callbackError, _storageNetwork, file);
+  _commands.emplace(sh);
 }
 
 std::vector<int> App::getEvents() {
   BOOST_LOG_TRIVIAL(debug) << "App: getEvents";
-  return _events;
+
+//  return _events;
 }
 
 void App::SaveEvents(const std::function<void(const std::string &msg)> &callback) {

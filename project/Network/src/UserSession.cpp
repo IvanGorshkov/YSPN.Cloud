@@ -49,7 +49,7 @@ void UserSession::receiveRequest() {
 }
 
 void UserSession::receiveResponse(const pt::ptree &jsonSend) {
-  BOOST_LOG_TRIVIAL(error) << "UserSession: send response";
+  BOOST_LOG_TRIVIAL(debug) << "UserSession: send response";
   std::stringstream ss;
   try {
     pt::json_parser::write_json(ss, jsonSend, false);

@@ -8,7 +8,7 @@ std::shared_ptr<pt::ptree> StorageManager::GetRequest(pt::ptree &val) {
   try {
     requestId = val.get<int>("requestId");
   } catch (pt::ptree_error &er) {
-    BOOST_LOG_TRIVIAL(warning) << "Storage worker: " << er.what();
+    BOOST_LOG_TRIVIAL(warning) << "StorageManager: " << er.what();
     auto answer = SerializerAnswer(-1, "No requestId");
   }
 
@@ -16,12 +16,12 @@ std::shared_ptr<pt::ptree> StorageManager::GetRequest(pt::ptree &val) {
     command = getCommand(val);
 
   } catch (NoCommand &er) {
-    BOOST_LOG_TRIVIAL(warning) << "Storage worker: " << er.what();
+    BOOST_LOG_TRIVIAL(warning) << "StorageManager: " << er.what();
     auto answer = SerializerAnswer(requestId, er.what());
     return std::make_shared<pt::ptree>(answer.GetJson());
 
   } catch (WrongCommand &er) {
-    BOOST_LOG_TRIVIAL(warning) << "Storage worker: " << er.what();
+    BOOST_LOG_TRIVIAL(warning) << "StorageManager: " << er.what();
     auto answer = SerializerAnswer(requestId, er.what());
     return std::make_shared<pt::ptree>(answer.GetJson());
   }
@@ -31,7 +31,7 @@ std::shared_ptr<pt::ptree> StorageManager::GetRequest(pt::ptree &val) {
 }
 
 std::unique_ptr<Command> StorageManager::getCommand(const pt::ptree &val) {
-  BOOST_LOG_TRIVIAL(debug) << "Storage worker: getCommand";
+  BOOST_LOG_TRIVIAL(debug) << "StorageManager: getCommand";
   std::string command;
 
   try {

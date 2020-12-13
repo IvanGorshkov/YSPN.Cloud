@@ -12,6 +12,10 @@ ADD_LIBRARY(Network-dev SHARED
         )
 TARGET_LINK_LIBRARIES(Network-dev ${Boost_LIBRARIES})
 
+ADD_LIBRARY(ClientNetwork-dev SHARED
+        src/ClientNetwork.cpp)
+TARGET_LINK_LIBRARIES(ClientNetwork-dev ${Boost_LIBRARIES})
+
 ADD_EXECUTABLE(testServer
         src/NetworkSever.cpp
         src/UserSession.cpp
@@ -20,7 +24,7 @@ ADD_EXECUTABLE(testServer
 
 ADD_EXECUTABLE(testClient
         src/test_client.cpp
-        src/Client.cpp)
+        src/ClientNetwork.cpp)
 ADD_SUBDIRECTORY(testsNetwork)
 
 

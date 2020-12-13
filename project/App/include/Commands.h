@@ -1,7 +1,13 @@
 #pragma once
 
-#include "InternalDB.h"
 #include <string>
+#include "InternalDB.h"
+#include "ClientNetwork.h"
+#include "Files.h"
+#include "SerializerAnswer.h"
+#include "SerializerChunk.h"
+#include "SerializerUserChunk.h"
+#include "SerializerExceptions.h"
 
 class CommandInterface {
  public:
@@ -11,7 +17,7 @@ class CommandInterface {
 
 class RefreshCommand : public CommandInterface {
  public:
-  explicit RefreshCommand(const std::shared_ptr<InternalDB> &db);
+  explicit RefreshCommand(std::shared_ptr<InternalDB> db);
   void Do() override;
 
  private:
@@ -20,8 +26,17 @@ class RefreshCommand : public CommandInterface {
 
 class DownloadFileCommand : public CommandInterface {
  public:
-  explicit DownloadFileCommand();
+  explicit DownloadFileCommand(std::function<void(const std::string &msg)> callbackOk,
+                               std::function<void(const std::string &msg)> callbackError,
+                               std::shared_ptr<ClientNetwork> _storageNetwork,
+                               Files &file);
   void Do() override;
+
+ private:
+  std::function<void(const std::string &msg)> callbackOk;
+  std::function<void(const std::string &msg)> callbackError;
+  std::shared_ptr<ClientNetwork> _storageNetwork;
+  Files _file;
 };
 
 class CreateFileCommand : public CommandInterface {

@@ -15,7 +15,8 @@ class ClientApp {
 
   void showFiles();
   void downloadFile();
-  static void downloadFileCallback(const std::string &msg);
+  static void downloadFileCallbackOk(const std::string &msg = "download complete");
+  static void downloadFileCallbackError(const std::string &msg);
 
   void showEvents();
   void saveEvents();

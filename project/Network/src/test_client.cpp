@@ -1,16 +1,16 @@
-#include "Client.h"
+#include "ClientNetwork.h"
 #include <iostream>
 
 namespace pt = boost::property_tree;
 
 int main(int argc, char *argv[]) {
-  Client client;
+  ClientNetwork client;
   client.Connect();
 
   srand(time(0));
 
-  int id = std::rand() % 1000;
   pt::ptree root;
+  int id = 2;
 
   root.put("command", "UploadChunk");
   root.put("requestId", id);
@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
   for (int i = 0; i < 2; i++) {
     pt::ptree child;
     child.put("userId", id);
-    child.put("chunkId", i + 1);
+    child.put("chunkId", i);
     child.put("sHash", "shash");
     child.put("rHash", "rhash");
     child.put("data", "data");

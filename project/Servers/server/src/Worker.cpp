@@ -1,4 +1,5 @@
 #include "Worker.h"
+
 #include <chrono>
 #include <thread>
 #include <boost/log/trivial.hpp>
@@ -45,12 +46,8 @@ void Worker::onConnect(const std::shared_ptr<std::pair<std::shared_ptr<UserSessi
   BOOST_LOG_TRIVIAL(info) << "Worker: start working with user id = ";
 
   auto responce = _manager->GetRequest(request->second);
-  std::cout << "Put responce" << std::endl;
-
-  std::pair<std::shared_ptr<UserSession>, pt::ptree> pr = std::make_pair(request->first, *responce);
-
-  auto sh = std::make_shared<std::pair<std::shared_ptr<UserSession>, pt::ptree>>(pr);
-  _networkServer->PutResponce(sh);
+  _networkServer->PutResponce(std::make_shared<std::pair<std::shared_ptr<UserSession>,
+                                                         pt::ptree>>(request->first, *responce));
 
   BOOST_LOG_TRIVIAL(info) << "Worker: stop working with user id = ";
 }

@@ -90,27 +90,34 @@ void ClientApp::downloadFile() {
   showFiles();
 
   std::cout << "Choice file: ";
-
   int file;
   std::cin >> file;
 
   try {
-    app.downloadFile(file, &ClientApp::downloadFileCallback);
-  } catch (WrongFileNum &er) {
+    app.downloadFile(file, &ClientApp::downloadFileCallbackOk, &ClientApp::downloadFileCallbackError);
+  } catch (FileIdException &er) {
+    std::cout << er.what() << std::endl;
+  } catch (FileDownloadedException &er) {
     std::cout << er.what() << std::endl;
   }
 }
 
-void ClientApp::downloadFileCallback(const std::string &msg) {
-  std::cout << "downloadFileCallback " << msg << std::endl;
+void ClientApp::downloadFileCallbackOk(const std::string &msg) {
+  std::cout << "downloadFileCallbackOk: " << msg << std::endl;
+}
 
-  // TODO downloadFileCallback print
+void ClientApp::downloadFileCallbackError(const std::string &msg) {
+  std::cout << "downloadFileCallbackError: " << msg << std::endl;
 }
 
 void ClientApp::showEvents() {
   std::cout << "Events: " << std::endl;
 
   auto events = app.getEvents();
+
+//  for (auto &&ev: events) {
+//    std::cout << "Event: " <<
+//  }
 
   // TODO print events
 }

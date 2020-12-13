@@ -82,13 +82,13 @@ void ClientWorker::RunClientWorker() {
 
 //  auto &config = Config::GetInstance();
 
-  size_t requestWorkersCount = 4;
+  size_t requestWorkersCount = 1;
   _workerGetRequests.reserve(requestWorkersCount);
   for (int i = 0; i < requestWorkersCount; ++i) {
     _workerGetRequests.emplace_back([this] { workerGetRequests(); });
   }
 
-  size_t responceWorkersCount = 4;
+  size_t responceWorkersCount = 1;
   _workerPutResponses.reserve(responceWorkersCount);
   for (int i = 0; i < responceWorkersCount; ++i) {
     _workerPutResponses.emplace_back([this] { workerSendResponses(); });

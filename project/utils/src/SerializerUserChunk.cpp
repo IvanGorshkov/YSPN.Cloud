@@ -38,7 +38,7 @@ pt::ptree SerializerUserChunk::GetJson() {
 void SerializerUserChunk::serialize() {
   BOOST_LOG_TRIVIAL(debug) << "SerializerUserChunk: serialize";
 
-  _json.put("command", "downloadChunk");
+  _json.put("command", "DownloadChunk");
   _json.put("requestId", _requestId);
   pt::ptree data;
   for (auto &el : _chunkVector) {

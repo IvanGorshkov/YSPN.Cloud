@@ -1,18 +1,18 @@
 #include "StorageCommand.h"
 #include <boost/log/trivial.hpp>
 
-void printChunkVec(const std::vector<Chunk> &vec) {
-  BOOST_LOG_TRIVIAL(debug) << "Print Vector";
-
-  for (auto &&el: vec) {
-    std::cout << "UserId: " << el.userId << std::endl;
-    std::cout << "ChunkId: " << el.chunkId << std::endl;
-    std::cout << "rHash: " << el.rHash << std::endl;
-    std::cout << "sHash: " << el.sHash << std::endl;
-    std::cout << "data: " << el.data << std::endl;
-    std::cout << std::endl;
-  }
-}
+//void printChunkVec(const std::vector<Chunk> &vec) {
+//  BOOST_LOG_TRIVIAL(debug) << "Print Vector";
+//
+//  for (auto &&el: vec) {
+//    std::cout << "UserId: " << el.userId << std::endl;
+//    std::cout << "ChunkId: " << el.chunkId << std::endl;
+//    std::cout << "rHash: " << el.rHash << std::endl;
+//    std::cout << "sHash: " << el.sHash << std::endl;
+//    std::cout << "data: " << el.data << std::endl;
+//    std::cout << std::endl;
+//  }
+//}
 
 UploadChunkCommand::UploadChunkCommand(std::shared_ptr<pt::ptree> &request)
     : _request(request),
@@ -86,7 +86,7 @@ std::shared_ptr<pt::ptree> DownloadChunkCommand::Do() {
     return std::make_shared<pt::ptree>(answer.GetJson());
   }
 
-  printChunkVec(responceVector);
+//  printChunkVec(responceVector);
 
   auto answer = SerializerChunk(_userChunk.GetRequestId(), responceVector);
   return std::make_shared<pt::ptree>(answer.GetJson());

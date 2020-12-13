@@ -1,8 +1,11 @@
 #include "Commands.h"
 #include <boost/log/trivial.hpp>
+#include <utility>
 
-RefreshCommand::RefreshCommand(const std::shared_ptr<InternalDB> &db)
-    : _internalDB(db) {
+namespace pt = boost::property_tree;
+
+RefreshCommand::RefreshCommand(std::shared_ptr<InternalDB> db)
+    : _internalDB(std::move(db)) {
   BOOST_LOG_TRIVIAL(debug) << "RefreshCommand: create command";
 }
 
@@ -23,7 +26,14 @@ void RefreshCommand::Do() {
   // send struct to Internal DB
 }
 
-DownloadFileCommand::DownloadFileCommand() {
+DownloadFileCommand::DownloadFileCommand(std::function<void(const std::string &msg)> callbackOk,
+                                         std::function<void(const std::string &msg)> callbackError,
+                                         std::shared_ptr<ClientNetwork> storageNetwork,
+                                         Files &file)
+    : callbackOk(std::move(callbackOk)),
+      callbackError(std::move(callbackError)),
+      _storageNetwork(std::move(storageNetwork)),
+      _file(file) {
   BOOST_LOG_TRIVIAL(debug) << "DownloadFileCommand: create command";
 }
 
@@ -31,13 +41,33 @@ void DownloadFileCommand::Do() {
   BOOST_LOG_TRIVIAL(debug) << "DownloadFileCommand: do";
   // TODO downloadCommand Do
 
-  // GetFileChunks from Internal DB
+  // Get UserChunk vector from InternalDB
 
-  // serialize fileChunks
-  // storageNetwork -> downloadChunk(userChunk ptree)
+  auto vec = std::vector<UserChunk>();
 
-  // deserialize ptree to struct
-  // send Chunker to create file
+  int id = 2;
+  for (int i = 0; i < 2; ++i) {
+    vec.emplace_back(id, i);
+  }
+
+  // Get UserChunk vector from InternalDB
+
+  auto requestSerializer = SerializerUserChunk(0, vec);
+  _storageNetwork->SendJSON(requestSerializer.GetJson());
+
+  auto response = _storageNetwork->ReceiveJSON();
+
+  try {
+    auto responceSerializer = SerializerChunk(response);
+    auto chunks = responceSerializer.GetChunk();
+    // Chunker create file
+    callbackOk("download complete");
+
+  } catch (ParseException &er) {
+    auto responceSerializer = SerializerAnswer(response);
+    auto error = std::get<StatusError>(responceSerializer.GetStatus());
+    callbackError(error.msg);
+  }
 }
 
 CreateFileCommand::CreateFileCommand() {

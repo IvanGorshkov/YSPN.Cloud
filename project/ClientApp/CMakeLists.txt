@@ -8,6 +8,8 @@ FIND_LIBRARY(App-dev REQUIRED)
 INCLUDE_DIRECTORIES(../App)
 
 INCLUDE_DIRECTORIES(../DataBases/InternalDB/include)
+INCLUDE_DIRECTORIES(../utils/include)
+INCLUDE_DIRECTORIES(../Network/include)
 
 INCLUDE_DIRECTORIES(include)
 
