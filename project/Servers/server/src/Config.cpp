@@ -26,9 +26,9 @@ Config &Config::GetInstance() {
   return instance;
 }
 
-StorageConfig &Config::GetStorageConfig() {
-  BOOST_LOG_TRIVIAL(debug) << "Config: GetStorageConfig";
-  return _storageConfig;
+ServerConfig &Config::GetServerConfig() {
+  BOOST_LOG_TRIVIAL(debug) << "Config: GetServerConfig";
+  return _serverConfig;
 }
 
 NetworkConfig &Config::GetNetworkConfig() {
@@ -60,7 +60,7 @@ int Config::Run(const std::string &path) {
   }
 
   try {
-    parseStorageConfig(root.get_child("storageConfig"));
+    parseStorageConfig(root.get_child("serverConfig"));
   } catch (pt::ptree_error &er) {
     BOOST_LOG_TRIVIAL(fatal) << "Config: " << er.what();
     return EXIT_FAILURE;
@@ -116,7 +116,7 @@ void Config::parseLogConfig(pt::ptree &log) {
 
 void Config::parseStorageConfig(pt::ptree &storage) {
   BOOST_LOG_TRIVIAL(debug) << "Config: parseStorageConfig";
-  _storageConfig.workersCount = storage.get<size_t>("workersCount");
+  _serverConfig.workersCount = storage.get<size_t>("workersCount");
 }
 
 void Config::parseNetworkConfig(pt::ptree &network) {
@@ -128,5 +128,5 @@ void Config::parseNetworkConfig(pt::ptree &network) {
 void Config::parseClientWorkerConfig(pt::ptree &clientWorker) {
   BOOST_LOG_TRIVIAL(debug) << "Config: parseClientWorkerConfig";
   _clientWorkerConfig.requestWorkersCount = clientWorker.get<size_t>("requestWorkersCount");
-  _clientWorkerConfig.responceWorkersCount = clientWorker.get<size_t>("responceWorkersCount");
+  _clientWorkerConfig.responseWorkersCount = clientWorker.get<size_t>("responceWorkersCount");
 }
