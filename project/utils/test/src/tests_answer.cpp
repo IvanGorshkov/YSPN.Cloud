@@ -11,12 +11,14 @@ struct visitor {
 };
 
 TEST(Serializer, AnswerOk) {
+  std::stringstream ss;
+
   auto sendOK = SerializerAnswer(std::rand() % 100);
   auto sendJsonOK = sendOK.GetJson();
-  pt::write_json("ok.json", sendJsonOK);
+  pt::write_json(ss, sendJsonOK);
 
   pt::ptree recvJsonOK;
-  pt::read_json("ok.json", recvJsonOK);
+  pt::read_json(ss, recvJsonOK);
   EXPECT_EQ(sendJsonOK, recvJsonOK);
 
   auto recvOK = SerializerAnswer(recvJsonOK);
@@ -25,12 +27,14 @@ TEST(Serializer, AnswerOk) {
 }
 
 TEST(Serializer, AnswerError) {
+  std::stringstream ss;
+
   auto sendERROR = SerializerAnswer(std::rand() % 100, "Error");
   auto sendJsonERROR = sendERROR.GetJson();
-  pt::write_json("error.json", sendJsonERROR);
+  pt::write_json(ss, sendJsonERROR);
 
   pt::ptree recvJsonERROR;
-  pt::read_json("error.json", recvJsonERROR);
+  pt::read_json(ss, recvJsonERROR);
   EXPECT_EQ(sendJsonERROR, recvJsonERROR);
 
   auto recvERROR = SerializerAnswer(recvJsonERROR);
@@ -39,6 +43,8 @@ TEST(Serializer, AnswerError) {
 }
 
 TEST(Serializer, AnswerErrorMap) {
+  std::stringstream ss;
+
   std::map<int, std::string> err;
   for (int i = 0; i < 2; ++i) {
     err.emplace(std::rand() % 100, "op, error");
@@ -46,10 +52,10 @@ TEST(Serializer, AnswerErrorMap) {
 
   auto sendERROR = SerializerAnswer(std::rand() % 100, "Error", err);
   auto sendJsonERROR = sendERROR.GetJson();
-  pt::write_json("error.json", sendJsonERROR);
+  pt::write_json(ss, sendJsonERROR);
 
   pt::ptree recvJsonERROR;
-  pt::read_json("error.json", recvJsonERROR);
+  pt::read_json(ss, recvJsonERROR);
   EXPECT_EQ(sendJsonERROR, recvJsonERROR);
 
   auto recvERROR = SerializerAnswer(recvJsonERROR);

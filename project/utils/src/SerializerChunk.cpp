@@ -45,6 +45,7 @@ void SerializerChunk::serialize() {
     pt::ptree child;
     child.put("userId", el.userId);
     child.put("chunkId", el.chunkId);
+    child.put("chunkSize", el.chunkSize);
     child.put("sHash", el.sHash);
     child.put("rHash", el.rHash);
     child.put("data", el.data);
@@ -61,15 +62,17 @@ void SerializerChunk::deserialize() {
   try {
     _requestId = _json.get<int>("requestId");
     for (auto &val : _json.get_child("data")) {
-      _chunkVector.emplace_back(val.second.get<int>("userId"),
-                                val.second.get<int>("chunkId"),
-                                val.second.get<std::string>("sHash"),
-                                val.second.get<std::string>("rHash"),
-                                val.second.get<std::string>("data"));
+      auto chunk = Chunk{.userId = val.second.get<int>("userId"),
+          .chunkId =  val.second.get<int>("chunkId"),
+          .chunkSize =  val.second.get<int>("chunkSize"),
+          .sHash = val.second.get<std::string>("sHash"),
+          .rHash =  val.second.get<std::string>("rHash"),
+          .data = val.second.get<std::string>("data")
+      };
 
+      _chunkVector.push_back(chunk);
     }
   } catch (pt::ptree_error &er) {
-    _chunkVector.clear();
     throw ParseException(er.what());
   }
 }

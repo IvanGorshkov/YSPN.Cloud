@@ -3,22 +3,11 @@
 #include <boost/property_tree/ptree.hpp>
 #include <string>
 #include <vector>
+#include "structs/UserChunk.h"
 #include "SerializerInterface.h"
 #include "SerializerExceptions.h"
 
 namespace pt = boost::property_tree;
-
-struct UserChunk {
-  UserChunk() = default;
-
-  UserChunk(int userId, int chunkId)
-      : userId(userId),
-        chunkId(chunkId) {
-  }
-
-  int userId{};
-  int chunkId{};
-};
 
 class SerializerUserChunk : public SerializerInterface {
  public:

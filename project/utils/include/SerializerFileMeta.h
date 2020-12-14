@@ -3,20 +3,20 @@
 #include <boost/property_tree/ptree.hpp>
 #include <string>
 #include <vector>
-#include "structs/Chunk.h"
+#include "structs/FileMeta.h"
 #include "SerializerInterface.h"
 #include "SerializerExceptions.h"
 
 namespace pt = boost::property_tree;
 
-class SerializerChunk : public SerializerInterface {
+class SerializerFileMeta : public SerializerInterface {
  public:
-  SerializerChunk() = default;
-  explicit SerializerChunk(int requestId, std::vector<Chunk> val);
-  explicit SerializerChunk(const pt::ptree &val);
+  SerializerFileMeta() = default;
+  explicit SerializerFileMeta(int requestId, int userId, FileMeta fileMeta);
+  explicit SerializerFileMeta(const pt::ptree &val);
 
   int GetRequestId() const;
-  std::vector<Chunk> GetChunk() noexcept(false);
+  FileMeta GetFileMeta() noexcept(false);
   pt::ptree GetJson();
 
  private:
@@ -25,6 +25,7 @@ class SerializerChunk : public SerializerInterface {
 
  private:
   int _requestId{};
-  std::vector<Chunk> _chunkVector;
+  int _userId{};
+  FileMeta _fileMeta;
   pt::ptree _json{};
 };

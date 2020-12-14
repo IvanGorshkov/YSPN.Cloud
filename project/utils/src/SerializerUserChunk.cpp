@@ -58,11 +58,12 @@ void SerializerUserChunk::deserialize() {
   try {
     _requestId = _json.get<int>("requestId");
     for (auto &val : _json.get_child("data")) {
-      _chunkVector.emplace_back(val.second.get<int>("userId"),
-                                val.second.get<int>("chunkId"));
+      auto userChunk = UserChunk{.userId = val.second.get<int>("userId"),
+          .chunkId = val.second.get<int>("chunkId")};
+
+      _chunkVector.push_back(userChunk);
     }
   } catch (pt::ptree_error &er) {
-    _chunkVector.clear();
     throw ParseException(er.what());
   }
 }

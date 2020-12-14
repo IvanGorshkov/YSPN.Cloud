@@ -3,17 +3,17 @@
 #include <utility>
 
 SerializerAnswer::SerializerAnswer(int id)
-    : _status(StatusOk(id)) {
+    : _status(StatusOk{.requestId = id}) {
   BOOST_LOG_TRIVIAL(debug) << "SerializerAnswer: create serializer answer with OK status";
 }
 
 SerializerAnswer::SerializerAnswer(int id, std::string msg)
-    : _status(StatusError(id, std::move(msg))) {
+    : _status(StatusError{.requestId = id, .msg = std::move(msg)}) {
   BOOST_LOG_TRIVIAL(debug) << "SerializerAnswer: create serializer answer with ERROR status";
 }
 
 SerializerAnswer::SerializerAnswer(int id, std::string msg, std::map<int, std::string> errs)
-    : _status(StatusError(id, std::move(msg), std::move(errs))) {
+    : _status(StatusError{.requestId = id, .msg = std::move(msg), .errs = std::move(errs)}) {
   BOOST_LOG_TRIVIAL(debug) << "SerializerAnswer: create serializer answer with ERROR status";
 }
 
@@ -75,7 +75,7 @@ void SerializerAnswer::deserialize() {
     auto status = _json.get<std::string>("status");
     if (status == "OK") {
       auto id = _json.get<int>("requestId");
-      _status = StatusOk(id);
+      _status = StatusOk{.requestId = id};
 
     } else {
       auto id = _json.get<int>("requestId");
@@ -88,7 +88,7 @@ void SerializerAnswer::deserialize() {
         errs.emplace(erId, erMsg);
       }
 
-      _status = StatusError(id, msg, errs);
+      _status = StatusError{.requestId = id, .msg = msg, .errs = errs};
     }
   } catch (pt::ptree_error &er) {
     throw ParseException(er.what());
