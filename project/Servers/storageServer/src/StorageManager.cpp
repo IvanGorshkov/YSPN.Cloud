@@ -3,13 +3,12 @@
 
 std::shared_ptr<pt::ptree> StorageManager::GetRequest(pt::ptree &val) {
   std::unique_ptr<Command> command;
-  int requestId = 0;
+  int userId = 0;
 
   try {
-    requestId = val.get<int>("requestId");
+    userId = val.get<int>("requestId");
   } catch (pt::ptree_error &er) {
     BOOST_LOG_TRIVIAL(warning) << "StorageManager: " << er.what();
-    auto answer = SerializerAnswer(-1, "No requestId");
   }
 
   try {
@@ -17,17 +16,16 @@ std::shared_ptr<pt::ptree> StorageManager::GetRequest(pt::ptree &val) {
 
   } catch (NoCommand &er) {
     BOOST_LOG_TRIVIAL(warning) << "StorageManager: " << er.what();
-    auto answer = SerializerAnswer(requestId, er.what());
+    auto answer = SerializerAnswer(userId, er.what());
     return std::make_shared<pt::ptree>(answer.GetJson());
 
   } catch (WrongCommand &er) {
     BOOST_LOG_TRIVIAL(warning) << "StorageManager: " << er.what();
-    auto answer = SerializerAnswer(requestId, er.what());
+    auto answer = SerializerAnswer(userId, er.what());
     return std::make_shared<pt::ptree>(answer.GetJson());
   }
 
-  auto request = command->Do();
-  return request;
+  return command->Do();
 }
 
 std::unique_ptr<Command> StorageManager::getCommand(const pt::ptree &val) {
@@ -41,7 +39,6 @@ std::unique_ptr<Command> StorageManager::getCommand(const pt::ptree &val) {
   }
 
   auto sh = std::make_shared<pt::ptree>(val);
-
   if (command == "DownloadChunk") {
     return std::make_unique<DownloadChunkCommand>(sh);
   }

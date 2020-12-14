@@ -3,37 +3,46 @@
 
 StorageServer::StorageServer()
     : _config(Config::GetInstance()),
-      _networkServer(std::make_shared<NetworkSever>()) {
-  BOOST_LOG_TRIVIAL(debug) << "Storage server: create storage server";
+      _networkServer(std::make_shared<NetworkServer>(_config.GetNetworkConfig().port,
+                                                     _config.GetNetworkConfig().backlog)) {
+  BOOST_LOG_TRIVIAL(debug) << "StorageServer: create storage server";
 }
 
 StorageServer::~StorageServer() {
-  BOOST_LOG_TRIVIAL(debug) << "Storage server: delete storage server";
+  BOOST_LOG_TRIVIAL(debug) << "StorageServer: delete storage server";
   stopWorkers();
 }
 
 void StorageServer::Run() {
-  BOOST_LOG_TRIVIAL(info) << "Storage server: start server";
+  BOOST_LOG_TRIVIAL(info) << "StorageServer: Run";
   startWorkers();
-  _networkServer->StartServer();
+  try {
+    _networkServer->StartServer();
+  } catch (ErrorRunServerException &er) {
+    stopWorkers();
+  }
 }
 
 void StorageServer::startWorkers() {
-  _workerThreads.reserve(_config.GetStorageConfig().workersCount);
+  BOOST_LOG_TRIVIAL(debug) << "StorageServer: startWorkers";
 
-  for (int i = 0; i < _config.GetStorageConfig().workersCount; ++i) {
+  auto workersCount = _config.GetServerConfig().workersCount;
+  _workerThreads.reserve(workersCount);
+
+  for (int i = 0; i < workersCount; ++i) {
     _workerThreads.emplace_back(&Worker::Run,
                                 std::move(Worker(std::make_shared<StorageManager>(), _networkServer)));
 
-    BOOST_LOG_TRIVIAL(info) << "Storage server: add new worker with id = " << _workerThreads[i].get_id();
+    BOOST_LOG_TRIVIAL(info) << "StorageServer: add new worker with id = " << _workerThreads[i].get_id();
   }
 }
 
 void StorageServer::stopWorkers() {
+  BOOST_LOG_TRIVIAL(debug) << "StorageServer: stopWorkers";
   if (!_workerThreads.empty()) {
     for (auto &thread : _workerThreads) {
-      BOOST_LOG_TRIVIAL(info) << "Storage server: join worker with id = " << thread.get_id();
       thread.join();
+      BOOST_LOG_TRIVIAL(info) << "StorageServer: join worker with id = " << thread.get_id();
     }
 
     _workerThreads.clear();

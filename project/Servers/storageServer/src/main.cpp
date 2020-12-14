@@ -36,35 +36,7 @@ int main(int argc, char **argv) {
   }
 
   StorageServer server;
-
-  int a;
-  while (std::cin >> a) {
-    switch (a) {
-//      case -1: {
-//        server.Stop();
-//        break;
-//      }
-
-      case 1: {
-        server.Run();
-        break;
-      }
-
-//      case 2: {
-//        server.put2();
-//        break;
-//      }
-
-      case 0: {
-        return EXIT_SUCCESS;
-      }
-
-//      default: {
-//        server.put();
-//        break;
-//      }
-    }
-  }
+  server.Run();
 
   return EXIT_SUCCESS;
 }
