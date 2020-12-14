@@ -11,16 +11,18 @@ class ClientApp {
   int parseCommand(int command);
 
   void refresh();
-  static void refreshCallback(const std::string &msg);
+  static void refreshCallbackOk();
+  static void refreshCallbackError(const std::string &msg);
 
   void showFiles();
   void downloadFile();
-  static void downloadFileCallbackOk(const std::string &msg = "download complete");
+  static void downloadFileCallbackOk();
   static void downloadFileCallbackError(const std::string &msg);
 
   void showEvents();
   void saveEvents();
-  static void saveEventsCallback(const std::string &msg);
+  static void saveEventsCallbackOk();
+  static void saveEventsCallbackError(const std::string &msg);
 
  private:
   App app;
