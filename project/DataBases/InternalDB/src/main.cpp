@@ -7,7 +7,7 @@
 
 int main() {
   InternalDB myDB("myDB.sqlite");
-  myDB.ExistUser();
+
   //myDB.DeleteUser(233);
   myDB.UpdateSyncFolder("asd");
   Files f;

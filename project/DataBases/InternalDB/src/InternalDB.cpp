@@ -6,14 +6,20 @@
 #include <utility>
 #include "InternalExceptions.h"
 
-InternalDB::InternalDB(std::string  databaseName): _databaseName(std::move(databaseName)) {
+InternalDB::InternalDB(std::string  databaseName): _databaseName(std::move(databaseName)),
+												   _userId(-1),
+												   _deviceId(-1),
+												   _syncFolder(""),
+												   _lastUpdate("") {
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Init DB";
   if (connect()) {
     creatTable();
-	_userId = selectUserId();
-	_deviceId = selectDeviceId();
-	_syncFolder = selectFolder();
-	_lastUpdate = selectLastUpdate();
+    if (existUser()) {
+	  _userId = selectUserId();
+	  _deviceId = selectDeviceId();
+	  _syncFolder = selectFolder();
+	  _lastUpdate = selectLastUpdate();
+	}
 	close();
   }
 }
@@ -58,10 +64,13 @@ void InternalDB::InsertUser(const User& user) {
   	+"', " + std::to_string(user.deviceId)
   	+ ", '" + user.deviceName
   	+ "', '" + user.syncFolder
-  	+ "', '" + user.lastUpdate
+  	+ "', '1970-Dec-31 12:30:02'"
   	+ "');";
   insert(query);
-
+  _userId = user.userId;
+  _deviceId = user.deviceId;
+  _syncFolder = user.syncFolder;
+  _lastUpdate = "1970-Dec-31 12:30:02";
   close();
 }
 
@@ -142,12 +151,10 @@ void InternalDB::UpdateChunk() {
 }
 
 //MARK: Проверка присудствия пользователя
-bool InternalDB::ExistUser() {
-  if (!connect()) { throw InternalExceptions("Don't connect"); }
+bool InternalDB::existUser() {
   std::string query = "SELECT count(*) FROM User;";
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Check exist user";
   int count = selectId(query);
-  close();
   return count != 0;
 }
 
@@ -171,16 +178,8 @@ Files InternalDB::SelectFile(size_t idFile) {
   _stmt.reset(pStmt);
 
   if (sqlite3_step(_stmt.get()) == SQLITE_ROW) {
-    file.id = sqlite3_column_int(_stmt.get(), 0);
-    file.file_name = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 1));
-    file.file_extention = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 2));
-    file.file_size = sqlite3_column_int(_stmt.get(), 3);
-    file.file_path = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 4));
-    file.count_chunks = sqlite3_column_int(_stmt.get(), 5);
-    file.version = sqlite3_column_int(_stmt.get(), 6);
-    file.is_download = sqlite3_column_int(_stmt.get(), 7);
-    file.update_date = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 8));
-    file.create_date = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 9));
+    file = getOneFile();
+	BOOST_LOG_TRIVIAL(debug) << "InternalDB: Selected";
   } else {
 	BOOST_LOG_TRIVIAL(error) << "File by id = " + std::to_string(idFile) + " don't exist";;
     throw InternalExceptions("File by id = " + std::to_string(idFile) + " don't exist");
@@ -188,6 +187,21 @@ Files InternalDB::SelectFile(size_t idFile) {
 
   close();
   return file;
+}
+
+Files& InternalDB::getOneFile() {
+  Files file;
+  file.id = sqlite3_column_int(_stmt.get(), 0);
+  file.file_name = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 1));
+  file.file_extention = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 2));
+  file.file_size = sqlite3_column_int(_stmt.get(), 3);
+  file.file_path = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 4));
+  file.count_chunks = sqlite3_column_int(_stmt.get(), 5);
+  file.version = sqlite3_column_int(_stmt.get(), 6);
+  file.is_download = sqlite3_column_int(_stmt.get(), 7);
+  file.update_date = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 8));
+  file.create_date = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 9));
+  return std::ref(file);
 }
 
 std::vector<Files> InternalDB::SelectAllFiles() {
@@ -199,18 +213,8 @@ std::vector<Files> InternalDB::SelectAllFiles() {
   sqlite3_prepare_v2(_database.get(), query.c_str(), query.size(), &pStmt, nullptr);
   _stmt.reset(pStmt);
   while(sqlite3_step(_stmt.get()) == SQLITE_ROW) {
-    Files file;
-    file.id = sqlite3_column_int(_stmt.get(), 0);
-	file.file_name = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 1));
-	file.file_extention = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 2));
-	file.file_size = sqlite3_column_int(_stmt.get(), 3);
-	file.file_path = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 4));
-	file.count_chunks = sqlite3_column_int(_stmt.get(), 5);
-	file.version = sqlite3_column_int(_stmt.get(), 6);
-	file.is_download = sqlite3_column_int(_stmt.get(), 7);
-	file.update_date = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 8));
-	file.create_date = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 9));
-	files.push_back(file);
+	files.push_back(getOneFile());
+	BOOST_LOG_TRIVIAL(debug) << "InternalDB: Selected";
   }
   close();
   return files;
