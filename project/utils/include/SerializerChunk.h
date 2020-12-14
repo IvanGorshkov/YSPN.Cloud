@@ -3,27 +3,11 @@
 #include <boost/property_tree/ptree.hpp>
 #include <string>
 #include <vector>
+#include "structs/Chunk.h"
 #include "SerializerInterface.h"
 #include "SerializerExceptions.h"
 
 namespace pt = boost::property_tree;
-
-struct Chunk {
-  Chunk() = default;
-  Chunk(int userId, int chunkId, std::string sHash, std::string rHash, std::string data)
-      : userId(userId),
-        chunkId(chunkId),
-        sHash(std::move(sHash)),
-        rHash(std::move(rHash)),
-        data(std::move(data)) {
-  }
-
-  int userId{};
-  int chunkId{};
-  std::string sHash;
-  std::string rHash;
-  std::string data;
-};
 
 class SerializerChunk : public SerializerInterface {
  public:

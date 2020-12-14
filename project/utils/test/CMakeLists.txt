@@ -9,7 +9,10 @@ INCLUDE_DIRECTORIES(include)
 
 ADD_EXECUTABLE(${PROJECT_NAME}
         src/main.cpp
-        src/tests_storage.cpp)
+        src/tests_answer.cpp
+        src/tests_userdate.cpp
+        src/tests_filemeta.cpp
+        )
 
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} GTest::gtest ${CMAKE_THREAD_LIBS_INIT} Utils-dev)
 

@@ -17,19 +17,15 @@ FIND_LIBRARY(MongoDB-dev REQUIRED)
 INCLUDE_DIRECTORIES(../../DataBases/MongoDB/include)
 
 FIND_LIBRARY(Network-dev REQUIRED)
-INCLUDE_DIRECTORIES(../../Network/include)
+INCLUDE_DIRECTORIES(../../Network/Server/include)
 
 
 INCLUDE_DIRECTORIES(include)
 
 ADD_EXECUTABLE(${PROJECT_NAME}
         src/main.cpp
-        src/StorageCommand.cpp
+        src/StorageCommands.cpp
         src/StorageManager.cpp
         src/StorageServer.cpp
         )
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${Boost_LIBRARIES} Utils-dev Server-dev MongoDB-dev)
-
-#ADD_EXECUTABLE(${PROJECT_NAME}-test
-#        src/main_test.cpp)
-#TARGET_LINK_LIBRARIES(${PROJECT_NAME}-test ${Boost_LIBRARIES})
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${Boost_LIBRARIES} Utils-dev Server-dev MongoDB-dev Utils-dev)

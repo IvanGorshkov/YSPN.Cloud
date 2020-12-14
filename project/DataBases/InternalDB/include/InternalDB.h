@@ -27,7 +27,6 @@ class InternalDB {
   std::string GetSyncFolder() const;
   void InsertUser(const User &user);
   void DeleteUser(size_t id);
-  bool ExistUser();
   void UpdateSyncFolder(const std::string &newFolder);
   void UpdatePassword(const std::string &newPassword);
   std::string SelectUserPassword();
@@ -41,6 +40,7 @@ class InternalDB {
   void SaveLastUpdate();
   std::vector<Files> SelectAllFiles();
  private:
+  std::string _databaseName;
   int _userId;
   int _deviceId;
   std::string _syncFolder;
@@ -48,7 +48,6 @@ class InternalDB {
   boost::posix_time::ptime _lastTMPUpdate;
   std::unique_ptr<sqlite3, sqlite3_deleter> _database;
   std::unique_ptr<sqlite3_stmt, sqlite3_stmt_deleter> _stmt;
-  std::string _databaseName;
   int selectDeviceId();
   int selectUserId();
   std::string selectFolder();
@@ -60,4 +59,6 @@ class InternalDB {
   void insert(const std::string &query);
   std::string selectLastUpdate();
   std::string selectStr(const std::string &query);
+  Files& getOneFile();
+  bool existUser();
 };

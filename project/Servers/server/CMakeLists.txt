@@ -11,7 +11,7 @@ INCLUDE_DIRECTORIES(../../DataBases/MongoDB/include)
 INCLUDE_DIRECTORIES(../../utils/include)
 
 FIND_LIBRARY(Network-dev REQUIRED)
-INCLUDE_DIRECTORIES(../../Network/include)
+INCLUDE_DIRECTORIES(../../Network/Server/include)
 
 
 INCLUDE_DIRECTORIES(include)

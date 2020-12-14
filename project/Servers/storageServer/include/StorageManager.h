@@ -4,7 +4,7 @@
 #include "CommandManager.h"
 #include "StorageExceptions.h"
 #include "SerializerAnswer.h"
-#include "StorageCommand.h"
+#include "StorageCommands.h"
 
 namespace pt = boost::property_tree;
 

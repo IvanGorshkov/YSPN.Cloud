@@ -4,5 +4,5 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include "SerializerAnswer.h"
-#include "SerializerChunk.h"
-#include "SerializerUserChunk.h"
+#include "SerializerUserDate.h"
+#include "SerializerFileMeta.h"

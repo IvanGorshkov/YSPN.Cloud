@@ -5,7 +5,7 @@
 
 namespace pt = boost::property_tree;
 
-struct StorageConfig {
+struct ServerConfig {
   size_t workersCount;
 };
 
@@ -16,13 +16,13 @@ struct NetworkConfig {
 
 struct ClientWorkerConfig {
   size_t requestWorkersCount;
-  size_t responceWorkersCount;
+  size_t responseWorkersCount;
 };
 
 class Config {
  public:
   int Run(const std::string &path);
-  StorageConfig &GetStorageConfig();
+  ServerConfig &GetServerConfig();
   NetworkConfig &GetNetworkConfig();
   ClientWorkerConfig &GetClientWorkerConfig();
   static Config &GetInstance();
@@ -39,7 +39,7 @@ class Config {
   void parseClientWorkerConfig(pt::ptree &clientWorker);
 
  private:
-  StorageConfig _storageConfig{};
+  ServerConfig _serverConfig{};
   NetworkConfig _networkConfig{};
   ClientWorkerConfig _clientWorkerConfig{};
 };

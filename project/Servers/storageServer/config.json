@@ -3,7 +3,7 @@
     "state": "debug",
     "file": ""
   },
-  "storageConfig": {
+  "serverConfig": {
     "workersCount": 1
   },
   "networkConfig": {
@@ -11,7 +11,7 @@
     "backlog": 10
   },
   "clientWorkerConfig": {
-    "requestWorkersCount": 4,
-    "responceWorkersCount": 4
+    "requestWorkersCount": 1,
+    "responceWorkersCount": 1
   }
 }

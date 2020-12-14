@@ -60,19 +60,21 @@ int ClientApp::parseCommand(int command) {
 
 void ClientApp::refresh() {
   std::cout << "Refresh: " << std::endl;
-  app.Refresh(&ClientApp::refreshCallback);
+  app.Refresh(&ClientApp::refreshCallbackOk, &refreshCallbackError);
 }
 
-void ClientApp::refreshCallback(const std::string &msg) {
-  std::cout << "refreshCallback " << msg << std::endl;
+void ClientApp::refreshCallbackOk() {
+  std::cout << "refreshCallbackOk: " << "update complete" << std::endl;
+}
 
-  // TODO refreshCallback print
+void ClientApp::refreshCallbackError(const std::string &msg) {
+  std::cout << "refreshCallbackError: " << msg << std::endl;
 }
 
 void ClientApp::showFiles() {
   std::cout << "Files: " << std::endl;
 
-  auto files = app.getFiles();
+  auto files = app.GetFiles();
 
   for (auto &&file: files) {
     std::cout << file.id << ")";
@@ -90,39 +92,46 @@ void ClientApp::downloadFile() {
   showFiles();
 
   std::cout << "Choice file: ";
-
   int file;
   std::cin >> file;
 
   try {
-    app.downloadFile(file, &ClientApp::downloadFileCallback);
-  } catch (WrongFileNum &er) {
+    app.DownloadFile(file, &ClientApp::downloadFileCallbackOk, &ClientApp::downloadFileCallbackError);
+  } catch (FileIdException &er) {
+    std::cout << er.what() << std::endl;
+  } catch (FileDownloadedException &er) {
     std::cout << er.what() << std::endl;
   }
 }
 
-void ClientApp::downloadFileCallback(const std::string &msg) {
-  std::cout << "downloadFileCallback " << msg << std::endl;
+void ClientApp::downloadFileCallbackOk() {
+  std::cout << "downloadFileCallbackOk: " << "download complete" << std::endl;
+}
 
-  // TODO downloadFileCallback print
+void ClientApp::downloadFileCallbackError(const std::string &msg) {
+  std::cout << "downloadFileCallbackError: " << msg << std::endl;
 }
 
 void ClientApp::showEvents() {
   std::cout << "Events: " << std::endl;
 
-  auto events = app.getEvents();
+//  auto events = app.GetEvents();
+
+//  for (auto &&ev: events) {
+//    std::cout << "Event: " <<
+//  }
 
   // TODO print events
 }
 
 void ClientApp::saveEvents() {
-  app.SaveEvents(&ClientApp::saveEventsCallback);
-
-  // TODO check that is all
+  app.SaveEvents(&ClientApp::saveEventsCallbackOk, &ClientApp::saveEventsCallbackError);
 }
 
-void ClientApp::saveEventsCallback(const std::string &msg) {
-  std::cout << "saveEventsCallback " << msg << std::endl;
+void ClientApp::saveEventsCallbackOk() {
+  std::cout << "saveEventsCallbackOk: " << "upload complete" << std::endl;
+}
 
-  // TODO saveEventsCallback print
+void ClientApp::saveEventsCallbackError(const std::string &msg) {
+  std::cout << "saveEventsCallbackError " << msg << std::endl;
 }

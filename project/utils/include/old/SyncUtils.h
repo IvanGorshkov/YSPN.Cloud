@@ -29,6 +29,7 @@ struct FileMeta {
   int userId;
   int version;
   std::string fileName;
+  std::string filePath;
   std::string fileExtension;
   int fileSize;
   int chunksCount;

@@ -1,30 +1,23 @@
 #include "Worker.h"
+
 #include <chrono>
 #include <thread>
 #include <boost/log/trivial.hpp>
 #include <utility>
 
 Worker::Worker(std::shared_ptr<CommandManager> manager,
-               std::shared_ptr<NetworkSever> server)
+               std::shared_ptr<NetworkServer> server)
     : _manager(std::move(manager)),
       _networkServer(std::move(server)) {
   BOOST_LOG_TRIVIAL(debug) << "Worker: create worker";
 }
-
-//Worker::Worker(std::shared_ptr<CommandManager> manager,
-//               std::function<std::shared_ptr<std::pair<UserSession, pt::ptree>>()> get)
-//    : _manager(std::move(manager)),
-//      getConnection(std::move(get)) {
-//
-//  BOOST_LOG_TRIVIAL(debug) << "Worker: create worker";
-//}
 
 Worker::~Worker() {
   BOOST_LOG_TRIVIAL(debug) << "Worker: delete worker";
 }
 
 void Worker::Run() {
-  BOOST_LOG_TRIVIAL(info) << "Worker: start worker";
+  BOOST_LOG_TRIVIAL(info) << "Worker: Run";
   listening();
 }
 
@@ -42,15 +35,11 @@ void Worker::listening() {
 }
 
 void Worker::onConnect(const std::shared_ptr<std::pair<std::shared_ptr<UserSession>, pt::ptree>> &request) {
-  BOOST_LOG_TRIVIAL(info) << "Worker: start working with user id = ";
+  BOOST_LOG_TRIVIAL(info) << "Worker: start working with user";
 
-  auto responce = _manager->GetRequest(request->second);
-  std::cout << "Put responce" << std::endl;
+  auto response = _manager->GetRequest(request->second);
+  _networkServer->PutResponse(std::make_shared<std::pair<std::shared_ptr<UserSession>,
+                                                         pt::ptree>>(request->first, *response));
 
-  std::pair<std::shared_ptr<UserSession>, pt::ptree> pr = std::make_pair(request->first, *responce);
-
-  auto sh = std::make_shared<std::pair<std::shared_ptr<UserSession>, pt::ptree>>(pr);
-  _networkServer->PutResponce(sh);
-
-  BOOST_LOG_TRIVIAL(info) << "Worker: stop working with user id = ";
+  BOOST_LOG_TRIVIAL(info) << "Worker: stop working with user";
 }

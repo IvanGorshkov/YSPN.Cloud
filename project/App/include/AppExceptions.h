@@ -18,9 +18,16 @@ class AppExceptions : public std::exception {
   std::string _msg;
 };
 
-class WrongFileNum : public AppExceptions {
+class FileIdException : public AppExceptions {
  public:
-  explicit WrongFileNum(std::string msg)
-      : AppExceptions("Wrong file num: " + std::move(msg)) {
+  explicit FileIdException(std::string msg)
+      : AppExceptions("Wrong file id: " + std::move(msg)) {
+  }
+};
+
+class FileDownloadedException : public AppExceptions {
+ public:
+  explicit FileDownloadedException(std::string msg)
+      : AppExceptions("File downloaded: " + std::move(msg)) {
   }
 };

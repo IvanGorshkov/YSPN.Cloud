@@ -5,13 +5,5 @@
 
 class Worker {
  public:
-  Worker(const std::queue<std::shared_ptr<CommandInterface>> &queue);
-
-  void Run();
-
- private:
-  void listening();
-
- private:
-  std::queue<std::shared_ptr<CommandInterface>> _commands;
+  static void Run(std::queue<std::shared_ptr<BaseCommand>> &queue);
 };
