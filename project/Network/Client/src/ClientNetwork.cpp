@@ -64,7 +64,11 @@ void ClientNetwork::Connect(const std::string &localhost, int port) {
 }
 
 void ClientNetwork::Disconnect() {
+  BOOST_LOG_TRIVIAL(debug) << "ClientNetwork: Disconnect";
   _socket.close();
 }
 
-ClientNetwork::~ClientNetwork() = default;
+ClientNetwork::~ClientNetwork() {
+  BOOST_LOG_TRIVIAL(debug) << "ClientNetwork: delete ClientNetwork";
+  Disconnect();
+}
