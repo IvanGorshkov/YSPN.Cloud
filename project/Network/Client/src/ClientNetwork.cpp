@@ -2,17 +2,17 @@
 
 ClientNetwork::ClientNetwork()
     : _socket(_service) {
-  BOOST_LOG_TRIVIAL(debug) << "ClientNetwork: create client";
+  BOOST_LOG_TRIVIAL(debug) << "ClientNetwork: create ClientNetwork";
 }
 
-void ClientNetwork::SendJSON(const boost::property_tree::ptree &jsonRequest) {
+void ClientNetwork::SendJSON(const pt::ptree &jsonRequest) {
   BOOST_LOG_TRIVIAL(debug) << "ClientNetwork: SendJSON";
   std::stringstream ss;
   try {
-    boost::property_tree::json_parser::write_json(ss, jsonRequest, false);
-  } catch (boost::property_tree::ptree_error &ec) {
-    BOOST_LOG_TRIVIAL(error) << "ClientNetwork: error read ptree:" << ec.what();
-    return;
+    pt::json_parser::write_json(ss, jsonRequest, false);
+  } catch (pt::ptree_error &ec) {
+    BOOST_LOG_TRIVIAL(error) << "ClientNetwork: error read JSON, while sending:" << ec.what();
+    throw SendToServerParseJsonException(ec.what());
   }
   char sendBuf[1024];
 
@@ -23,35 +23,29 @@ void ClientNetwork::SendJSON(const boost::property_tree::ptree &jsonRequest) {
   boost::system::error_code ec;
   boost::asio::write(_socket, boost::asio::buffer(sendBuf, request_length), ec);
   if (ec) {
-    BOOST_LOG_TRIVIAL(error) << "ClientNetwork: error write to server:" << ec.message().c_str();
-    return;
+    BOOST_LOG_TRIVIAL(error) << "ClientNetwork: error send to server:" << ec.message().c_str();
+    throw SendToServerException(ec.message());
   }
 }
 
-boost::property_tree::ptree ClientNetwork::ReceiveJSON() {
+pt::ptree ClientNetwork::ReceiveJSON() {
   BOOST_LOG_TRIVIAL(debug) << "ClientNetwork: ReceiveJSON";
   auto buf = std::make_shared<std::vector<char>>(1024);
   boost::system::error_code ec;
   boost::asio::read(_socket, boost::asio::buffer(*buf), ec);
   if (ec) {
     BOOST_LOG_TRIVIAL(error) << "ClientNetwork: error read from server:" << ec.message().c_str();
-    std::stringstream ss(R"({"error": "Error occured" })");
-    boost::property_tree::ptree jsonError;
-    boost::property_tree::read_json(ss, jsonError);
-    return jsonError;
+    throw ReadFromServerException(ec.message());
   }
 
   std::string response = buf->data();
   std::stringstream ss(response);
-  boost::property_tree::ptree jsonResponse;
+  pt::ptree jsonResponse;
   try {
-    boost::property_tree::read_json(ss, jsonResponse);
-  } catch (boost::property_tree::ptree_error &ec) {
-    BOOST_LOG_TRIVIAL(error) << "ClientNetwork: error write ptree: " << ec.what();
-    std::stringstream ss(R"({"error": "Error occured" })");
-    boost::property_tree::ptree jsonError;
-    boost::property_tree::read_json(ss, jsonError);
-    return jsonError;
+    pt::read_json(ss, jsonResponse);
+  } catch (pt::ptree_error &ec) {
+    BOOST_LOG_TRIVIAL(error) << "ClientNetwork: error write JSON to ptree, while receiving: " << ec.what();
+    throw ReadFromServerParseJsonException(ec.what());
   }
   return jsonResponse;
 }
@@ -64,9 +58,13 @@ void ClientNetwork::Connect(const std::string &localhost, int port) {
   boost::system::error_code ec;
   boost::asio::connect(_socket, resolver.resolve({localhost, sport}), ec);
   if (ec) {
-    BOOST_LOG_TRIVIAL(error) << "ClientNetwork: error connect to server:" << ec.message().c_str();
-    return;
+    BOOST_LOG_TRIVIAL(error) << "ClientNetwork: error connect to server: " << ec.message().c_str();
+    throw ConnectServerException(ec.message());
   }
+}
+
+void ClientNetwork::Disconnect() {
+  _socket.close();
 }
 
 ClientNetwork::~ClientNetwork() = default;

@@ -4,14 +4,15 @@
 #include <boost/property_tree/ptree.hpp>
 #include "UserSession.h"
 #include "ClientWorker.h"
+#include "ServerNetworkExceptions.h"
 
 namespace pt = boost::property_tree;
 
-class NetworkSever {
+class NetworkServer {
  public:
-  explicit NetworkSever(short port = 5555, short backlog = 1024);
+  explicit NetworkServer(short port = 5555, short backlog = 1024);
   void StartServer();
-  void PutResponce(const std::shared_ptr<std::pair<std::shared_ptr<UserSession>,
+  void PutResponse(const std::shared_ptr<std::pair<std::shared_ptr<UserSession>,
                                                    pt::ptree> > &response);
   std::shared_ptr<std::pair<std::shared_ptr<UserSession>, pt::ptree> > GetRequest();
 

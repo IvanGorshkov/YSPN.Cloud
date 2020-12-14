@@ -1,4 +1,4 @@
-#include "ClientNetwork.h"
+#include "../../Client/include/ClientNetwork.h"
 #include <iostream>
 
 namespace pt = boost::property_tree;

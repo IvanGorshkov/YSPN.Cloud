@@ -1,4 +1,4 @@
 #pragma once
 
-#include "NetworkSever.h"
+#include "../../Server/include/NetworkServer.h"
 #include <gtest/gtest.h>

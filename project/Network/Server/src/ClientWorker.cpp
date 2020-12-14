@@ -12,7 +12,6 @@ std::shared_ptr<std::pair<std::shared_ptr<UserSession>,
   if (!_request.Empty()) {
     return _request.Pop();
   }
-
   return nullptr;
 }
 
@@ -40,7 +39,11 @@ void ClientWorker::getRequest(const std::shared_ptr<UserSession> &user) {
 void ClientWorker::sendResponse() {
   BOOST_LOG_TRIVIAL(debug) << "ClientWorker: sendResponse";
   auto pairResponse = _response.Pop();
-  pairResponse->first->SendResponse(pairResponse->second);
+    if (pairResponse->first->Sock().is_open())
+        pairResponse->first->SendResponse(pairResponse->second);
+    else{
+        BOOST_LOG_TRIVIAL(error) << "ClientWorker: lost connection to user while sending response";
+    }
 }
 
 // воркер получения запросов пользователя
@@ -76,29 +79,35 @@ void ClientWorker::sendResponse() {
 }
 
 void ClientWorker::RunClientWorker() {
-  BOOST_LOG_TRIVIAL(debug) << "ClientWorker: run client network";
-  std::vector<std::thread> _workerGetRequests;
-  std::vector<std::thread> _workerPutResponses;
+    BOOST_LOG_TRIVIAL(debug) << "ClientWorker: run client network";
 
 //  auto &config = Config::GetInstance();
 
-  size_t requestWorkersCount = 1;
-  _workerGetRequests.reserve(requestWorkersCount);
-  for (int i = 0; i < requestWorkersCount; ++i) {
-    _workerGetRequests.emplace_back([this] { workerGetRequests(); });
-  }
+    size_t requestWorkersCount = 1;
+    std::vector<std::thread> _workerGetRequests;
+    _workerGetRequests.reserve(requestWorkersCount);
+    for (int i = 0; i < requestWorkersCount; ++i) {
+        _workerGetRequests.emplace_back([this] { workerGetRequests(); });
+        BOOST_LOG_TRIVIAL(info) << "ClientWorker: add new worker Get Requests with id = " << _workerGetRequests[i].get_id();
+    }
 
-  size_t responceWorkersCount = 1;
-  _workerPutResponses.reserve(responceWorkersCount);
-  for (int i = 0; i < responceWorkersCount; ++i) {
-    _workerPutResponses.emplace_back([this] { workerSendResponses(); });
-  }
+    size_t responseWorkersCount = 1;
+    std::vector<std::thread> _workerPutResponses;
+    _workerPutResponses.reserve(responseWorkersCount);
+    for (int i = 0; i < responseWorkersCount; ++i) {
+        _workerPutResponses.emplace_back([this] { workerSendResponses(); });
+        BOOST_LOG_TRIVIAL(info) << "ClientWorker: add new worker Put Responses with id = " << _workerPutResponses[i].get_id();
+    }
 
-  for (auto &thread : _workerGetRequests) {
-    thread.join();
-  }
+    for (auto &thread : _workerGetRequests) {
+        thread.join();
+        BOOST_LOG_TRIVIAL(info) << "ClientWorker: join worker Get Requests with id = " << thread.get_id();
+    }
+    _workerGetRequests.clear();
 
-  for (auto &thread : _workerPutResponses) {
-    thread.join();
-  }
+    for (auto &thread : _workerPutResponses) {
+        thread.join();
+        BOOST_LOG_TRIVIAL(info) << "ClientWorker: join worker Put Responses with id = " << thread.get_id();
+    }
+    _workerPutResponses.clear();
 }
