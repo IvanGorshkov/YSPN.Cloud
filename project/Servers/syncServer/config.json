@@ -1,0 +1,17 @@
+{
+  "log": {
+    "state": "debug",
+    "file": ""
+  },
+  "serverConfig": {
+    "workersCount": 1
+  },
+  "networkConfig": {
+    "port": 6666,
+    "backlog": 10
+  },
+  "clientWorkerConfig": {
+    "requestWorkersCount": 1,
+    "responceWorkersCount": 1
+  }
+}
