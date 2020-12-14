@@ -1,5 +1,4 @@
 #include "Worker.h"
-#include <chrono>
 #include <thread>
 #include <boost/log/trivial.hpp>
 
@@ -25,16 +24,11 @@
 //  BOOST_LOG_TRIVIAL(debug) << "Worker: worker &&";
 //}
 
-void Worker::Run(std::queue<std::shared_ptr<CommandInterface>> &queue, bool &isWorking) {
-  while (isWorking) {
-    if (!queue.empty()) {
-      BOOST_LOG_TRIVIAL(info) << "Worker: new command";
-      auto command = queue.front();
-      queue.pop();
-      command->Do();
-    } else {
-//      BOOST_LOG_TRIVIAL(debug) << "Worker: sleep";
-      std::this_thread::sleep_for(std::chrono::seconds(2));
-    }
+void Worker::Run(std::queue<std::shared_ptr<BaseCommand>> &queue) {
+  while (!queue.empty()) {
+    BOOST_LOG_TRIVIAL(info) << "Worker: new command";
+    auto command = queue.front();
+    queue.pop();
+    command->Do();
   }
 }

@@ -4,7 +4,6 @@
 #include <queue>
 #include <functional>
 #include <thread>
-#include "ClientNetwork.h"
 #include "Commands.h"
 #include "InternalDB.h"
 #include "Worker.h"
@@ -15,26 +14,23 @@ class App {
  public:
   App();
   ~App();
-  void Refresh(const std::function<void(const std::string &msg)> &callback);
+  void Refresh(const std::function<void()> &callbackOk,
+               const std::function<void(const std::string &msg)> &callbackError);
 
-  std::vector<Files> getFiles();
-  void downloadFile(int fileId,
-                    const std::function<void(const std::string &msg)> &callbackOk,
+  std::vector<Files> GetFiles();
+  void DownloadFile(int fileId,
+                    const std::function<void()> &callbackOk,
                     const std::function<void(const std::string &msg)> &callbackError) noexcept(false);
 
-  std::vector<int> getEvents();
-  void SaveEvents(const std::function<void(const std::string &msg)> &callback);
+  std::vector<int> GetEvents();
+  void SaveEvents(const std::function<void()> &callbackOk,
+                  const std::function<void(const std::string &msg)> &callbackError);
 
  private:
-  void refresh();
+  void runWorker();
+
+ private:
   std::queue<int> _events;
-  std::queue<std::shared_ptr<CommandInterface>> _commands;
-
-  bool _isWorkingWorker;
-  std::thread _worker;
-
+  std::queue<std::shared_ptr<BaseCommand>> _commands;
   std::shared_ptr<InternalDB> _internalDB;
-  std::shared_ptr<ClientNetwork> _storageNetwork;
-  // shared meta network
-  // shared cloud network
 };

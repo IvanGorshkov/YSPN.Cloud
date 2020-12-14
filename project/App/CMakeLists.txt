@@ -11,7 +11,7 @@ FIND_PACKAGE(Boost COMPONENTS log REQUIRED)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 
 FIND_LIBRARY(ClientNetwork-dev REQUIRED)
-INCLUDE_DIRECTORIES(../Network/include)
+INCLUDE_DIRECTORIES(../Network/Client/include)
 
 FIND_LIBRARY(Utils-dev REQUIRED)
 INCLUDE_DIRECTORIES(../utils/include)
@@ -24,4 +24,4 @@ ADD_LIBRARY(${PROJECT_NAME}-dev
         src/Commands.cpp
         src/ClientConfig.cpp
         )
-TARGET_LINK_LIBRARIES(${PROJECT_NAME}-dev ${Boost_LIBRARIES} InternalDB-dev ClientNetwork-dev Utils-dev )
+TARGET_LINK_LIBRARIES(${PROJECT_NAME}-dev ${Boost_LIBRARIES} InternalDB-dev ClientNetwork-dev Utils-dev)

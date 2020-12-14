@@ -56,3 +56,12 @@ void ClientConfig::Log(const std::string &state, const std::string &file) {
         );
   }
 }
+NetworkConfig ClientConfig::getStorageConfig() {
+  BOOST_LOG_TRIVIAL(debug) << "ClientConfig: getStorageConfig";
+  return NetworkConfig{.host = "localhost", .port = 5555};
+}
+
+NetworkConfig ClientConfig::getSyncConfig() {
+  BOOST_LOG_TRIVIAL(debug) << "ClientConfig: getSyncConfig";
+  return NetworkConfig{.host = "localhost", .port = 6666};
+}

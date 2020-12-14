@@ -4,36 +4,34 @@
 #include <boost/log/trivial.hpp>
 
 App::App()
-    : _internalDB(std::make_shared<InternalDB>("myDB.sqlite")),
-      _storageNetwork(std::make_shared<ClientNetwork>()),
-      _isWorkingWorker(true),
-      _worker(&Worker::Run, std::ref(_commands), std::ref(_isWorkingWorker)) {
+    : _internalDB(std::make_shared<InternalDB>("myDB.sqlite")) {
   BOOST_LOG_TRIVIAL(debug) << "App: create app";
-  ClientConfig::Log();
-  _storageNetwork->Connect();
+//  ClientConfig::Log("release");
 }
 
 App::~App() {
   BOOST_LOG_TRIVIAL(debug) << "App: delete app";
-  _isWorkingWorker = false;
-  _worker.join();
 }
 
-void App::Refresh(const std::function<void(const std::string &msg)> &callback) {
+void App::Refresh(const std::function<void()> &callbackOk,
+                  const std::function<void(const std::string &msg)> &callbackError) {
   BOOST_LOG_TRIVIAL(debug) << "App: Refresh";
-  refresh();
-  callback("dsdsd");
+
+  auto sh = std::make_shared<RefreshCommand>(callbackOk, callbackError, _internalDB);
+  _commands.emplace(sh);
+
+  runWorker();
 }
 
-std::vector<Files> App::getFiles() {
-  BOOST_LOG_TRIVIAL(debug) << "App: getFiles";
+std::vector<Files> App::GetFiles() {
+  BOOST_LOG_TRIVIAL(debug) << "App: GetFiles";
   return _internalDB->SelectAllFiles();
 }
 
-void App::downloadFile(int fileId,
-                       const std::function<void(const std::string &msg)> &callbackOk,
+void App::DownloadFile(int fileId,
+                       const std::function<void()> &callbackOk,
                        const std::function<void(const std::string &msg)> &callbackError) {
-  BOOST_LOG_TRIVIAL(debug) << "App: downloadFile";
+  BOOST_LOG_TRIVIAL(debug) << "App: DownloadFile";
 
   Files file;
   try {
@@ -46,28 +44,30 @@ void App::downloadFile(int fileId,
     throw FileDownloadedException("file is already downloaded");
   }
 
-  auto sh = std::make_shared<DownloadFileCommand>(callbackOk, callbackError, _storageNetwork, file);
+  auto sh = std::make_shared<DownloadFileCommand>(callbackOk, callbackError, _internalDB, file);
   _commands.emplace(sh);
+
+  runWorker();
 }
 
-std::vector<int> App::getEvents() {
-  BOOST_LOG_TRIVIAL(debug) << "App: getEvents";
-
-//  return _events;
+std::vector<int> App::GetEvents() {
+  BOOST_LOG_TRIVIAL(debug) << "App: GetEvents";
+  // TODO getEvents return events queue
 }
 
-void App::SaveEvents(const std::function<void(const std::string &msg)> &callback) {
+void App::SaveEvents(const std::function<void()> &callbackOk,
+                     const std::function<void(const std::string &msg)> &callbackError) {
   BOOST_LOG_TRIVIAL(debug) << "App: SaveEvents";
-  // TODO loop create event command and send to queue
+  // TODO SaveEvents loop create event command and send to queue
 
-  callback("dsdsd");
+  callbackError("test");
 }
 
-void App::refresh() {
-  BOOST_LOG_TRIVIAL(debug) << "App: refresh";
-  // TODO create refreshCommand and send to queue
-  auto sh = std::make_shared<RefreshCommand>(_internalDB);
-  _commands.emplace(sh);
+void App::runWorker() {
+  BOOST_LOG_TRIVIAL(debug) << "App: runWorker";
+
+  auto worker = std::thread(&Worker::Run, std::ref(_commands));
+  worker.detach();
 }
 
 

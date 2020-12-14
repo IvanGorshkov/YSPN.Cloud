@@ -3,62 +3,86 @@
 #include <string>
 #include "InternalDB.h"
 #include "ClientNetwork.h"
+#include "ClientNetworkExceptions.h"
+#include "CommandsExceptions.h"
+#include "ClientConfig.h"
 #include "Files.h"
 #include "SerializerAnswer.h"
 #include "SerializerChunk.h"
 #include "SerializerUserChunk.h"
+#include "SerializerUserDate.h"
+#include "SerializerFileMeta.h"
 #include "SerializerExceptions.h"
 
-class CommandInterface {
+class BaseCommand {
  public:
-  virtual ~CommandInterface() = default;
+  explicit BaseCommand(std::function<void()> callbackOk,
+                       std::function<void(const std::string &msg)> callbackError,
+                       std::shared_ptr<InternalDB> internalDB);
+  virtual ~BaseCommand() = default;
   virtual void Do() = 0;
-};
 
-class RefreshCommand : public CommandInterface {
- public:
-  explicit RefreshCommand(std::shared_ptr<InternalDB> db);
-  void Do() override;
+ protected:
+  static void connect(ClientNetwork &network, NetworkConfig &config);
+  void send(ClientNetwork &network, const pt::ptree &json);
+  void receive(ClientNetwork &network, pt::ptree &json);
 
- private:
+ protected:
+  std::function<void()> callbackOk;
+  std::function<void(const std::string &msg)> callbackError;
+
+ protected:
   std::shared_ptr<InternalDB> _internalDB;
 };
 
-class DownloadFileCommand : public CommandInterface {
+class RefreshCommand : public BaseCommand {
  public:
-  explicit DownloadFileCommand(std::function<void(const std::string &msg)> callbackOk,
+  explicit RefreshCommand(std::function<void()> callbackOk,
+                          std::function<void(const std::string &msg)> callbackError,
+                          std::shared_ptr<InternalDB> internalDB);
+  void Do() override;
+};
+
+class DownloadFileCommand : public BaseCommand {
+ public:
+  explicit DownloadFileCommand(std::function<void()> callbackOk,
                                std::function<void(const std::string &msg)> callbackError,
-                               std::shared_ptr<ClientNetwork> _storageNetwork,
+                               std::shared_ptr<InternalDB> internalDB,
                                Files &file);
   void Do() override;
 
  private:
-  std::function<void(const std::string &msg)> callbackOk;
-  std::function<void(const std::string &msg)> callbackError;
-  std::shared_ptr<ClientNetwork> _storageNetwork;
   Files _file;
 };
 
-class CreateFileCommand : public CommandInterface {
+class CreateFileCommand : public BaseCommand {
  public:
-  explicit CreateFileCommand();
+  explicit CreateFileCommand(std::function<void()> callbackOk,
+                             std::function<void(const std::string &msg)> callbackError,
+                             std::shared_ptr<InternalDB> internalDB);
   void Do() override;
 };
 
-class RemoveFileCommand : public CommandInterface {
+class RemoveFileCommand : public BaseCommand {
  public:
-  explicit RemoveFileCommand();
+  explicit RemoveFileCommand(std::function<void()> callbackOk,
+                             std::function<void(const std::string &msg)> callbackError,
+                             std::shared_ptr<InternalDB> internalDB);
   void Do() override;
 };
 
-class RenameFileCommand : public CommandInterface {
+class RenameFileCommand : public BaseCommand {
  public:
-  explicit RenameFileCommand();
+  explicit RenameFileCommand(std::function<void()> callbackOk,
+                             std::function<void(const std::string &msg)> callbackError,
+                             std::shared_ptr<InternalDB> internalDB);
   void Do() override;
 };
 
-class ModifyFileCommand : public CommandInterface {
+class ModifyFileCommand : public BaseCommand {
  public:
-  explicit ModifyFileCommand();
+  explicit ModifyFileCommand(std::function<void()> callbackOk,
+                             std::function<void(const std::string &msg)> callbackError,
+                             std::shared_ptr<InternalDB> internalDB);
   void Do() override;
 };
