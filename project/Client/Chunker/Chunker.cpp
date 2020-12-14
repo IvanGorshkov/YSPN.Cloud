@@ -26,13 +26,11 @@ void Chunker::ChunkCompare(FileChunk data) {
 }
 
 
-std::string Chunker::getSHashSum() {
+void Chunker::getSHash(FileChunk& chunk) {
     MD5_CTX ctx;
     MD5_Init(&ctx);
-    char file_buffer[4096];
 
-    //разобраться где ифстрим запускать
-
+    MD5_Update(&ctx, chunk.data.data(), chunk.chunkSize);
 
     unsigned char digest[MD5_DIGEST_LENGTH] = {};
     MD5_Final(digest, &ctx);
@@ -41,8 +39,15 @@ std::string Chunker::getSHashSum() {
     for(unsigned char i : digest)
         result << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(i);
 
-    return result.str();
+    chunk.SHash = result.str();
+}
 
+void Chunker::getRHash(FileChunk& chunk) {
+    uint32_t digest = adler32(0, reinterpret_cast<const Bytef *>(chunk.data.data()), chunk.chunkSize);
+
+    std::stringstream result;
+    result << std::hex << static_cast<int>(digest);
+    chunk.RHash = result.str();
 }
 
 
@@ -60,6 +65,8 @@ std::vector<FileChunk> Chunker::ChunkFile() {
             std::array<char, CHUNK_SIZE> data{};
             fileStream.read(data.data(), 7);
             FileChunk chunk{ data, static_cast<size_t>(fileStream.gcount())};
+            getRHash(chunk);
+            getSHash(chunk);
             chunks.push_back(std::move(chunk));
         }
     }

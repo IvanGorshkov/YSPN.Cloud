@@ -18,8 +18,7 @@ public:
     std::ifstream Read();
     std::ofstream Write();
 
-private: 
-    size_t _chunksCount;
+private:
     std::string _path;
 };
 

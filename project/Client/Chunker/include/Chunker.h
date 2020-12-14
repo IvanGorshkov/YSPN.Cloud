@@ -11,23 +11,18 @@
 
 
 class Chunker {
-public: 
+public:
     explicit Chunker(File);
 int SentNewChunk();
-    
 int SentNewPosition();
-    
 File* GetFile();
-
 std::vector<FileChunk> ChunkFile();
 void MergeFile(std::vector<FileChunk>);
-
 void ChunkCompare(FileChunk data);
 private: 
     File  _file;
-    
-std::string getSHashSum();
-    
+void getRHash(FileChunk&);
+    void getSHash(FileChunk&);
 std::string getOldCheckSums();
 
 
