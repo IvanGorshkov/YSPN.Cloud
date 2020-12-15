@@ -24,14 +24,17 @@ InternalDB::InternalDB(std::string  databaseName): _databaseName(std::move(datab
   }
 }
 
-bool InternalDB::isFileExist(const int idFile) {
+bool InternalDB::IsFileExist(const int idFile) {
+  if (!connect()) { throw InternalExceptions("Don't connect"); }
   std::string query = "SELECT count(*) FROM Files Where id="+ std::to_string(idFile) + ";";
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Check exist file id=" + std::to_string(idFile);
   int count = selectId(query);
+  close();
   return count != 0;
 }
 
 std::vector<UserChunk> InternalDB::GetUsersChunks(const int idFile) {
+  if (!connect()) { throw InternalExceptions("Don't connect"); }
 	std::vector<UserChunk> userChunks;
   	std::string query = "SELECT id FROM Chunks Where id_file = " + std::to_string(idFile) + ";";
   	auto pStmt = _stmt.get();
@@ -41,6 +44,7 @@ std::vector<UserChunk> InternalDB::GetUsersChunks(const int idFile) {
    	 userChunks.emplace_back(UserChunk{_userId, sqlite3_column_int(_stmt.get(), 0)});
    	 BOOST_LOG_TRIVIAL(debug) << "InternalDB: Selected";
   	}
+  close();
   return userChunks;
 }
 
