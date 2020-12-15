@@ -41,8 +41,8 @@ int main() {
   u.login = "3";
   //myDB.InsertUser(u);
 
-  std::cout << myDB.GetLastUpdate() << std::endl;
+ // std::cout << myDB.GetLastUpdate() << std::endl;
   myDB.SaveLastUpdate();
-  std::cout << myDB.GetLastUpdate() << std::endl;
+ //std::cout << myDB.GetLastUpdate() << std::endl;
   return 0;
 }

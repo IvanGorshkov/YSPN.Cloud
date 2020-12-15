@@ -37,9 +37,9 @@ std::string InternalDB::GetSyncFolder() const {
   return _syncFolder;
 }
 
-std::string InternalDB::GetLastUpdate() {
+UserDate InternalDB::GetLastUpdate() {
   _lastTMPUpdate = boost::posix_time::second_clock::universal_time();
-  return _lastUpdate;
+  return UserDate{.userId = _userId, .date = _lastUpdate};
 }
 
 //MARK: Занесение в таблицу

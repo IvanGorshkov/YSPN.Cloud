@@ -6,6 +6,7 @@
 #include "Chunks.h"
 #include "User.h"
 #include "Files.h"
+#include "structs/UserDate.h"
 
 struct sqlite3_deleter {
   void operator()(sqlite3 *sql) {
@@ -36,7 +37,7 @@ class InternalDB {
   void InsertChunk(const Chunks &chunks);
   void SelectChunk();
   void UpdateChunk();
-  std::string GetLastUpdate();
+  UserDate GetLastUpdate();
   void SaveLastUpdate();
   std::vector<Files> SelectAllFiles();
  private:
