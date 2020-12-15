@@ -24,6 +24,18 @@ InternalDB::InternalDB(std::string  databaseName): _databaseName(std::move(datab
   }
 }
 
+void InternalDB::InsertFileMeta(const std::vector<FileInfo>& filesInfo) {
+  if (!connect()) { throw InternalExceptions("Don't connect"); }
+	for (const auto& fileInfo: filesInfo) {
+	  insertOneFile(fileInfo.file);
+	  int id = selectId("SELECT id FROM Files ORDER  BY  id  DESC Limit 1");
+	  for (const auto& fileChunksMeta: fileInfo.fileChunksMeta) {
+		InsertChunk(fileChunksMeta, id);
+	  }
+	}
+  close();
+}
+
 //MARK: Getters параметров
 int InternalDB::GetUserId() const {
   return _userId;
@@ -54,6 +66,7 @@ void InternalDB::insert(const std::string& query) {
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Inserted";
 }
 
+
 void InternalDB::InsertUser(const User& user) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Insert User";
@@ -74,23 +87,34 @@ void InternalDB::InsertUser(const User& user) {
   close();
 }
 
-void InternalDB::InsertChunk(const Chunks& chunks) {
+void InternalDB::InsertChunk(const FileChunksMeta& chunks, const int idFile) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Insert Chunck";
-  std::string query = "INSERT INTO Chunks (id_file, chunk_size, rapid_hash, static_hash) VALUES (" + std::to_string(chunks.idFile) + ", " + std::to_string(chunks.chunkSize) + ", '" + chunks.rapidHash + "', '" +
-	  chunks.staticHash + "');";
+  std::string query = "INSERT INTO Chunks (id_file, chunk_order) VALUES (" + std::to_string(idFile) + ", " + std::to_string(chunks.chunkOrder) + ");";
   insert(query);
   close();
 }
 
-void InternalDB::InsertFile(const std::vector<Files>& files) {
+void InternalDB::insertOneFile(const FileMeta& file) {
+  std::string query = "INSERT INTO Files "
+					  "(file_name, file_extention, file_size, "
+	   "file_path, count_chunks, version, is_download, "
+	"update_date, create_date) VALUES ('"
+	+ file.fileName + "', '" + file.fileExtension
+	+ "', " + std::to_string(file.fileSize)
+	+ ", '" + file.filePath + "', " +
+	std::to_string(file.chunksCount) + ", "
+	+ std::to_string(file.version) + ", "
+	+ std::to_string(file.isDownload.value()) + ", '"
+	+ file.updateDate + "', '" + file.createDate + "');";
+  insert(query);
+}
+
+void InternalDB::InsertFile(const std::vector<FileMeta>& files) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Insert Files";
   for(const auto& file: files) {
-	std::string query = "INSERT INTO Files (file_name, file_extention, file_size, file_path, count_chunks, version, is_download, update_date, create_date) VALUES ('" + file.file_name + "', '" + file.file_extention + "', " + std::to_string(file.file_size) + ", '" +
-		file.file_path + "', " + std::to_string(file.count_chunks) + ", " + std::to_string(file.version) + ", " + std::to_string(file.is_download.value()) + ", '" +
-		file.update_date + "', '" + file.create_date + "');";
-	insert(query);
+	insertOneFile(file);
   }
   close();
 }
@@ -109,7 +133,6 @@ void InternalDB::DeleteUser(size_t id) {
   close();
 }
 
-
 //MARK: Обновление БД
 bool InternalDB::update(const std::string& query) {
   auto pStmt = _stmt.get();
@@ -121,14 +144,6 @@ bool InternalDB::update(const std::string& query) {
   }
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Updated";
   return true;
-}
-
-void InternalDB::UpdatePassword(const std::string& newPassword) {
-  if (!connect()) { throw InternalExceptions("Don't connect"); }
-  std::string query = "Update User set password = \"" + newPassword + "\" where user_id = " +  std::to_string(_userId) + ";";
-  BOOST_LOG_TRIVIAL(debug) << "InternalDB: Prepare to update password";
-  update(query);
-  close();
 }
 
 void InternalDB::UpdateSyncFolder(const std::string& newFolder) {
@@ -160,17 +175,9 @@ bool InternalDB::existUser() {
 }
 
 //MARK: Получение данных из БД
-std::string InternalDB::SelectUserPassword() {
-  if (!connect()) { throw InternalExceptions("Don't connect"); }
-  std::string query = "Select password from User where user_id = " +  std::to_string(_userId) + ";";
-  BOOST_LOG_TRIVIAL(debug) << "InternalDB: Prepare to select user password";
-  std::string password = selectStr(query);
-  close();
-  return  password;
-}
 
-Files InternalDB::SelectFile(size_t idFile) {
-  Files file;
+FileMeta InternalDB::SelectFile(size_t idFile) {
+  FileMeta file;
   if (!connect()) { throw InternalExceptions("Don't connect"); }
   std::string query = "SELECT * FROM Files Where id = " + std::to_string(idFile) + ";";
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Select File by id = " << std::to_string(idFile);
@@ -190,23 +197,23 @@ Files InternalDB::SelectFile(size_t idFile) {
   return file;
 }
 
-Files InternalDB::getOneFile() {
-  Files file;
-  file.id = sqlite3_column_int(_stmt.get(), 0);
-  file.file_name = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 1));
-  file.file_extention = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 2));
-  file.file_size = sqlite3_column_int(_stmt.get(), 3);
-  file.file_path = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 4));
-  file.count_chunks = sqlite3_column_int(_stmt.get(), 5);
+FileMeta InternalDB::getOneFile() {
+  FileMeta file;
+  file.fileId = sqlite3_column_int(_stmt.get(), 0);
+  file.fileName = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 1));
+  file.fileExtension = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 2));
+  file.fileSize = sqlite3_column_int(_stmt.get(), 3);
+  file.filePath = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 4));
+  file.chunksCount = sqlite3_column_int(_stmt.get(), 5);
   file.version = sqlite3_column_int(_stmt.get(), 6);
-  file.is_download = sqlite3_column_int(_stmt.get(), 7);
-  file.update_date = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 8));
-  file.create_date = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 9));
+  file.isDownload = sqlite3_column_int(_stmt.get(), 7);
+  file.updateDate = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 8));
+  file.createDate = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 9));
   return file;
 }
 
-std::vector<Files> InternalDB::SelectAllFiles() {
-  std::vector<Files> files;
+std::vector<FileMeta> InternalDB::SelectAllFiles() {
+  std::vector<FileMeta> files;
   if (!connect()) { throw InternalExceptions("Don't connect"); }
   std::string query = "SELECT * FROM Files;";
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Select All Files";
@@ -330,4 +337,21 @@ bool InternalDB::connect() {
 void InternalDB::close() {
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Close";
   sqlite3_shutdown();
+}
+
+//MARK: Функции для регистрации
+void InternalDB::UpdatePassword(const std::string& newPassword) {
+  if (!connect()) { throw InternalExceptions("Don't connect"); }
+  std::string query = "Update User set password = \"" + newPassword + "\" where user_id = " +  std::to_string(_userId) + ";";
+  BOOST_LOG_TRIVIAL(debug) << "InternalDB: Prepare to update password";
+  update(query);
+  close();
+}
+std::string InternalDB::SelectUserPassword() {
+  if (!connect()) { throw InternalExceptions("Don't connect"); }
+  std::string query = "Select password from User where user_id = " +  std::to_string(_userId) + ";";
+  BOOST_LOG_TRIVIAL(debug) << "InternalDB: Prepare to select user password";
+  std::string password = selectStr(query);
+  close();
+  return  password;
 }
