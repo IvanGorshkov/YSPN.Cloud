@@ -2,10 +2,10 @@
 #include <thread>
 
 TEST(TestChunker, RunTest) {
-    File file("/home/dantedoyl/watch/20.txt");
+    File file("/home/dantedoyl/watch/20new.txt");
     Chunker test_chunk(file);
 
-    std::vector<FileChunk> a(test_chunk.ChunkFile());
+    std::vector<Chunk> a(test_chunk.ChunkFile());
 
     File file1("/home/dantedoyl/watch/20new.txt");
     Chunker test_chunk1(file1);
