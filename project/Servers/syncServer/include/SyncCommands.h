@@ -4,7 +4,7 @@
 #include "Command.h"
 #include "SerializerAnswer.h"
 #include "SerializerUserDate.h"
-#include "SerializerFileMeta.h"
+#include "SerializerFileInfo.h"
 
 namespace pt = boost::property_tree;
 
@@ -25,5 +25,5 @@ class UploadFileCommand : public Command {
 
  private:
   std::shared_ptr<pt::ptree> _request;
-  SerializerFileMeta _fileMeta;
+  SerializerFileInfo _fileMeta;
 };

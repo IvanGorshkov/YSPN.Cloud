@@ -92,10 +92,11 @@ void Config::parseLogConfig(pt::ptree &log) {
         );
   }
 
-  if (!log.get<std::string>("file").empty()) {
+  auto file = log.get<std::string>("file");
+  if (!file.empty()) {
     logging::add_file_log
         (
-            keywords::file_name = "sample_%N.log",
+            keywords::file_name = file + "_%N.log",
             keywords::rotation_size = 10 * 1024 * 1024,
             keywords::time_based_rotation =
                 sinks::file::rotation_at_time_point(0, 0, 0),
