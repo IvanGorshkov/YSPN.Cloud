@@ -24,7 +24,7 @@ InternalDB::InternalDB(std::string  databaseName): _databaseName(std::move(datab
   }
 }
 
-void InternalDB::InsertFileMeta(const std::vector<FileInfo>& filesInfo) {
+void InternalDB::InsertFileInfo(const std::vector<FileInfo>& filesInfo) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
 	for (const auto& fileInfo: filesInfo) {
 	  insertOneFile(fileInfo.file);

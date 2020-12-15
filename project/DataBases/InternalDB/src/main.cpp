@@ -34,7 +34,7 @@ int main() {
   auto fileInfo = FileInfo{.file = file, .chunkMeta = chunksMetaVector, .fileChunksMeta = fileChunksMetaVector};
   std::vector<FileInfo> f;
   f.push_back(fileInfo);
-  myDB.InsertFileMeta(f);
+  myDB.InsertFileInfo(f);
 
   return 0;
 }

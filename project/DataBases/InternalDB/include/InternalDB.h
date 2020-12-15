@@ -42,7 +42,7 @@ class InternalDB {
   UserDate GetLastUpdate();
   void SaveLastUpdate();
   std::vector<FileMeta> SelectAllFiles();
-  void InsertFileMeta(const std::vector<FileInfo>& filesInfo);
+  void InsertFileInfo(const std::vector<FileInfo>& filesInfo);
 
  private:
   std::string _databaseName;
