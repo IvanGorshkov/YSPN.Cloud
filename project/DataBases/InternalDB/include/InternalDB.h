@@ -59,6 +59,6 @@ class InternalDB {
   void insert(const std::string &query);
   std::string selectLastUpdate();
   std::string selectStr(const std::string &query);
-  Files& getOneFile();
+  Files getOneFile();
   bool existUser();
 };
