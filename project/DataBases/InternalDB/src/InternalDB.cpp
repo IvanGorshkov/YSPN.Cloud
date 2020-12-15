@@ -189,7 +189,7 @@ Files InternalDB::SelectFile(size_t idFile) {
   return file;
 }
 
-Files& InternalDB::getOneFile() {
+Files InternalDB::getOneFile() {
   Files file;
   file.id = sqlite3_column_int(_stmt.get(), 0);
   file.file_name = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 1));
@@ -201,7 +201,7 @@ Files& InternalDB::getOneFile() {
   file.is_download = sqlite3_column_int(_stmt.get(), 7);
   file.update_date = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 8));
   file.create_date = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 9));
-  return std::ref(file);
+  return file;
 }
 
 std::vector<Files> InternalDB::SelectAllFiles() {
