@@ -22,7 +22,7 @@ std::shared_ptr<pt::ptree> DataUpdateCommand::Do() {
     return std::make_shared<pt::ptree>(answer.GetJson());
   }
 
-  FileMeta responseFileMeta;
+  std::vector<FileInfo> responseFileMeta;
   try {
     // Get fileMeta
   } catch (std::exception &er) {
@@ -31,7 +31,7 @@ std::shared_ptr<pt::ptree> DataUpdateCommand::Do() {
     return std::make_shared<pt::ptree>(answer.GetJson());
   }
 
-  auto answer = SerializerFileMeta(_userDate.GetRequestId(), requestUserDate.userId, responseFileMeta);
+  auto answer = SerializerFileInfo(_userDate.GetRequestId(), requestUserDate.userId, responseFileMeta);
   return std::make_shared<pt::ptree>(answer.GetJson());
 }
 
@@ -47,7 +47,7 @@ std::shared_ptr<pt::ptree> UploadFileCommand::Do() {
   BOOST_LOG_TRIVIAL(debug) << "UploadFileCommand: Do";
   // TODO UploadFileCommand Do PostgreSQL
 
-  FileMeta requestFileMeta;
+  std::vector<FileInfo> requestFileMeta;
   try {
     requestFileMeta = _fileMeta.GetFileMeta();
   } catch (ParseException &er) {
@@ -56,7 +56,7 @@ std::shared_ptr<pt::ptree> UploadFileCommand::Do() {
     return std::make_shared<pt::ptree>(answer.GetJson());
   }
 
-  if (requestFileMeta.fileChunksMeta.empty()) {
+  if (requestFileMeta.empty()) {
     BOOST_LOG_TRIVIAL(error) << "UploadChunkCommand: empty chunk vector";
     auto answer = SerializerAnswer(_fileMeta.GetRequestId(), "Empty json");
     return std::make_shared<pt::ptree>(answer.GetJson());

@@ -18,6 +18,7 @@ void ClientApp::printCommandList() {
   std::cout << "3) DownloadFile" << std::endl;
   std::cout << "4) ShowEvents" << std::endl;
   std::cout << "5) SaveEvents" << std::endl;
+  std::cout << "6) UploadFile" << std::endl;
 }
 
 int ClientApp::parseCommand(int command) {
@@ -48,6 +49,11 @@ int ClientApp::parseCommand(int command) {
 
     case 5: {
       saveEvents();
+      return EXIT_SUCCESS;
+    }
+
+    case 6: {
+      uploadFile();
       return EXIT_SUCCESS;
     }
 
@@ -133,5 +139,27 @@ void ClientApp::saveEventsCallbackOk() {
 }
 
 void ClientApp::saveEventsCallbackError(const std::string &msg) {
-  std::cout << "saveEventsCallbackError " << msg << std::endl;
+  std::cout << "saveEventsCallbackError: " << msg << std::endl;
+}
+
+void ClientApp::uploadFile() {
+  std::cout << "Chose file: ";
+
+  std::string path = "/Users/s.alekhin/cloud/test.txt";
+  std::cout << path << std::endl;
+//  std::cin >> path;
+
+  try {
+    app.UploadFile(path, &ClientApp::uploadFileCallbackOk, &ClientApp::uploadFileCallbackError);
+  } catch (FileNotExistsException &er) {
+    std::cout << er.what() << std::endl;
+  }
+}
+
+void ClientApp::uploadFileCallbackOk() {
+  std::cout << "uploadFileCallbackOk: " << "upload complete" << std::endl;
+}
+
+void ClientApp::uploadFileCallbackError(const std::string &msg) {
+  std::cout << "uploadFileCallbackError: " << msg << std::endl;
 }

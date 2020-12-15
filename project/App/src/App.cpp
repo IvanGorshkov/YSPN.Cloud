@@ -6,7 +6,7 @@
 App::App()
     : _internalDB(std::make_shared<InternalDB>("myDB.sqlite")) {
   BOOST_LOG_TRIVIAL(debug) << "App: create app";
-//  ClientConfig::Log("release");
+//  ClientConfig::Log("release", "sample");
 }
 
 App::~App() {
@@ -61,6 +61,21 @@ void App::SaveEvents(const std::function<void()> &callbackOk,
   // TODO SaveEvents loop create event command and send to queue
 
   callbackError("test");
+}
+
+void App::UploadFile(const fs::path &path,
+                     const std::function<void()> &callbackOk,
+                     const std::function<void(const std::string &)> &callbackError) {
+  BOOST_LOG_TRIVIAL(debug) << "App: UploadFile";
+
+  if (!fs::exists(path)) {
+    throw FileNotExistsException("this file does not exist");
+  }
+
+  auto sh = std::make_shared<CreateFileCommand>(callbackOk, callbackError, _internalDB, path);
+  _commands.emplace(sh);
+
+  runWorker();
 }
 
 void App::runWorker() {

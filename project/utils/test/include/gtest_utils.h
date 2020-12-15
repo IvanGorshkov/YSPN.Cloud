@@ -5,4 +5,4 @@
 #include <boost/property_tree/json_parser.hpp>
 #include "SerializerAnswer.h"
 #include "SerializerUserDate.h"
-#include "SerializerFileMeta.h"
+#include "SerializerFileInfo.h"

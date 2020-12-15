@@ -24,6 +24,10 @@ class ClientApp {
   static void saveEventsCallbackOk();
   static void saveEventsCallbackError(const std::string &msg);
 
+  void uploadFile();
+  static void uploadFileCallbackOk();
+  static void uploadFileCallbackError(const std::string &msg);
+
  private:
   App app;
 };
