@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <boost/filesystem.hpp>
 #include "InternalDB.h"
 #include "ClientNetwork.h"
 #include "ClientNetworkExceptions.h"
@@ -11,8 +12,10 @@
 #include "SerializerChunk.h"
 #include "SerializerUserChunk.h"
 #include "SerializerUserDate.h"
-#include "SerializerFileMeta.h"
+#include "SerializerFileInfo.h"
 #include "SerializerExceptions.h"
+
+namespace fs = boost::filesystem;
 
 class BaseCommand {
  public:
@@ -21,11 +24,6 @@ class BaseCommand {
                        std::shared_ptr<InternalDB> internalDB);
   virtual ~BaseCommand() = default;
   virtual void Do() = 0;
-
- protected:
-  static void connect(ClientNetwork &network, NetworkConfig &config);
-  void send(ClientNetwork &network, const pt::ptree &json);
-  void receive(ClientNetwork &network, pt::ptree &json);
 
  protected:
   std::function<void()> callbackOk;
@@ -59,8 +57,12 @@ class CreateFileCommand : public BaseCommand {
  public:
   explicit CreateFileCommand(std::function<void()> callbackOk,
                              std::function<void(const std::string &msg)> callbackError,
-                             std::shared_ptr<InternalDB> internalDB);
+                             std::shared_ptr<InternalDB> internalDB,
+                             fs::path path);
   void Do() override;
+
+ private:
+  fs::path _filePath;
 };
 
 class RemoveFileCommand : public BaseCommand {

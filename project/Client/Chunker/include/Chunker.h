@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include "File.h"
@@ -7,28 +6,19 @@
 #include "zlib.h"
 #include <memory>
 
-
-
-
 class Chunker {
-public: 
-    explicit Chunker(File);
-int SentNewChunk();
-    
-int SentNewPosition();
-    
-File* GetFile();
-
-std::vector<FileChunk> ChunkFile();
-void MergeFile(std::vector<FileChunk>);
-
-void ChunkCompare(FileChunk data);
-private: 
-    File  _file;
-    
-std::string getSHashSum();
-    
-std::string getOldCheckSums();
-
+ public:
+  explicit Chunker(File);
+  int SentNewChunk();
+  int SentNewPosition();
+  File *GetFile();
+  std::vector<FileChunk> ChunkFile();
+  void MergeFile(std::vector<FileChunk>);
+  void ChunkCompare(FileChunk data);
+ private:
+  File _file;
+  void getRHash(FileChunk &);
+  void getSHash(FileChunk &);
+  std::string getOldCheckSums();
 
 };

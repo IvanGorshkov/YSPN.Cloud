@@ -3,20 +3,20 @@
 #include <boost/property_tree/ptree.hpp>
 #include <string>
 #include <vector>
-#include "structs/FileMeta.h"
+#include "structs/FileInfo.h"
 #include "SerializerInterface.h"
 #include "SerializerExceptions.h"
 
 namespace pt = boost::property_tree;
 
-class SerializerFileMeta : public SerializerInterface {
+class SerializerFileInfo : public SerializerInterface {
  public:
-  SerializerFileMeta() = default;
-  explicit SerializerFileMeta(int requestId, int userId, FileMeta fileMeta);
-  explicit SerializerFileMeta(const pt::ptree &val);
+  SerializerFileInfo() = default;
+  explicit SerializerFileInfo(int requestId, int userId, std::vector<FileInfo> fileMetaVector);
+  explicit SerializerFileInfo(const pt::ptree &val);
 
   int GetRequestId() const;
-  FileMeta GetFileMeta() noexcept(false);
+  std::vector<FileInfo> GetFileMeta() noexcept(false);
   pt::ptree GetJson();
 
  private:
@@ -26,6 +26,6 @@ class SerializerFileMeta : public SerializerInterface {
  private:
   int _requestId{};
   int _userId{};
-  FileMeta _fileMeta;
+  std::vector<FileInfo> _fileMetaVector;
   pt::ptree _json{};
 };

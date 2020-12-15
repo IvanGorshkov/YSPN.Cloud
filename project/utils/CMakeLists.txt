@@ -14,7 +14,7 @@ ADD_LIBRARY(${PROJECT_NAME}-dev SHARED
         src/SerializerUserChunk.cpp
         src/SerializerAnswer.cpp
         src/SerializerUserDate.cpp
-        src/SerializerFileMeta.cpp
+        src/SerializerFileInfo.cpp
         )
 TARGET_LINK_LIBRARIES(${PROJECT_NAME}-dev ${Boost_LIBRARIES})
 

@@ -1,7 +1,7 @@
 #include "gtest_utils.h"
 
 TEST(FileMeta, Struct) {
-  auto file = File{.fileId = 1,
+  auto file = FileMeta{.fileId = 1,
       .version = 1,
       .fileName = "test",
       .fileExtension = "txt",
@@ -24,9 +24,12 @@ TEST(FileMeta, Struct) {
     fileChunksMetaVector.push_back(fileChunkMeta);
   }
 
-  auto fileMeta = FileMeta{.file = file, .chunkMeta = chunksMetaVector, .fileChunksMeta = fileChunksMetaVector};
+  auto fileMeta = FileInfo{.file = file, .chunkMeta = chunksMetaVector, .fileChunksMeta = fileChunksMetaVector};
 
-  auto serializer = SerializerFileMeta(1, 1, fileMeta);
+  std::vector<FileInfo> vec;
+  vec.push_back(fileMeta);
+
+  auto serializer = SerializerFileInfo(1, 1, vec);
 
   std::stringstream ss;
   pt::write_json(ss, serializer.GetJson());

@@ -9,11 +9,13 @@ struct FileMeta {
            const time_t &createDate,
            const time_t &updateDate)
       :
-        fileName(fileName),
-        fileExtension(fileExtension),
-        fileSize(fileSize),
-        createDate(createDate),
-        updateDate(updateDate) {
+      fileName(fileName),
+      fileExtension(fileExtension),
+      fileSize(fileSize),
+      createDate(createDate),
+      updateDate(updateDate),
+      isDeleted(false),
+      isCurrent(true) {
   }
 
   int fileId;
@@ -24,6 +26,7 @@ struct FileMeta {
   int fileSize;
   int chunksCount;
   bool isCurrent;
+  bool isDeleted;
   time_t createDate;
   time_t updateDate;
 };

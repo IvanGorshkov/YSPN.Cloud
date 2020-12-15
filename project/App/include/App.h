@@ -4,11 +4,14 @@
 #include <queue>
 #include <functional>
 #include <thread>
+#include <boost/filesystem.hpp>
 #include "Commands.h"
 #include "InternalDB.h"
 #include "Worker.h"
 #include "AppExceptions.h"
 #include "InternalExceptions.h"
+
+namespace fs = boost::filesystem;
 
 class App {
  public:
@@ -24,6 +27,10 @@ class App {
 
   std::vector<int> GetEvents();
   void SaveEvents(const std::function<void()> &callbackOk,
+                  const std::function<void(const std::string &msg)> &callbackError);
+
+  void UploadFile(const fs::path &path,
+                  const std::function<void()> &callbackOk,
                   const std::function<void(const std::string &msg)> &callbackError);
 
  private:

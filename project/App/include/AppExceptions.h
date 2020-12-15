@@ -31,3 +31,10 @@ class FileDownloadedException : public AppExceptions {
       : AppExceptions("File downloaded: " + std::move(msg)) {
   }
 };
+
+class FileNotExistsException : public AppExceptions {
+ public:
+  explicit FileNotExistsException(std::string msg)
+      : AppExceptions("File not exists: " + std::move(msg)) {
+  }
+};
