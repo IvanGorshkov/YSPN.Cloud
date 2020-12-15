@@ -33,6 +33,7 @@ void MongoDB::InsertChunk(const std::vector<Chunk>& chunks) const {
 	inChunks.push_back(
 		document{} << "id_user" << chunk.userId
 		<< "id_chunk" << chunk.chunkId
+		<< "size_chunk" << chunk.chunkSize
 		<< "rapid_hash" << chunk.rHash
 		<< "static_hash" << chunk.sHash
 		<< "data" << b_binary << finalize
@@ -56,6 +57,7 @@ std::vector<Chunk> MongoDB::GetChunk(const std::vector<UserChunk>& userChunks) c
 	  bsoncxx::document::view view = value.view();
 	  chunk.userId = view["id_user"].get_int32();
 	  chunk.chunkId = view["id_chunk"].get_int32();
+	  chunk.chunkSize = view["size_chunk"].get_int32();
 	  chunk.sHash = view["static_hash"].get_utf8().value.to_string();
 	  chunk.rHash = view["rapid_hash"].get_utf8().value.to_string();
 	  const unsigned char* data = view["data"].get_binary().bytes;

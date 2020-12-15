@@ -3,9 +3,13 @@
 #include <sqlite3.h>
 #include <memory>
 #include <boost/date_time.hpp>
-#include "Chunks.h"
+#include "structs/FileChunksMeta.h"
 #include "User.h"
-#include "Files.h"
+#include "structs/FileMeta.h"
+#include "structs/UserDate.h"
+#include "structs/FileInfo.h"
+#include "structs/UserChunk.h"
+#include <vector>
 
 struct sqlite3_deleter {
   void operator()(sqlite3 *sql) {
@@ -30,15 +34,19 @@ class InternalDB {
   void UpdateSyncFolder(const std::string &newFolder);
   void UpdatePassword(const std::string &newPassword);
   std::string SelectUserPassword();
-  void InsertFile(const std::vector<Files> &files);
-  Files SelectFile(size_t idFile);
+  void InsertFile(const std::vector<FileMeta> &files);
+  FileMeta SelectFile(size_t idFile);
   void UpdateFile();
-  void InsertChunk(const Chunks &chunks);
+  void InsertChunk(const FileChunksMeta& chunks, const int idFile) ;
   void SelectChunk();
   void UpdateChunk();
-  std::string GetLastUpdate();
+  UserDate GetLastUpdate();
   void SaveLastUpdate();
-  std::vector<Files> SelectAllFiles();
+  std::vector<FileMeta> SelectAllFiles();
+  void InsertFileInfo(const std::vector<FileInfo>& filesInfo);
+  std::vector<UserChunk> GetUsersChunks(const int idFile);
+  bool IsFileExist(const int idFile);
+
  private:
   std::string _databaseName;
   int _userId;
@@ -59,6 +67,7 @@ class InternalDB {
   void insert(const std::string &query);
   std::string selectLastUpdate();
   std::string selectStr(const std::string &query);
-  Files getOneFile();
+  FileMeta getOneFile();
   bool existUser();
+  void insertOneFile(const FileMeta& file);
 };

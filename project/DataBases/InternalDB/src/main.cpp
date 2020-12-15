@@ -7,42 +7,34 @@
 
 int main() {
   InternalDB myDB("myDB.sqlite");
+  auto file = FileMeta{.fileId = 1,
+	  .version = 1,
+	  .fileName = "test",
+	  .fileExtension = "txt",
+	  .filePath = "static/",
+	  .fileSize = 1,
+	  .chunksCount = 1,
+	  .isCurrent = true,
+	  .isDownload = true,
+	  .updateDate = "31.12.1970",
+	  .createDate = "31.12.1970"};
 
-  //myDB.DeleteUser(233);
-  myDB.UpdateSyncFolder("asd");
-  Files f;
-  f.file_name = "hello";
-  f.file_extention = "hello";
-  f.create_date = "hello";
-  f.update_date = "hello";
-  f.is_download = false;
-  f.version = 1;
-  f.count_chunks = 0;
-  f.file_path = "fuck";
-  f.file_size = 232;
-  std::vector<Files> files;
-  files.push_back(f);
-  myDB.InsertFile(files);
-  myDB.SelectFile(2);
-  Chunks c;
-  c.idFile = 1;
-  c.chunkSize = 2;
-  c.id = 1;
-  c.rapidHash = "asd";
-  c.staticHash = "adsd";
-  myDB.InsertChunk(c);
-  User u;
-  u.userId = 1;
-  u.lastUpdate = "popusk";
-  u.syncFolder = "popusk";
-  u.deviceName = "popusk";
-  u.deviceId = 3;
-  u.password = "3";
-  u.login = "3";
-  //myDB.InsertUser(u);
+  std::vector<ChunkMeta> chunksMetaVector;
+  for (int i = 0; i < 2; ++i) {
+	auto chunkMeta = ChunkMeta{.chunkId = i};
+	chunksMetaVector.push_back(chunkMeta);
+  }
 
-  std::cout << myDB.GetLastUpdate() << std::endl;
-  myDB.SaveLastUpdate();
-  std::cout << myDB.GetLastUpdate() << std::endl;
+  std::vector<FileChunksMeta> fileChunksMetaVector;
+  for (int i = 0; i < 2; ++i) {
+	auto fileChunkMeta = FileChunksMeta{.chunkId = i, .chunkOrder = i};
+	fileChunksMetaVector.push_back(fileChunkMeta);
+  }
+
+  auto fileInfo = FileInfo{.file = file, .chunkMeta = chunksMetaVector, .fileChunksMeta = fileChunksMetaVector};
+  std::vector<FileInfo> f;
+  f.push_back(fileInfo);
+  myDB.InsertFileInfo(f);
+  auto d = myDB.GetUsersChunks(3);
   return 0;
 }

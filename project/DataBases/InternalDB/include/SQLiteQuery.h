@@ -16,9 +16,10 @@ const std::string createQueryFiles = "CREATE TABLE IF NOT EXISTS  \"Files\" (\n"
 const std::string createQueryChunks = "CREATE TABLE IF NOT EXISTS \"Chunks\" (\n"
 								"\t\"id\"\tINTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,\n"
 								"\t\"id_file\"\tINTEGER NOT NULL,\n"
-								"\t\"chunk_size\"\tINTEGER NOT NULL,\n"
-								"\t\"rapid_hash\"\tTEXT NOT NULL,\n"
-								"\t\"static_hash\"\tTEXT NOT NULL,\n"
+								"\t\"chunk_order\"\tINTEGER NOT NULL,\n"
+								"\t\"chunk_size\"\tINTEGER,\n"
+								"\t\"rapid_hash\"\tTEXT,\n"
+								"\t\"static_hash\"\tTEXT,\n"
 								"\tFOREIGN KEY(\"id_file\") REFERENCES \"Files\"(\"id\") ON DELETE CASCADE\n"
 								");";
 
