@@ -8,6 +8,7 @@
 #include "structs/FileMeta.h"
 #include "structs/UserDate.h"
 #include "structs/FileInfo.h"
+#include "structs/UserChunk.h"
 #include <vector>
 
 struct sqlite3_deleter {
@@ -43,6 +44,7 @@ class InternalDB {
   void SaveLastUpdate();
   std::vector<FileMeta> SelectAllFiles();
   void InsertFileInfo(const std::vector<FileInfo>& filesInfo);
+  std::vector<UserChunk> GetUsersChunks(const int idFile);
 
  private:
   std::string _databaseName;

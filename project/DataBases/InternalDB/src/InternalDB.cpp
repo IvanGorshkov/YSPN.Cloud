@@ -24,6 +24,19 @@ InternalDB::InternalDB(std::string  databaseName): _databaseName(std::move(datab
   }
 }
 
+std::vector<UserChunk> InternalDB::GetUsersChunks(const int idFile) {
+	std::vector<UserChunk> userChunks;
+  	std::string query = "SELECT id FROM Chunks Where id_file = " + std::to_string(idFile) + ";";
+  	auto pStmt = _stmt.get();
+  	sqlite3_prepare_v2(_database.get(), query.c_str(), query.size(), &pStmt, nullptr);
+  	_stmt.reset(pStmt);
+    while(sqlite3_step(_stmt.get()) == SQLITE_ROW) {
+   	 userChunks.emplace_back(UserChunk{_userId, sqlite3_column_int(_stmt.get(), 0)});
+   	 BOOST_LOG_TRIVIAL(debug) << "InternalDB: Selected";
+  	}
+  return userChunks;
+}
+
 void InternalDB::InsertFileInfo(const std::vector<FileInfo>& filesInfo) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
 	for (const auto& fileInfo: filesInfo) {
