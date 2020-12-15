@@ -45,6 +45,7 @@ class InternalDB {
   std::vector<FileMeta> SelectAllFiles();
   void InsertFileInfo(const std::vector<FileInfo>& filesInfo);
   std::vector<UserChunk> GetUsersChunks(const int idFile);
+  bool isFileExist(const int idFile);
 
  private:
   std::string _databaseName;
