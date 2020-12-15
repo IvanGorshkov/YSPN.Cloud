@@ -109,6 +109,7 @@ void InternalDB::DeleteUser(size_t id) {
   close();
 }
 
+
 //MARK: Обновление БД
 bool InternalDB::update(const std::string& query) {
   auto pStmt = _stmt.get();
