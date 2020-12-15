@@ -1,29 +1,31 @@
 #include "Indexer.h"
-
-void Indexer::GetWatcherEvent(Notification notification) {
-  switch (notification.event) {
-    case 256:CreateNewFile(notification.path);
-      break;
-    case 512:DeleteFile(notification.path);
-      break;
-    case 2:ModifyFile(notification.path);
-      break;
-    case 64:ChangeMetaData(notification.path);
-  }
-  return;
+#include "FileMeta.h"
+FileMeta Indexer::GetFileMeta(bfs::path file, bool IsDeleted = false) {
+  FileMeta new_file_meta{.fileName = file.filename().string(),
+      .fileExtension = file.extension().string(),
+      .fileSize = boost::filesystem::file_size(file),
+      .updateDate = boost::filesystem::last_write_time(file),
+      .isDeleted = IsDeleted};
+  // TODO: отправить FileMeta для получения FileId
+  return new_file_meta;
 }
 
-void Indexer::CreateNewFile(boost::filesystem::path file) {
-
-  // TODO: notifier alert for app notification
-  File new_file(file.string());
-  FileMeta new_file_meta(file.filename().string(),
-                         file.extension().string(),
-                         boost::filesystem::file_size(file),
-                         boost::filesystem::last_write_time(file),
-                         boost::filesystem::last_write_time(file));
-
-  // TODO: отправить метаданные в InternalDB
+FileInfo Indexer::GetFileInfo(const FileMeta &file, std::vector<Chunk> chunks) {
+  //TODO: InternalDB(FileMeta.fileid, &vector<Chunk>) получаем id
+  std::vector<ChunkMeta> chunk_meta;
+  std::vector<FileChunksMeta> file_chunks_meta;
+  int i = 0;
+  std::for_each(chunks.begin(), chunks.end(), [&chunk_meta, &file_chunks_meta, &i](const Chunk &chunk) {
+    chunk_meta.push_back(ChunkMeta{chunk.chunkId});
+    file_chunks_meta.push_back(FileChunksMeta{chunk.chunkId, ++i});
+  });
+  FileInfo info{
+      .chunkMeta = chunk_meta,
+      .file = file,
+      .userId = 0, //TODO: InternalDB.getUserId()
+      .fileChunksMeta = file_chunks_meta
+  };
+  return info;
 }
 
 int Indexer::sentUpdatetoLocalDB(void структура_для_мета_данных) {

@@ -11,11 +11,35 @@ int Chunker::SentNewPosition() {
   return 0;
 }
 
-void Chunker::ChunkCompare(FileChunk data) {
+void Chunker::ChunkCompare(Chunk data) {
   return;
 }
 
-void Chunker::getSHash(FileChunk &chunk) {
+std::vector<Chunk> Chunker::UpdateChunkFile(const std::vector<Chunk>& old_chunks) {
+  std::ifstream fileStream(std::move(_file.Read()));
+  size_t size = fileStream.seekg(0, std::ios::end).tellg();
+  fileStream.seekg(0,std::ios::beg);
+  std::vector<Chunk> chunks;
+
+  if (fileStream.is_open()) {
+    while (!fileStream.eof()) {
+      std::array<char, CHUNK_SIZE> data{};
+
+//      fileStream.read(data.data(), CHUNK_SIZE);
+//      Chunk chunk{
+//          .chunkSize = static_cast<int>(fileStream.gcount()),
+//          .data = data,
+//      };
+//      getRHash(chunk);
+//      getSHash(chunk);
+//      chunks.push_back(std::move(chunk));
+    }
+  }
+  fileStream.close();
+  return chunks;
+}
+
+void Chunker::getSHash(Chunk &chunk) {
   MD5_CTX ctx;
   MD5_Init(&ctx);
 
@@ -28,31 +52,35 @@ void Chunker::getSHash(FileChunk &chunk) {
   for (unsigned char i : digest)
     result << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(i);
 
-  chunk.SHash = result.str();
+  chunk.sHash = result.str();
 }
 
-void Chunker::getRHash(FileChunk &chunk) {
+void Chunker::getRHash(Chunk &chunk) {
   uint32_t digest = adler32(0, reinterpret_cast<const Bytef *>(chunk.data.data()), chunk.chunkSize);
 
   std::stringstream result;
   result << std::hex << static_cast<int>(digest);
-  chunk.RHash = result.str();
+  chunk.rHash = result.str();
 }
 
 std::string Chunker::getOldCheckSums() {
   return "";
 }
 
-std::vector<FileChunk> Chunker::ChunkFile() {
+std::vector<Chunk> Chunker::ChunkFile() {
   std::ifstream fileStream(std::move(_file.Read()));
-  //size_t size = fileStream.seekg(0, std::ios::end).tellg();
-  std::vector<FileChunk> chunks;
+  size_t size = fileStream.seekg(0, std::ios::end).tellg();
+  fileStream.seekg(0,std::ios::beg);
+  std::vector<Chunk> chunks;
 
   if (fileStream.is_open()) {
     while (!fileStream.eof()) {
       std::array<char, CHUNK_SIZE> data{};
-      fileStream.read(data.data(), 7);
-      FileChunk chunk{data, static_cast<size_t>(fileStream.gcount())};
+      fileStream.read(data.data(), CHUNK_SIZE);
+      Chunk chunk{
+          .chunkSize = static_cast<int>(fileStream.gcount()),
+          .data = data,
+      };
       getRHash(chunk);
       getSHash(chunk);
       chunks.push_back(std::move(chunk));
@@ -62,7 +90,7 @@ std::vector<FileChunk> Chunker::ChunkFile() {
   return chunks;
 }
 
-void Chunker::MergeFile(std::vector<FileChunk> chunks) {
+void Chunker::MergeFile(std::vector<Chunk> chunks) {
   // TODO: для беспорядка принимать мапу, где первое поле order
   std::ofstream outputFile(std::move(_file.Write()));
 

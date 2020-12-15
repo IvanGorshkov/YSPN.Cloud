@@ -31,9 +31,10 @@ include_directories(${GTEST_INCLUDE_DIRS})
 include_directories(include)
 include_directories(../include)
 include_directories(../../utils)
+include_directories(../../../utils/include/structs)
 
 add_executable(tests_gtest_client main.cpp test_Chunker.cpp)
-target_link_libraries(tests_gtest_client ${GTEST_BOTH_LIBRARIES}  ${CMAKE_THREAD_LIBS_INIT} libChunker Crypto ZLIB::ZLIB)
-
+target_link_libraries(tests_gtest_client ${GTEST_BOTH_LIBRARIES}  ${CMAKE_THREAD_LIBS_INIT} libChunker OpenSSL::Crypto ZLIB::ZLIB)
+#===========OpenSSL::Crypto не работет на Маке, надо исправить===========
 
 ADD_TEST(NAME Test COMMAND ${PROJECT_NAME})

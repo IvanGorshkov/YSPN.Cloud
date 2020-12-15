@@ -1,5 +1,5 @@
 #pragma once
-
+#include "Chunk.h"
 #include "File.h"
 #include <openssl/md5.h>
 #include <iomanip>
@@ -12,13 +12,14 @@ class Chunker {
   int SentNewChunk();
   int SentNewPosition();
   File *GetFile();
-  std::vector<FileChunk> ChunkFile();
-  void MergeFile(std::vector<FileChunk>);
-  void ChunkCompare(FileChunk data);
+  std::vector<Chunk> ChunkFile();
+  std::vector<Chunk> UpdateChunkFile(const std::vector<Chunk>&);
+  void MergeFile(std::vector<Chunk>);
+  void ChunkCompare(Chunk data);
  private:
   File _file;
-  void getRHash(FileChunk &);
-  void getSHash(FileChunk &);
+  void getRHash(Chunk &);
+  void getSHash(Chunk &);
   std::string getOldCheckSums();
 
 };

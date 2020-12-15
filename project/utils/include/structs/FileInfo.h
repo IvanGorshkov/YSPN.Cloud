@@ -1,9 +1,9 @@
 #pragma once
 
 #include <vector>
-#include "structs/FileMeta.h"
-#include "structs/ChunkMeta.h"
-#include "structs/FileChunksMeta.h"
+#include "FileMeta.h"
+#include "ChunkMeta.h"
+#include "FileChunksMeta.h"
 
 struct FileInfo {
   int userId;
