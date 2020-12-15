@@ -1,10 +1,4 @@
-/**
- * Project Untitled
- */
-
-
-#ifndef _FILE_H
-#define _FILE_H
+#pragma once
 #include "stdlib.h"
 #include <vector>
 #include <string>
@@ -12,14 +6,12 @@
 #include <fstream>
 
 class File {
-public: 
-    File(std::string);
-    ~File();
-    std::ifstream Read();
-    std::ofstream Write();
+ public:
+  File(std::string);
+  ~File();
+  std::ifstream Read();
+  std::ofstream Write();
 
-private:
-    std::string _path;
+ private:
+  std::string _path;
 };
-
-#endif //_FILE_H
