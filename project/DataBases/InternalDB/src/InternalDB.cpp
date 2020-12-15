@@ -309,6 +309,7 @@ std::string InternalDB::selectStr(const std::string& query) {
   return string;
 }
 
+
 //MARK: Создание Последней даты использования
 void InternalDB::SaveLastUpdate() {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
