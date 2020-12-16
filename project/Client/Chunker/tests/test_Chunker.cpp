@@ -7,7 +7,7 @@ TEST(TestChunker, RunTest) {
 
     std::vector<Chunk> a(test_chunk.ChunkFile());
 
-    File file1("/home/dantedoyl/watch/20new.txt");
+    File file1("/home/dantedoyl/watch/20newnew.txt");
     Chunker test_chunk1(file1);
 
     test_chunk1.MergeFile(a);

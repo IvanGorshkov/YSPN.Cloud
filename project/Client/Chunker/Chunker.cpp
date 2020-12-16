@@ -68,22 +68,23 @@ std::string Chunker::getOldCheckSums() {
 }
 
 std::vector<Chunk> Chunker::ChunkFile() {
+  int a = 0;
   std::ifstream fileStream(std::move(_file.Read()));
   size_t size = fileStream.seekg(0, std::ios::end).tellg();
   fileStream.seekg(0,std::ios::beg);
   std::vector<Chunk> chunks;
-
   if (fileStream.is_open()) {
     while (!fileStream.eof()) {
       std::array<char, CHUNK_SIZE> data{};
       fileStream.read(data.data(), CHUNK_SIZE);
       Chunk chunk{
           .chunkSize = static_cast<int>(fileStream.gcount()),
-          .data = data,
       };
+      std::copy(data.begin(), std::find(data.begin(), data.end(), '\0'), std::back_inserter(chunk.data));
       getRHash(chunk);
       getSHash(chunk);
       chunks.push_back(std::move(chunk));
+
     }
   }
   fileStream.close();

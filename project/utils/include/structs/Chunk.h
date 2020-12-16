@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <array>
+#include <vector>
 
 #define CHUNK_SIZE       4096
 
@@ -11,5 +11,5 @@ struct Chunk {
   int chunkSize;
   std::string sHash;
   std::string rHash;
-  std::array<char, CHUNK_SIZE> data;
+  std::vector<char> data;
 };
