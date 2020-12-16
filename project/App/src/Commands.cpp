@@ -25,22 +25,24 @@ RefreshCommand::RefreshCommand(std::function<void()> callbackOk,
 void RefreshCommand::Do() {
   BOOST_LOG_TRIVIAL(debug) << "RefreshCommand: do";
 
+  auto syncConfig = ClientConfig::getSyncConfig();
+  auto network = ClientNetwork();
+
   auto userDate = _internalDB->GetLastUpdate();
   auto requestSerializer = SerializerUserDate(0, userDate);
 
-  auto syncConfig = ClientConfig::getSyncConfig();
-  auto sync = ClientNetwork();
   pt::ptree response;
   try {
-    sync.Connect(syncConfig.host, syncConfig.port);
-    sync.SendJSON(requestSerializer.GetJson());
-    response = sync.ReceiveJSON();
+    network.Connect(syncConfig.host, syncConfig.port);
+    network.SendJSON(requestSerializer.GetJson());
+    response = network.ReceiveJSON();
 
   } catch (ClientNetworkExceptions &er) {
     BOOST_LOG_TRIVIAL(error) << "RefreshCommand: " << er.what();
     callbackError(er.what());
     return;
   }
+  network.Disconnect();
 
   // test
   std::stringstream ss;
@@ -80,22 +82,24 @@ DownloadFileCommand::DownloadFileCommand(std::function<void()> callbackOk,
 void DownloadFileCommand::Do() {
   BOOST_LOG_TRIVIAL(debug) << "DownloadFileCommand: do";
 
+  auto storageConfig = ClientConfig::getStorageConfig();
+  auto network = ClientNetwork();
+
   auto userChunkVector = _internalDB->GetUsersChunks(_file.fileId);
   auto requestSerializer = SerializerUserChunk(0, userChunkVector);
 
-  auto storageConfig = ClientConfig::getStorageConfig();
-  auto storage = ClientNetwork();
   pt::ptree response;
   try {
-    storage.Connect(storageConfig.host, storageConfig.port);
-    storage.SendJSON(requestSerializer.GetJson());
-    response = storage.ReceiveJSON();
+    network.Connect(storageConfig.host, storageConfig.port);
+    network.SendJSON(requestSerializer.GetJson());
+    response = network.ReceiveJSON();
 
   } catch (ClientNetworkExceptions &er) {
     BOOST_LOG_TRIVIAL(error) << "DownloadFileCommand: " << er.what();
     callbackError(er.what());
     return;
   }
+  network.Disconnect();
 
   // test
   std::stringstream ss;
@@ -143,6 +147,9 @@ void FileCommand::Do() {
   BOOST_LOG_TRIVIAL(debug) << "FileCommand: do";
   // TODO createFileCommand Do
 
+  auto storageConfig = ClientConfig::getStorageConfig();
+  auto syncConfig = ClientConfig::getSyncConfig();
+  auto network = ClientNetwork();
 
   File file(_filePath.string());
   Chunker chunker(file);
@@ -153,47 +160,47 @@ void FileCommand::Do() {
   auto fileInfo = indexer.GetFileInfo(fileMeta, chunkVector);
 
   auto storageRequestSerializer = SerializerChunk(0, chunkVector);
-  auto storageConfig = ClientConfig::getStorageConfig();
-  auto storage = ClientNetwork();
-  pt::ptree response;
+  pt::ptree responseStorage;
   try {
-    storage.Connect(storageConfig.host, storageConfig.port);
-    storage.SendJSON(storageRequestSerializer.GetJson());
-    response = storage.ReceiveJSON();
+    network.Connect(storageConfig.host, storageConfig.port);
+    network.SendJSON(storageRequestSerializer.GetJson());
+    responseStorage = network.ReceiveJSON();
 
   } catch (ClientNetworkExceptions &er) {
     BOOST_LOG_TRIVIAL(error) << "FileCommand: " << er.what();
     callbackError(er.what());
     return;
   }
+  network.Disconnect();
 
   // TODO createFileCommand parse response
 
   // test
   std::stringstream ss;
-  pt::write_json(ss, response);
-  std::cout << ss.str() << std::endl;
+  pt::write_json(ss, responseStorage);
+  std::cout << "Storage: " << ss.str() << std::endl;
   // test
 
   auto syncRequestSerializer = SerializerFileInfo(0, fileInfo);
-  auto syncConfig = ClientConfig::getSyncConfig();
-  auto sync = ClientNetwork();
+  pt::ptree responseSync;
   try {
-    sync.Connect(syncConfig.host, syncConfig.port);
-    sync.SendJSON(syncRequestSerializer.GetJson());
-    response = sync.ReceiveJSON();
+    network.Connect(syncConfig.host, syncConfig.port);
+    network.SendJSON(syncRequestSerializer.GetJson());
+    responseSync = network.ReceiveJSON();
 
   } catch (ClientNetworkExceptions &er) {
     BOOST_LOG_TRIVIAL(error) << "FileCommand: " << er.what();
     callbackError(er.what());
     return;
   }
+  network.Disconnect();
 
   // TODO createFileCommand parse response
 
   // test
-  pt::write_json(ss, response);
-  std::cout << ss.str() << std::endl;
+  std::stringstream ss2;
+  pt::write_json(ss2, responseSync);
+  std::cout << "Sync: " << ss2.str() << std::endl;
   // test
 
   callbackError("test");
