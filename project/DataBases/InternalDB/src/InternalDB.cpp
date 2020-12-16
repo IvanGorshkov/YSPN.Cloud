@@ -136,9 +136,8 @@ void InternalDB::insertOneFile(const FileMeta &file) {
       std::to_string(file.chunksCount) + ", "
       + std::to_string(file.version) + ", "
       + std::to_string(file.isDownload) + ", '"
-      + file.filePath + "', '" + file.filePath + "');";
+      + file.updateDate + "', '" + file.createDate + "');";
 
-  // TODO Ivan не работает добавление времени
   insert(query);
 }
 
@@ -240,9 +239,8 @@ FileMeta InternalDB::getOneFile() {
   file.chunksCount = sqlite3_column_int(_stmt.get(), 5);
   file.version = sqlite3_column_int(_stmt.get(), 6);
   file.isDownload = sqlite3_column_int(_stmt.get(), 7);
-  file.updateDate = boost::lexical_cast<time_t>(sqlite3_column_text(_stmt.get(), 8));
-  file.createDate = boost::lexical_cast<time_t>(sqlite3_column_text(_stmt.get(), 9));
-  // TODO Ivan ошибка парсина в time_t кидает exception
+  file.updateDate = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 8));
+  file.createDate = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 9));
   return file;
 }
 

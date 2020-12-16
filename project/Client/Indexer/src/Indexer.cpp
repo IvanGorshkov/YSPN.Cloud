@@ -9,7 +9,7 @@ FileMeta Indexer::GetFileMeta(bfs::path file, bool IsDeleted = false) {
       .fileExtension = file.extension().string(),
       .fileSize = static_cast<int>(boost::filesystem::file_size(file)),
       .isDeleted = IsDeleted,
-      .updateDate = boost::filesystem::last_write_time(file),
+      .updateDate = boost::lexical_cast<std::string>(boost::filesystem::last_write_time(file)),
   };
   // TODO: отправить FileMeta для получения FileId
   return new_file_meta;

@@ -13,6 +13,6 @@ struct FileMeta {
   bool isDownload;
   bool isDeleted;
   bool isCurrent;
-  time_t updateDate;
-  time_t createDate;
+  std::string updateDate;
+  std::string createDate;
 };
