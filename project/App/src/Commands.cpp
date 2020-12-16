@@ -175,9 +175,7 @@ void FileCommand::Do() {
   std::cout << ss.str() << std::endl;
   // test
 
-  std::vector<FileInfo> vec;
-  vec.push_back(fileInfo);
-  auto syncRequestSerializer = SerializerFileInfo(0, vec);
+  auto syncRequestSerializer = SerializerFileInfo(0, fileInfo);
   auto syncConfig = ClientConfig::getSyncConfig();
   auto sync = ClientNetwork();
   try {

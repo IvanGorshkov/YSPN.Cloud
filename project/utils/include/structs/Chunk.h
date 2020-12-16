@@ -3,8 +3,6 @@
 #include <string>
 #include <vector>
 
-#define CHUNK_SIZE       4096
-
 struct Chunk {
   int userId;
   int chunkId;
