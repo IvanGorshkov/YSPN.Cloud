@@ -92,8 +92,7 @@ void ClientApp::showFiles() {
 
   for (auto &&file: files) {
     std::cout << file.fileId << ")";
-    std::cout << " file path: " << file.filePath << std::endl;
-    std::cout << " file: " << file.fileName << '.' << file.fileExtension;
+    std::cout << " file: " << file.filePath << file.fileName << '.' << file.fileExtension;
     std::cout << " version: " << file.version;
     std::cout << " size: " << file.fileSize;
     std::cout << " download: " << file.isDownload;

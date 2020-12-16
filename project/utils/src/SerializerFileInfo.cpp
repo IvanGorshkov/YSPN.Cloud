@@ -112,8 +112,8 @@ void SerializerFileInfo::deserialize() {
           .chunksCount = file.get<int>("chunksCount"),
           .isCurrent = file.get<bool>("isCurrent"),
           .isDeleted = file.get<bool>("isDeleted"),
-          .updateDate = file.get<time_t>("updateDate"),
-          .createDate = file.get<time_t>("createDate")};
+          .updateDate = file.get<std::string>("updateDate"),
+          .createDate = file.get<std::string>("createDate")};
 
       for (auto &val : fileMeta.second.get_child("chunks")) {
         auto chunkMeta = ChunkMeta{.chunkId = val.second.get<int>("chunkId")};
