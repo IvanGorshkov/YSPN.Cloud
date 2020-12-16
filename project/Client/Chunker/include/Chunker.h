@@ -5,6 +5,8 @@
 #include <iomanip>
 #include "zlib.h"
 #include <memory>
+#include <algorithm>
+#include <iterator>
 
 class Chunker {
  public:
