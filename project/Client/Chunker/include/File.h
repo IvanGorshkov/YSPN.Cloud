@@ -5,7 +5,7 @@
 
 class File {
  public:
-  File(std::string);
+  explicit File(std::string);
   ~File();
   std::ifstream Read();
   std::ofstream Write();

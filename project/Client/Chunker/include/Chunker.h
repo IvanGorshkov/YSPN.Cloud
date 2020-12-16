@@ -1,5 +1,8 @@
 #pragma once
-#include "Chunk.h"
+
+#define CHUNK_SIZE 4096
+
+#include "structs/Chunk.h"
 #include "File.h"
 #include <openssl/md5.h>
 #include <iomanip>
@@ -7,10 +10,12 @@
 #include <memory>
 #include <algorithm>
 #include <iterator>
+#include <sstream>
+#include <array>
 
 class Chunker {
  public:
-  explicit Chunker(File);
+  explicit Chunker(const File&);
   int SentNewChunk();
   int SentNewPosition();
   File *GetFile();

@@ -7,7 +7,7 @@ SET(CMAKE_CXX_STANDARD 17)
 FIND_PACKAGE(Boost COMPONENTS system filesystem REQUIRED)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 
-INCLUDE_DIRECTORIES(../../utils/include/structs)
+INCLUDE_DIRECTORIES(../../utils/include)
 INCLUDE_DIRECTORIES(../utils)
 
 FIND_LIBRARY(InternalDB-dev REQUIRED)
@@ -16,8 +16,9 @@ INCLUDE_DIRECTORIES(../../DataBases/InternalDB/include)
 INCLUDE_DIRECTORIES(include)
 ADD_LIBRARY(${PROJECT_NAME}-dev SHARED
         include/Indexer.h
-        Indexer.cpp
+        src/Indexer.cpp
         )
-add_executable(Indexer Indexer.cpp)
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${Boost_LIBRARIES})
+TARGET_LINK_LIBRARIES(${PROJECT_NAME}-dev InternalDB-dev ${Boost_LIBRARIES})
+#add_executable(Indexer Indexer.cpp)
+
 
