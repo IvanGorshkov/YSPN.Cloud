@@ -7,6 +7,8 @@
 #include <memory>
 #include <algorithm>
 #include <iterator>
+#include <array>
+#include <strstream>
 
 class Chunker {
  public:
@@ -20,8 +22,8 @@ class Chunker {
   void ChunkCompare(Chunk data);
  private:
   File _file;
-  void getRHash(Chunk &);
-  void getSHash(Chunk &);
+  std::string getRHash(char*, int);
+  std::string getSHash(char*, int);
   std::string getOldCheckSums();
 
 };

@@ -20,17 +20,25 @@ std::vector<Chunk> Chunker::UpdateChunkFile(const std::vector<Chunk>& old_chunks
   size_t size = fileStream.seekg(0, std::ios::end).tellg();
   fileStream.seekg(0,std::ios::beg);
   std::vector<Chunk> chunks;
-
+  Chunk new_chunk;
   if (fileStream.is_open()) {
+    std::vector<char> data(CHUNK_SIZE);
+    fileStream.read(data.data(), CHUNK_SIZE);
     while (!fileStream.eof()) {
-      std::array<char, CHUNK_SIZE> data{};
-
-//      fileStream.read(data.data(), CHUNK_SIZE);
-//      Chunk chunk{
-//          .chunkSize = static_cast<int>(fileStream.gcount()),
-//          .data = data,
-//      };
-//      getRHash(chunk);
+      std::string chunksRHash = getRHash(data.data(), static_cast<int>(fileStream.gcount()));
+      auto match = std::find_if(old_chunks.begin(), old_chunks.end(), [&chunksRHash](const Chunk& old_chunk){
+        return old_chunk.rHash == chunksRHash;
+      });
+      if(match != old_chunks.end()){
+        chunks.push_back(*match);
+        fileStream.read(data.data(), CHUNK_SIZE);
+        // smothing more
+      } else {
+        new_chunk.chunkSize += static_cast<int>(fileStream.gcount()); // check size
+        std::copy(data.begin(), data.begin() + CHUNK_MOVE_SIZE, std::back_inserter(new_chunk.data));
+        data.erase(data.begin(), data.begin()+CHUNK_MOVE_SIZE);
+        fileStream.read(data.data() + 3072, CHUNK_MOVE_SIZE);
+      }
 //      getSHash(chunk);
 //      chunks.push_back(std::move(chunk));
     }
@@ -39,11 +47,11 @@ std::vector<Chunk> Chunker::UpdateChunkFile(const std::vector<Chunk>& old_chunks
   return chunks;
 }
 
-void Chunker::getSHash(Chunk &chunk) {
+std::string Chunker::getSHash(char *data, int chunkSize) {
   MD5_CTX ctx;
   MD5_Init(&ctx);
 
-  MD5_Update(&ctx, chunk.data.data(), chunk.chunkSize);
+  MD5_Update(&ctx, data, chunkSize);
 
   unsigned char digest[MD5_DIGEST_LENGTH] = {};
   MD5_Final(digest, &ctx);
@@ -52,15 +60,15 @@ void Chunker::getSHash(Chunk &chunk) {
   for (unsigned char i : digest)
     result << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(i);
 
-  chunk.sHash = result.str();
+  return result.str();
 }
 
-void Chunker::getRHash(Chunk &chunk) {
-  uint32_t digest = adler32(0, reinterpret_cast<const Bytef *>(chunk.data.data()), chunk.chunkSize);
+std::string Chunker::getRHash(char *data, int chunkSize) {
+  uint32_t digest = adler32(0, reinterpret_cast<const Bytef *>(data), chunkSize);
 
   std::stringstream result;
   result << std::hex << static_cast<int>(digest);
-  chunk.rHash = result.str();
+  return result.str();
 }
 
 std::string Chunker::getOldCheckSums() {
@@ -75,14 +83,16 @@ std::vector<Chunk> Chunker::ChunkFile() {
   std::vector<Chunk> chunks;
   if (fileStream.is_open()) {
     while (!fileStream.eof()) {
-      std::array<char, CHUNK_SIZE> data{};
+      std::vector<char> data(CHUNK_SIZE);
       fileStream.read(data.data(), CHUNK_SIZE);
+      // createchunk
       Chunk chunk{
           .chunkSize = static_cast<int>(fileStream.gcount()),
       };
       std::copy(data.begin(), std::find(data.begin(), data.end(), '\0'), std::back_inserter(chunk.data));
-      getRHash(chunk);
-      getSHash(chunk);
+      chunk.rHash = getRHash(chunk.data.data(), chunk.chunkSize);
+      chunk.sHash = getSHash(chunk.data.data(), chunk.chunkSize);
+
       chunks.push_back(std::move(chunk));
 
     }

@@ -15,7 +15,7 @@ namespace bfs = boost::filesystem;
 class Indexer {
  public:
   FileMeta GetFileMeta(boost::filesystem::path, bool);
-  FileInfo GetFileInfo(const FileMeta&, std::vector<Chunk>);
+  FileInfo GetFileInfo(const FileMeta&, std::vector<Chunk>&);
  private:
   InternalDB _internalDB;
 };

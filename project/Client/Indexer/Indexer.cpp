@@ -1,6 +1,6 @@
 #include "Indexer.h"
 FileMeta Indexer::GetFileMeta(bfs::path file, bool IsDeleted = false) {
-  FileMeta new_file_meta{.fileName = file.filename().string(),
+  FileMeta new_file_meta{.fileName = file.stem().string(),
       .fileExtension = file.extension().string(),
       .fileSize = static_cast<int>(boost::filesystem::file_size(file)),
       .isDeleted = IsDeleted,
@@ -10,7 +10,7 @@ FileMeta Indexer::GetFileMeta(bfs::path file, bool IsDeleted = false) {
   return new_file_meta;
 }
 
-FileInfo Indexer::GetFileInfo(const FileMeta &file, std::vector<Chunk> chunks) {
+FileInfo Indexer::GetFileInfo(const FileMeta &file, std::vector<Chunk>& chunks) {
   //TODO: InternalDB(FileMeta.fileid, &vector<Chunk>) получаем id
   std::vector<ChunkMeta> chunk_meta;
   std::vector<FileChunksMeta> file_chunks_meta;
