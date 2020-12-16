@@ -20,7 +20,7 @@ class App {
   void Refresh(const std::function<void()> &callbackOk,
                const std::function<void(const std::string &msg)> &callbackError);
 
-  std::vector<Files> GetFiles();
+  std::vector<FileMeta> GetFiles();
   void DownloadFile(int fileId,
                     const std::function<void()> &callbackOk,
                     const std::function<void(const std::string &msg)> &callbackError) noexcept(false);
@@ -32,6 +32,8 @@ class App {
   void UploadFile(const fs::path &path,
                   const std::function<void()> &callbackOk,
                   const std::function<void(const std::string &msg)> &callbackError);
+
+  void UpdateSyncFolder(const fs::path &path);
 
  private:
   void runWorker();

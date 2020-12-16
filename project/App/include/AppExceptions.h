@@ -38,3 +38,10 @@ class FileNotExistsException : public AppExceptions {
       : AppExceptions("File not exists: " + std::move(msg)) {
   }
 };
+
+class FolderNotExistsException : public AppExceptions {
+ public:
+  explicit FolderNotExistsException(std::string msg)
+      : AppExceptions("Folder not exists: " + std::move(msg)) {
+  }
+};
