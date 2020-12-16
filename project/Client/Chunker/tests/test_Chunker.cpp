@@ -11,4 +11,5 @@ TEST(TestChunker, RunTest) {
     Chunker test_chunk1(file1);
 
     test_chunk1.MergeFile(a);
+    test_chunk1.UpdateChunkFile(a);
 }

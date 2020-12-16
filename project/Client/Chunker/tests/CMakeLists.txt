@@ -7,7 +7,7 @@ find_package(ZLIB REQUIRED)
 
 PROJECT(tests_gtest_client)
 SET(CMAKE_CXX_STANDARD 14)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -Wpedantic")
+#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -Wpedantic")
 
 find_package(OpenSSL REQUIRED)
 if (OPENSSL_FOUND)
