@@ -2,6 +2,7 @@
 #include <boost/log/trivial.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <utility>
+#include <variant>
 
 namespace pt = boost::property_tree;
 
@@ -108,6 +109,12 @@ void DownloadFileCommand::Do() {
     auto chunks = responseSerializer.GetChunk();
 
     // TODO downloadCommand Do Chunker create file
+    std::string filePath = _internalDB->GetSyncFolder() + _file.filePath + _file.fileName + '.' + _file.fileExtension;
+    std::cout << filePath << std::endl;
+
+    File file(filePath);
+    Chunker chunker(file);
+    chunker.MergeFile(chunks);
 
     callbackOk();
     return;
@@ -133,48 +140,49 @@ FileCommand::FileCommand(std::function<void()> callbackOk,
 }
 
 void FileCommand::Do() {
-  BOOST_LOG_TRIVIAL(debug) << "CreateFileCommand: do";
+  BOOST_LOG_TRIVIAL(debug) << "FileCommand: do";
   // TODO createFileCommand Do
 
-//  auto storageConfig = ClientConfig::getStorageConfig();
-//  auto syncConfig = ClientConfig::getSyncConfig();
 
-  std::cout << _filePath.string() << std::endl;
+  File file(_filePath.string());
+  Chunker chunker(file);
+  auto chunkVector = chunker.ChunkFile();
 
-  std::vector<FileInfo> fileInfo;
-  auto file = FileMeta{.fileId = 1,
-      .version = 1,
-      .fileName = "test",
-      .fileExtension = "txt",
-      .filePath = "static/",
-      .fileSize = 1,
-      .chunksCount = 1,
-      .isCurrent = true,
-      .isDeleted = false,
-      .updateDate = "31.12.1970",
-      .createDate = "31.12.1970"};
+  Indexer indexer(_internalDB);
+  auto fileMeta = indexer.GetFileMeta(_filePath, _isDeleted);
+  auto fileInfo = indexer.GetFileInfo(fileMeta, chunkVector);
 
-  std::vector<ChunkMeta> chunksMetaVector;
-  for (int i = 1; i < 3; ++i) {
-    auto chunkMeta = ChunkMeta{.chunkId = i};
-    chunksMetaVector.push_back(chunkMeta);
-  }
-
-  std::vector<FileChunksMeta> fileChunksMetaVector;
-  for (int i = 1; i < 3; ++i) {
-    auto fileChunkMeta = FileChunksMeta{.chunkId = i, .chunkOrder = i};
-    fileChunksMetaVector.push_back(fileChunkMeta);
-  }
-  fileInfo.push_back(FileInfo{.userId = 1, .file = file, .chunkMeta = chunksMetaVector, .fileChunksMeta = fileChunksMetaVector});
-
-  auto requestSerializer = SerializerFileInfo(0, fileInfo);
-
-  auto syncConfig = ClientConfig::getSyncConfig();
-  auto sync = ClientNetwork();
+  auto storageRequestSerializer = SerializerChunk(0, chunkVector);
+  auto storageConfig = ClientConfig::getStorageConfig();
+  auto storage = ClientNetwork();
   pt::ptree response;
   try {
+    storage.Connect(storageConfig.host, storageConfig.port);
+    storage.SendJSON(storageRequestSerializer.GetJson());
+    response = storage.ReceiveJSON();
+
+  } catch (ClientNetworkExceptions &er) {
+    BOOST_LOG_TRIVIAL(error) << "FileCommand: " << er.what();
+    callbackError(er.what());
+    return;
+  }
+
+  // TODO createFileCommand parse response
+
+  // test
+  std::stringstream ss;
+  pt::write_json(ss, response);
+  std::cout << ss.str() << std::endl;
+  // test
+
+  std::vector<FileInfo> vec;
+  vec.push_back(fileInfo);
+  auto syncRequestSerializer = SerializerFileInfo(0, vec);
+  auto syncConfig = ClientConfig::getSyncConfig();
+  auto sync = ClientNetwork();
+  try {
     sync.Connect(syncConfig.host, syncConfig.port);
-    sync.SendJSON(requestSerializer.GetJson());
+    sync.SendJSON(syncRequestSerializer.GetJson());
     response = sync.ReceiveJSON();
 
   } catch (ClientNetworkExceptions &er) {
@@ -183,26 +191,22 @@ void FileCommand::Do() {
     return;
   }
 
+  // TODO createFileCommand parse response
+
   // test
-  std::stringstream ss;
   pt::write_json(ss, response);
   std::cout << ss.str() << std::endl;
   // test
 
-  // Indexer -> fs index file and insert to Internal DB (get file id) -> return file
-
-  // File -> fs chunk file -> return Chunk
-
-
-  // chunk file
-  // create chunkmeta
-  // create filechunksmeta (isCurrent = true)
-
-  // serialize allData
-  // storageNetwork -> uploadChunks(Chunk ptree)
-
-  // serialize MetaInfo
-  // syncNetwork -> uploadMeta
-
   callbackError("test");
+}
+
+void FileCommand::operator()(const StatusOk &val) const {
+  BOOST_LOG_TRIVIAL(error) << "FileCommand: StatusOk";
+  callbackOk();
+}
+
+void FileCommand::operator()(const StatusError &val) const {
+  BOOST_LOG_TRIVIAL(error) << "FileCommand: StatusError";
+  callbackError(val.msg);
 }

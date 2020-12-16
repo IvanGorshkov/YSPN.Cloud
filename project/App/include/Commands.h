@@ -13,6 +13,9 @@
 #include "SerializerUserDate.h"
 #include "SerializerFileInfo.h"
 #include "SerializerExceptions.h"
+#include "Indexer.h"
+#include "File.h"
+#include "Chunker.h"
 
 namespace fs = boost::filesystem;
 
@@ -60,6 +63,10 @@ class FileCommand : public BaseCommand {
                        fs::path path,
                        bool isDeleted = false);
   void Do() override;
+
+ private:
+  void operator()(const StatusOk &val) const;
+  void operator()(const StatusError &val) const;
 
  private:
   fs::path _filePath;

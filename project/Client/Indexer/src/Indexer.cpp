@@ -1,4 +1,9 @@
 #include "Indexer.h"
+
+Indexer::Indexer(std::shared_ptr<InternalDB> internalDB)
+    : _internalDB(std::move(internalDB)) {
+}
+
 FileMeta Indexer::GetFileMeta(bfs::path file, bool IsDeleted = false) {
   FileMeta new_file_meta{.fileName = file.filename().string(),
       .fileExtension = file.extension().string(),
@@ -10,7 +15,7 @@ FileMeta Indexer::GetFileMeta(bfs::path file, bool IsDeleted = false) {
   return new_file_meta;
 }
 
-FileInfo Indexer::GetFileInfo(const FileMeta &file, std::vector<Chunk> chunks) {
+FileInfo Indexer::GetFileInfo(const FileMeta &file, std::vector<Chunk> &chunks) {
   //TODO: InternalDB(FileMeta.fileid, &vector<Chunk>) получаем id
   std::vector<ChunkMeta> chunk_meta;
   std::vector<FileChunksMeta> file_chunks_meta;
@@ -20,7 +25,7 @@ FileInfo Indexer::GetFileInfo(const FileMeta &file, std::vector<Chunk> chunks) {
     file_chunks_meta.push_back(FileChunksMeta{chunk.chunkId, ++i});
   });
   FileInfo info{
-      .userId = 0,//TODO: InternalDB.getUserId()
+      .userId = _internalDB->GetUserId(),
       .file = file,
       .chunkMeta = chunk_meta,
       .fileChunksMeta = file_chunks_meta

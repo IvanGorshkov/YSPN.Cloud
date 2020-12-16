@@ -40,7 +40,7 @@ void App::DownloadFile(int fileId,
     throw FileIdException(er.what());
   }
 
-  if (file.isDownload.value()) {
+  if (file.isDownload) {
     throw FileDownloadedException("file is already downloaded");
   }
 
