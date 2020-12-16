@@ -16,6 +16,12 @@ INCLUDE_DIRECTORIES(../Network/Client/include)
 FIND_LIBRARY(Utils-dev REQUIRED)
 INCLUDE_DIRECTORIES(../utils/include)
 
+FIND_LIBRARY(Indexer-dev REQUIRED)
+INCLUDE_DIRECTORIES(../Client/Indexer/include)
+
+FIND_LIBRARY(Chunker-dev REQUIRED)
+INCLUDE_DIRECTORIES(../Client/Chunker/include)
+
 INCLUDE_DIRECTORIES(include)
 
 ADD_LIBRARY(${PROJECT_NAME}-dev
@@ -24,4 +30,4 @@ ADD_LIBRARY(${PROJECT_NAME}-dev
         src/Commands.cpp
         src/ClientConfig.cpp
         )
-TARGET_LINK_LIBRARIES(${PROJECT_NAME}-dev ${Boost_LIBRARIES} InternalDB-dev ClientNetwork-dev Utils-dev)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME}-dev ${Boost_LIBRARIES} InternalDB-dev ClientNetwork-dev Utils-dev Indexer-dev Chunker-dev)

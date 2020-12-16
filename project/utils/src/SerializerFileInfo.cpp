@@ -2,13 +2,20 @@
 #include <boost/log/trivial.hpp>
 #include <utility>
 
-SerializerFileInfo::SerializerFileInfo(int requestId, std::vector<FileInfo> fileMetaVector)
+SerializerFileInfo::SerializerFileInfo(int requestId, std::vector<FileInfo> fileInfoVector)
     : _requestId(requestId),
-      _fileInfoVector(std::move(fileMetaVector)) {
-  BOOST_LOG_TRIVIAL(debug) << "SerializerFileInfo: create serializer chunk from file";
+      _fileInfoVector(std::move(fileInfoVector)) {
+  BOOST_LOG_TRIVIAL(debug) << "SerializerFileInfo: create serializer chunk from file vector";
 }
 
-SerializerFileInfo::SerializerFileInfo(const pt::ptree &val)
+SerializerFileInfo::SerializerFileInfo(int requestId, const FileInfo &fileInfo)
+    : _requestId(requestId) {
+  BOOST_LOG_TRIVIAL(debug) << "SerializerFileInfo: create serializer chunk from file";
+  _fileInfoVector.push_back(fileInfo);
+}
+
+SerializerFileInfo::SerializerFileInfo(
+    const pt::ptree &val)
     : _json(val) {
   BOOST_LOG_TRIVIAL(debug) << "SerializerFileInfo: create serializer chunk from json";
 }
@@ -42,11 +49,10 @@ void SerializerFileInfo::serialize() {
   _json.put("command", "UploadFile");
   _json.put("requestId", _requestId);
 
-  auto userId = _fileInfoVector[0].userId;
   pt::ptree data;
   for (auto &fileMeta: _fileInfoVector) {
     pt::ptree child;
-    child.put("userId", userId);
+    child.put("userId", fileMeta.userId);
 
     pt::ptree file;
     file.put("fileId", fileMeta.file.fileId);
@@ -56,8 +62,8 @@ void SerializerFileInfo::serialize() {
     file.put("filePath", fileMeta.file.filePath);
     file.put("fileSize", fileMeta.file.fileSize);
     file.put("chunksCount", fileMeta.file.chunksCount);
-    file.put("isCurrent", fileMeta.file.isCurrent.value());
-    file.put("isDeleted", fileMeta.file.isDeleted.value());
+    file.put("isCurrent", fileMeta.file.isCurrent);
+    file.put("isDeleted", fileMeta.file.isDeleted);
     file.put("updateDate", fileMeta.file.updateDate);
     file.put("createDate", fileMeta.file.createDate);
     child.add_child("file", file);
@@ -106,8 +112,8 @@ void SerializerFileInfo::deserialize() {
           .chunksCount = file.get<int>("chunksCount"),
           .isCurrent = file.get<bool>("isCurrent"),
           .isDeleted = file.get<bool>("isDeleted"),
-          .updateDate = file.get<std::string>("updateDate"),
-          .createDate = file.get<std::string>("createDate")};
+          .updateDate = file.get<time_t>("updateDate"),
+          .createDate = file.get<time_t>("createDate")};
 
       for (auto &val : fileMeta.second.get_child("chunks")) {
         auto chunkMeta = ChunkMeta{.chunkId = val.second.get<int>("chunkId")};

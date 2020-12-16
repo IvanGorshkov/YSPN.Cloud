@@ -12,8 +12,8 @@ TestPostgra::TestPostgra() {
       .chunksCount = 1,
       .isCurrent = true,
       .isDeleted = false,
-      .updateDate = "31.12.1970",
-      .createDate = "31.12.1970"};
+      .updateDate = 0,
+      .createDate = 0};
 
   std::vector<ChunkMeta> chunksMetaVector;
   for (int i = 1; i < 3; ++i) {

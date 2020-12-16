@@ -1,6 +1,6 @@
 #include "Chunker.h"
 
-Chunker::Chunker(File file)
+Chunker::Chunker(const File& file)
     : _file(file) {}
 
 int Chunker::SentNewChunk() {
@@ -23,7 +23,7 @@ std::vector<Chunk> Chunker::UpdateChunkFile(const std::vector<Chunk>& old_chunks
 
   if (fileStream.is_open()) {
     while (!fileStream.eof()) {
-      std::array<char, CHUNK_SIZE> data{};
+//      std::array<char, CHUNK_SIZE> data;
 
 //      fileStream.read(data.data(), CHUNK_SIZE);
 //      Chunk chunk{
@@ -75,7 +75,7 @@ std::vector<Chunk> Chunker::ChunkFile() {
   std::vector<Chunk> chunks;
   if (fileStream.is_open()) {
     while (!fileStream.eof()) {
-      std::array<char, CHUNK_SIZE> data{};
+      std::array<char, CHUNK_SIZE> data;
       fileStream.read(data.data(), CHUNK_SIZE);
       Chunk chunk{
           .chunkSize = static_cast<int>(fileStream.gcount()),
