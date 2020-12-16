@@ -96,7 +96,7 @@ void ClientApp::showFiles() {
     std::cout << " file: " << file.fileName << '.' << file.fileExtension;
     std::cout << " version: " << file.version;
     std::cout << " size: " << file.fileSize;
-    std::cout << " download: " << file.isDownload.value();
+    std::cout << " download: " << file.isDownload;
     std::cout << " update date: " << file.updateDate;
     std::cout << " create date: " << file.createDate;
     std::cout << std::endl;
