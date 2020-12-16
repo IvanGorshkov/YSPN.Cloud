@@ -37,13 +37,13 @@ class InternalDB {
   void InsertFile(const std::vector<FileMeta> &files);
   FileMeta SelectFile(size_t idFile);
   void UpdateFile();
-  void InsertChunk(const FileChunksMeta& chunks, const int idFile) ;
+  void InsertChunk(const FileChunksMeta &chunks, const int idFile);
   void SelectChunk();
   void UpdateChunk();
   UserDate GetLastUpdate();
   void SaveLastUpdate();
   std::vector<FileMeta> SelectAllFiles();
-  void InsertFileInfo(const std::vector<FileInfo>& filesInfo);
+  void InsertFileInfo(const std::vector<FileInfo> &filesInfo);
   std::vector<UserChunk> GetUsersChunks(const int idFile);
   bool IsFileExist(const int idFile);
 
@@ -62,12 +62,12 @@ class InternalDB {
   int selectId(const std::string &query);
   void creatTable();
   bool update(const std::string &query);
-  virtual bool connect();
-  virtual void close();
+  bool connect();
+  void close();
   void insert(const std::string &query);
   std::string selectLastUpdate();
   std::string selectStr(const std::string &query);
   FileMeta getOneFile();
   bool existUser();
-  void insertOneFile(const FileMeta& file);
+  void insertOneFile(const FileMeta &file);
 };

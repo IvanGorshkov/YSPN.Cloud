@@ -8,6 +8,8 @@ void ClientApp::Watch() {
 
     std::cin >> command;
   } while (parseCommand(command) != EXIT_FAILURE);
+
+  std::cout << "Close app" << std::endl;
 }
 
 void ClientApp::printCommandList() {
@@ -19,6 +21,7 @@ void ClientApp::printCommandList() {
   std::cout << "4) ShowEvents" << std::endl;
   std::cout << "5) SaveEvents" << std::endl;
   std::cout << "6) UploadFile" << std::endl;
+//  std::cout << "7) ChangeDefaultFolder" << std::endl;
 }
 
 int ClientApp::parseCommand(int command) {
@@ -57,6 +60,11 @@ int ClientApp::parseCommand(int command) {
       return EXIT_SUCCESS;
     }
 
+    case 7: {
+      changeDefaultFolder();
+      return EXIT_SUCCESS;
+    }
+
     default: {
       std::cout << "Wrong command" << std::endl << std::endl;
       return EXIT_SUCCESS;
@@ -83,13 +91,14 @@ void ClientApp::showFiles() {
   auto files = app.GetFiles();
 
   for (auto &&file: files) {
-    std::cout << file.id << ")";
-    std::cout << " file: " << file.file_name << '.' << file.file_extention;
+    std::cout << file.fileId << ")";
+    std::cout << " file path: " << file.filePath << std::endl;
+    std::cout << " file: " << file.fileName << '.' << file.fileExtension;
     std::cout << " version: " << file.version;
-    std::cout << " size: " << file.file_size;
-    std::cout << " download: " << file.is_download.value();
-    std::cout << " update date: " << file.update_date;
-    std::cout << " create date: " << file.create_date;
+    std::cout << " size: " << file.fileSize;
+    std::cout << " download: " << file.isDownload.value();
+    std::cout << " update date: " << file.updateDate;
+    std::cout << " create date: " << file.createDate;
     std::cout << std::endl;
   }
 }
@@ -162,4 +171,18 @@ void ClientApp::uploadFileCallbackOk() {
 
 void ClientApp::uploadFileCallbackError(const std::string &msg) {
   std::cout << "uploadFileCallbackError: " << msg << std::endl;
+}
+
+void ClientApp::changeDefaultFolder() {
+  std::cout << "Chose folder: ";
+
+  std::string path = "/Users/s.alekhin/cloud";
+  std::cout << path << std::endl;
+//  std::cin >> path;
+
+  try {
+    app.UpdateSyncFolder(path);
+  } catch (FolderNotExistsException &er) {
+    std::cout << er.what() << std::endl;
+  }
 }

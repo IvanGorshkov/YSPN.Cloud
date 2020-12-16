@@ -1,11 +1,14 @@
 #include "SyncServer.h"
 #include "Config.h"
+#include "TestPostgra.h"
 #include <boost/program_options.hpp>
 #include <iostream>
 
 namespace po = boost::program_options;
 
 int main(int argc, char **argv) {
+  auto &testPostgra = TestPostgra::GetInstance();
+
   po::options_description desc("Allowed options");
   desc.add_options()
       ("help,h", "produce help message");

@@ -26,9 +26,13 @@ ADD_EXECUTABLE(testServer
         Server/src/ClientWorker.cpp
         )
 
+FIND_LIBRARY(Utils-dev REQUIRED)
+INCLUDE_DIRECTORIES(../utils/include)
 ADD_EXECUTABLE(testClient
         testsNetwork/src/test_client.cpp
         Client/src/ClientNetwork.cpp)
+TARGET_LINK_LIBRARIES(testClient Utils-dev)
+
 ADD_SUBDIRECTORY(testsNetwork)
 
 

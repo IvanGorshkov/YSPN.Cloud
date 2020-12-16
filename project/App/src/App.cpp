@@ -23,7 +23,7 @@ void App::Refresh(const std::function<void()> &callbackOk,
   runWorker();
 }
 
-std::vector<Files> App::GetFiles() {
+std::vector<FileMeta> App::GetFiles() {
   BOOST_LOG_TRIVIAL(debug) << "App: GetFiles";
   return _internalDB->SelectAllFiles();
 }
@@ -33,14 +33,14 @@ void App::DownloadFile(int fileId,
                        const std::function<void(const std::string &msg)> &callbackError) {
   BOOST_LOG_TRIVIAL(debug) << "App: DownloadFile";
 
-  Files file;
+  FileMeta file;
   try {
     file = _internalDB->SelectFile(fileId);
   } catch (InternalExceptions &er) {
     throw FileIdException(er.what());
   }
 
-  if (file.is_download.value()) {
+  if (file.isDownload.value()) {
     throw FileDownloadedException("file is already downloaded");
   }
 
@@ -72,10 +72,20 @@ void App::UploadFile(const fs::path &path,
     throw FileNotExistsException("this file does not exist");
   }
 
-  auto sh = std::make_shared<CreateFileCommand>(callbackOk, callbackError, _internalDB, path);
+  auto sh = std::make_shared<FileCommand>(callbackOk, callbackError, _internalDB, path);
   _commands.emplace(sh);
 
   runWorker();
+}
+
+void App::UpdateSyncFolder(const fs::path &path) {
+  BOOST_LOG_TRIVIAL(debug) << "App: UpdateSyncFolder";
+
+  if (!fs::exists(path)) {
+    throw FolderNotExistsException("this folder does not exist");
+  }
+
+  _internalDB->UpdateSyncFolder(path.string());
 }
 
 void App::runWorker() {

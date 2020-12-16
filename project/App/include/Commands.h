@@ -7,7 +7,6 @@
 #include "ClientNetworkExceptions.h"
 #include "CommandsExceptions.h"
 #include "ClientConfig.h"
-#include "Files.h"
 #include "SerializerAnswer.h"
 #include "SerializerChunk.h"
 #include "SerializerUserChunk.h"
@@ -46,45 +45,23 @@ class DownloadFileCommand : public BaseCommand {
   explicit DownloadFileCommand(std::function<void()> callbackOk,
                                std::function<void(const std::string &msg)> callbackError,
                                std::shared_ptr<InternalDB> internalDB,
-                               Files &file);
+                               FileMeta &file);
   void Do() override;
 
  private:
-  Files _file;
+  FileMeta _file;
 };
 
-class CreateFileCommand : public BaseCommand {
+class FileCommand : public BaseCommand {
  public:
-  explicit CreateFileCommand(std::function<void()> callbackOk,
-                             std::function<void(const std::string &msg)> callbackError,
-                             std::shared_ptr<InternalDB> internalDB,
-                             fs::path path);
+  explicit FileCommand(std::function<void()> callbackOk,
+                       std::function<void(const std::string &msg)> callbackError,
+                       std::shared_ptr<InternalDB> internalDB,
+                       fs::path path,
+                       bool isDeleted = false);
   void Do() override;
 
  private:
   fs::path _filePath;
-};
-
-class RemoveFileCommand : public BaseCommand {
- public:
-  explicit RemoveFileCommand(std::function<void()> callbackOk,
-                             std::function<void(const std::string &msg)> callbackError,
-                             std::shared_ptr<InternalDB> internalDB);
-  void Do() override;
-};
-
-class RenameFileCommand : public BaseCommand {
- public:
-  explicit RenameFileCommand(std::function<void()> callbackOk,
-                             std::function<void(const std::string &msg)> callbackError,
-                             std::shared_ptr<InternalDB> internalDB);
-  void Do() override;
-};
-
-class ModifyFileCommand : public BaseCommand {
- public:
-  explicit ModifyFileCommand(std::function<void()> callbackOk,
-                             std::function<void(const std::string &msg)> callbackError,
-                             std::shared_ptr<InternalDB> internalDB);
-  void Do() override;
+  bool _isDeleted;
 };

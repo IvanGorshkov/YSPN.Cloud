@@ -25,5 +25,5 @@ class UploadFileCommand : public Command {
 
  private:
   std::shared_ptr<pt::ptree> _request;
-  SerializerFileInfo _fileMeta;
+  SerializerFileInfo _fileInfo;
 };
