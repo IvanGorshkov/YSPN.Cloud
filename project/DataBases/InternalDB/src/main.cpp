@@ -7,7 +7,7 @@
 
 int main() {
   InternalDB myDB("myDB.sqlite");
-  auto file = FileMeta{.fileId = 2,
+  auto file = FileMeta{.fileId = 1,
 	  .version = 1,
 	  .fileName = "test",
 	  .fileExtension = "txt",
@@ -36,5 +36,6 @@ int main() {
   f.push_back(fileInfo);
   myDB.InsertFileInfo(f);
   auto d = myDB.GetUsersChunks(3);
+  myDB.DeleteFile(file);
   return 0;
 }

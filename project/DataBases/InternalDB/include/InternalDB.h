@@ -45,7 +45,7 @@ class InternalDB {
   void InsertFileInfo(const std::vector<FileInfo>& filesInfo);
   std::vector<UserChunk> GetUsersChunks(const int idFile);
   bool IsFileExist(const int idFile);
-
+  void DeleteFile(const FileMeta& filesInfo);
  private:
   std::string _databaseName;
   int _userId;
@@ -61,6 +61,7 @@ class InternalDB {
   int selectId(const std::string &query);
   void creatTable();
   bool update(const std::string &query);
+  void deleteInfo(const std::string &query);
   virtual bool connect();
   virtual void close();
   void insert(const std::string &query);
