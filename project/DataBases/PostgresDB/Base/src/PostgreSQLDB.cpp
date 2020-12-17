@@ -16,3 +16,15 @@ PostgresSQLDB::~PostgresSQLDB() {
 }
 
 PostgresSQLDB::PostgresSQLDB(std::string_view info): _connInfo(info) { }
+
+void PostgresSQLDB::pqExec(const std::string &query, PostgresExceptions exceptions) {
+  PGresult *res  = PQexec(_conn, query.c_str());
+  if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+	PQexec(_conn,"rollback to savepoint f_savepoint;");
+	PQclear(res);
+	throw exceptions;
+  }
+  PQclear(res);
+}
+
+

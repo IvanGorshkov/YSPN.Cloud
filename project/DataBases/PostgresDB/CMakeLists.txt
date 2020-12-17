@@ -2,7 +2,8 @@
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
 include_directories(Base/include
                       MetaDataDB/include
-                     UserDB/include)
+                     UserDB/include
+                    ../../utils/include)
 ADD_LIBRARY(libMetDataDB STATIC Base/src/PostgreSQLDB.cpp MetaDataDB/src/MetaDataDB.cpp)
 ADD_LIBRARY(libUserDB STATIC Base/src/PostgreSQLDB.cpp UserDB/src/UsersDB.cpp)
 

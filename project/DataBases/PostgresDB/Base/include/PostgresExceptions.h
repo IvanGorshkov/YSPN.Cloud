@@ -7,7 +7,7 @@
 class PostgresExceptions: public std::exception {
  public:
   explicit PostgresExceptions(std::string msg)
-	  : _msg(std::move(msg)) {
+	  : std::exception(), _msg(std::move(msg)) {
   }
 
   const char *what() const noexcept override {
