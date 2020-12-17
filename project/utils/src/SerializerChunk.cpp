@@ -48,7 +48,7 @@ void SerializerChunk::serialize() {
     child.put("chunkSize", el.chunkSize);
     child.put("sHash", el.sHash);
     child.put("rHash", el.rHash);
-    child.put("data", el.data);
+    child.put("data", el.data.data());
 
     data.push_back(std::make_pair("", child));
   }
@@ -66,9 +66,15 @@ void SerializerChunk::deserialize() {
           .chunkId =  val.second.get<int>("chunkId"),
           .chunkSize =  val.second.get<int>("chunkSize"),
           .sHash = val.second.get<std::string>("sHash"),
-          .rHash =  val.second.get<std::string>("rHash"),
-          .data = val.second.get<std::string>("data")
+          .rHash =  val.second.get<std::string>("rHash")
       };
+
+      auto str = val.second.get<std::string>("data");
+      std::vector<char> vec;
+      std::for_each(str.begin(), str.end(), [&vec](char &el) {
+        vec.push_back(el);
+      });
+      chunk.data = vec;
 
       _chunkVector.push_back(chunk);
     }

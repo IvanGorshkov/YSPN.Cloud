@@ -1,12 +1,16 @@
 #pragma once
 
 #include <string>
+#include <vector>
+
+#define CHUNK_SIZE       4096
+#define CHUNK_MOVE_SIZE  1024
 
 struct Chunk {
   int userId;
   int chunkId;
-  int chunkSize;
+  int chunkSize = 0;
   std::string sHash;
   std::string rHash;
-  std::string data;
+  std::vector<char> data;
 };

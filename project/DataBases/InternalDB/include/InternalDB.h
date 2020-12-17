@@ -42,7 +42,7 @@ class InternalDB {
   UserDate GetLastUpdate();
   void SaveLastUpdate();
   std::vector<FileMeta> SelectAllFiles();
-  void InsertFileInfo(const std::vector<FileInfo>& filesInfo);
+  void InsertFileInfo(const std::vector<FileInfo> &filesInfo);
   std::vector<UserChunk> GetUsersChunks(const int idFile);
   bool IsFileExist(const int idFile);
   void DeleteFile(const FileMeta& filesInfo);
