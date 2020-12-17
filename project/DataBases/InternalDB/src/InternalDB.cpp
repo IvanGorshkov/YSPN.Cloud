@@ -59,18 +59,19 @@ void InternalDB::InsertFileInfo(const std::vector<FileInfo>& filesInfo) {
 void InternalDB::updateOneFile(const FileMeta& file) {
   std::string query = "Update Files SET"
 					  "file_name = '" + file.fileName +
-	  "', file_extention = '" + file.fileExtension +
-	  "', file_size = " + std::to_string(file.fileSize) +
-	  ",file_path = '" + file.filePath +
-	  "', count_chunks = " + std::to_string(file.chunksCount) +
-	  ", version=" + std::to_string(file.version) +
-	  ", is_download=0, update_date = '" + file.updateDate +
-	  ", create_date = '"+ file.createDate + "' WHERE id=" + std::to_string(file.fileId) + ";";
+					  "', file_extention = '" + file.fileExtension +
+					  "', file_size = " + std::to_string(file.fileSize) +
+					  ",file_path = '" + file.filePath +
+					  "', count_chunks = " + std::to_string(file.chunksCount) +
+					  ", version=" + std::to_string(file.version) +
+					  ", is_download=0, update_date = '" + file.updateDate +
+					  ", create_date = '"+ file.createDate + "' WHERE id=" + std::to_string(file.fileId) + ";";
   update(query);
 }
 
 void InternalDB::insertOneFile(const FileMeta& file) {
-  std::string query = "INSERT INTO Files (file_name, file_extention, file_size, file_path, count_chunks, version, is_download, update_date, create_date) VALUES ('"
+  std::string query = "INSERT INTO Files (file_name, file_extention, file_size, file_path,"
+					  " count_chunks, version, is_download, update_date, create_date) VALUES ('"
 	  + file.fileName + "', '" + file.fileExtension
 	  + "', " + std::to_string(file.fileSize)
 	  + ", '" + file.filePath + "', " +
@@ -94,13 +95,13 @@ void InternalDB::UpdateFile(const FileMeta& file) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
   std::string query = "Update Files SET "
 					  "file_name = '" + file.fileName +
-	  "', file_extention = '" + file.fileExtension +
-	  "', file_size = " + std::to_string(file.fileSize) +
-	  ",file_path = '" + file.filePath +
-	  "', count_chunks = " + std::to_string(file.chunksCount) +
-	  ", version=" + std::to_string(file.version) +
-	  ", is_download=0, update_date = '" + file.updateDate +
-	  ", create_date = '"+ file.createDate + "' WHERE id=" + std::to_string(file.fileId) + ";";
+					  "', file_extention = '" + file.fileExtension +
+					  "', file_size = " + std::to_string(file.fileSize) +
+					  ",file_path = '" + file.filePath +
+					  "', count_chunks = " + std::to_string(file.chunksCount) +
+					  ", version=" + std::to_string(file.version) +
+					  ", is_download=0, update_date = '" + file.updateDate +
+					  ", create_date = '"+ file.createDate + "' WHERE id=" + std::to_string(file.fileId) + ";";
   update(query);
 
   close();
@@ -167,12 +168,22 @@ void InternalDB::DeleteFile(const FileMeta& filesInfo) {
   close();
 }
 
+void InternalDB::DowloadFile(const FileMeta& filesInfo) {
+  if (!connect()) { throw InternalExceptions("Don't connect"); }
+  std::string query = "UPDATE Files set is_download = true where id = " +
+	  std::to_string(filesInfo.fileId) + " ;";
+  update(query);
+  close();
+}
+
 //MARK: Работа с Chunks
 
 void InternalDB::InsertChunk(const FileChunksMeta& chunks, const int idFile) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Insert Chunck";
-  std::string query = "INSERT INTO Chunks (id_file, chunk_order) VALUES (" + std::to_string(idFile) + ", " + std::to_string(chunks.chunkOrder) + ");";
+  std::string query = "INSERT INTO Chunks (id_file, chunk_order) VALUES ("
+					  + std::to_string(idFile) + ", "
+					  + std::to_string(chunks.chunkOrder) + ");";
   insert(query);
   close();
 }
@@ -219,14 +230,14 @@ void InternalDB::InsertUser(const User& user) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Insert User";
   std::string query = "INSERT INTO User (user_id, login, password, device_id, device_name, sync_folder, last_update) VALUES ("
-	  + std::to_string(user.userId)
-	  + ", '" + user.login
-	  + "', '" + user.password
-	  +"', " + std::to_string(user.deviceId)
-	  + ", '" + user.deviceName
-	  + "', '" + user.syncFolder
-	  + "', '1970-Dec-31 12:30:02'"
-	  + "');";
+					  + std::to_string(user.userId)
+					  + ", '" + user.login
+					  + "', '" + user.password
+					  +"', " + std::to_string(user.deviceId)
+					  + ", '" + user.deviceName
+					  + "', '" + user.syncFolder
+					  + "', '1970-Dec-31 12:30:02'"
+					  + "');";
   insert(query);
   _userId = user.userId;
   _deviceId = user.deviceId;
@@ -283,7 +294,9 @@ std::string InternalDB::selectLastUpdate() {
 void InternalDB::SaveLastUpdate() {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Prepare to save last update";
-  std::string query = "Update User set last_update = \"" + boost::lexical_cast<std::string>(_lastTMPUpdate) + "\" where user_id = " +  std::to_string(_userId) + ";";
+  std::string query = "Update User set last_update = \""
+					  + boost::lexical_cast<std::string>(_lastTMPUpdate)
+					  + "\" where user_id = " +  std::to_string(_userId) + ";";
   update(query);
   _lastUpdate = boost::lexical_cast<std::string>(_lastTMPUpdate);
   close();
@@ -432,3 +445,5 @@ UserDate InternalDB::GetLastUpdate() {
   _lastTMPUpdate = boost::posix_time::second_clock::universal_time();
   return UserDate{.userId = _userId, .date = _lastUpdate};
 }
+
+

@@ -46,6 +46,8 @@ class InternalDB {
   std::vector<UserChunk> GetUsersChunks(const int idFile);
   bool IsFileExist(const int idFile);
   void DeleteFile(const FileMeta& filesInfo);
+  void DowloadFile(const FileMeta& filesInfo);
+
  private:
   std::string _databaseName;
   int _userId;
