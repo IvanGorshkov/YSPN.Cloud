@@ -7,7 +7,7 @@
 
 int main() {
   InternalDB myDB("myDB.sqlite");
-  auto file = FileMeta{.fileId = 1,
+  auto file = FileMeta{.fileId = 2,
 	  .version = 1,
 	  .fileName = "test",
 	  .fileExtension = "txt",
