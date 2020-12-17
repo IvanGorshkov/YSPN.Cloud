@@ -39,9 +39,7 @@ bool InternalDB::IsFileExist(const int idFile) {
 void InternalDB::InsertFileInfo(const std::vector<FileInfo>& filesInfo) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
   for (const auto& fileInfo: filesInfo) {
-	std::string query = "SELECT count(*) from Files Where id = " + std::to_string(fileInfo.file.fileId) +";";
-	int count  = selectId(query);
-	if (count == 0) {
+	if (!IsFileExist(fileInfo.file.fileId)) {
 	  insertOneFile(fileInfo.file);
 	  int id = selectId("SELECT id FROM Files ORDER  BY  id  DESC Limit 1");
 	  for (const auto& fileChunksMeta: fileInfo.fileChunksMeta) {
