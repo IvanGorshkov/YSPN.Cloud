@@ -6,21 +6,21 @@
 #include <utility>
 #include "InternalExceptions.h"
 
-InternalDB::InternalDB(std::string  databaseName): _databaseName(std::move(databaseName)),
-												   _userId(-1),
-												   _deviceId(-1),
-												   _syncFolder(""),
-												   _lastUpdate("") {
+InternalDB::InternalDB(std::string databaseName) : _databaseName(std::move(databaseName)),
+                                                   _userId(-1),
+                                                   _deviceId(-1),
+                                                   _syncFolder(""),
+                                                   _lastUpdate("") {
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Init DB";
   if (connect()) {
     creatTable();
     if (existUser()) {
-	  _userId = selectUserId();
-	  _deviceId = selectDeviceId();
-	  _syncFolder = selectFolder();
-	  _lastUpdate = selectLastUpdate();
-	}
-	close();
+      _userId = selectUserId();
+      _deviceId = selectDeviceId();
+      _syncFolder = selectFolder();
+      _lastUpdate = selectLastUpdate();
+    }
+    close();
   }
 }
 
@@ -29,7 +29,7 @@ InternalDB::InternalDB(std::string  databaseName): _databaseName(std::move(datab
 
 bool InternalDB::IsFileExist(const int idFile) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
-  std::string query = "SELECT count(*) FROM Files Where id="+ std::to_string(idFile) + ";";
+  std::string query = "SELECT count(*) FROM Files Where id=" + std::to_string(idFile) + ";";
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Check exist file id=" + std::to_string(idFile);
   int count = selectId(query);
   close();
@@ -63,7 +63,7 @@ void InternalDB::InsertOrUpdateFileInfo(FileInfo& fileInfo) {
   close();
 }
 
-void InternalDB::updateOneFile(const FileMeta& file) {
+void InternalDB::updateOneFile(const FileMeta &file) {
   std::string query = "Update Files SET"
 					  "file_name = '" + file.fileName +
 					  "', file_extention = '" + file.fileExtension +
@@ -89,16 +89,16 @@ void InternalDB::insertOneFile(const FileMeta& file) {
   insert(query);
 }
 
-void InternalDB::InsertFile(const std::vector<FileMeta>& files) {
+void InternalDB::InsertFile(const std::vector<FileMeta> &files) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Insert Files";
-  for(const auto& file: files) {
-	insertOneFile(file);
+  for (const auto &file: files) {
+    insertOneFile(file);
   }
   close();
 }
 
-void InternalDB::UpdateFile(const FileMeta& file) {
+void InternalDB::UpdateFile(const FileMeta &file) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
   std::string query = "Update Files SET "
 					  "file_name = '" + file.fileName +
@@ -124,11 +124,11 @@ FileMeta InternalDB::SelectFile(size_t idFile) {
   _stmt.reset(pStmt);
 
   if (sqlite3_step(_stmt.get()) == SQLITE_ROW) {
-	file = getOneFile();
-	BOOST_LOG_TRIVIAL(debug) << "InternalDB: Selected";
+    file = getOneFile();
+    BOOST_LOG_TRIVIAL(debug) << "InternalDB: Selected";
   } else {
-	BOOST_LOG_TRIVIAL(error) << "File by id = " + std::to_string(idFile) + " don't exist";;
-	throw InternalExceptions("File by id = " + std::to_string(idFile) + " don't exist");
+    BOOST_LOG_TRIVIAL(error) << "File by id = " + std::to_string(idFile) + " don't exist";;
+    throw InternalExceptions("File by id = " + std::to_string(idFile) + " don't exist");
   }
 
   close();
@@ -158,19 +158,19 @@ std::vector<FileMeta> InternalDB::SelectAllFiles() {
   auto pStmt = _stmt.get();
   sqlite3_prepare_v2(_database.get(), query.c_str(), query.size(), &pStmt, nullptr);
   _stmt.reset(pStmt);
-  while(sqlite3_step(_stmt.get()) == SQLITE_ROW) {
-	files.push_back(getOneFile());
-	BOOST_LOG_TRIVIAL(debug) << "InternalDB: Selected";
+  while (sqlite3_step(_stmt.get()) == SQLITE_ROW) {
+    files.push_back(getOneFile());
+    BOOST_LOG_TRIVIAL(debug) << "InternalDB: Selected";
   }
   close();
   return files;
 }
 
-void InternalDB::DeleteFile(const FileMeta& filesInfo) {
+void InternalDB::DeleteFile(const FileMeta &filesInfo) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
-  std::string query = "DELETE FROM Files WHERE id = " +  std::to_string(filesInfo.fileId) + ";";
+  std::string query = "DELETE FROM Files WHERE id = " + std::to_string(filesInfo.fileId) + ";";
   deleteInfo(query);
-  query = "DELETE FROM Chunks WHERE id_file = " +  std::to_string(filesInfo.fileId) + ";";
+  query = "DELETE FROM Chunks WHERE id_file = " + std::to_string(filesInfo.fileId) + ";";
   deleteInfo(query);
   close();
 }
@@ -206,8 +206,8 @@ void InternalDB::InsertChunk(FileChunksMeta& chunks, const int idFile) {
 void InternalDB::updateOneChunk(const FileChunksMeta &chunk, const int id) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
   std::string query = "Update Chunks SET "
-					  "chunk_order = " + std::to_string(chunk.chunkOrder) +
-	  " WHERE id_file = " + std::to_string(id) + ";";
+                      "chunk_order = " + std::to_string(chunk.chunkOrder) +
+      " WHERE id_file = " + std::to_string(id) + ";";
   update(query);
   close();
 }
@@ -219,9 +219,9 @@ std::vector<UserChunk> InternalDB::GetUsersChunks(const int idFile) {
   auto pStmt = _stmt.get();
   sqlite3_prepare_v2(_database.get(), query.c_str(), query.size(), &pStmt, nullptr);
   _stmt.reset(pStmt);
-  while(sqlite3_step(_stmt.get()) == SQLITE_ROW) {
-	userChunks.emplace_back(UserChunk{_userId, sqlite3_column_int(_stmt.get(), 0)});
-	BOOST_LOG_TRIVIAL(debug) << "InternalDB: Selected";
+  while (sqlite3_step(_stmt.get()) == SQLITE_ROW) {
+    userChunks.emplace_back(UserChunk{_userId, sqlite3_column_int(_stmt.get(), 0)});
+    BOOST_LOG_TRIVIAL(debug) << "InternalDB: Selected";
   }
   close();
   return userChunks;
@@ -236,12 +236,12 @@ void InternalDB::SelectChunk() {
 
 void InternalDB::DeleteUser(size_t id) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
-  std::string query = "DELETE FROM User WHERE user_id = " +  std::to_string(id) + ";";
+  std::string query = "DELETE FROM User WHERE user_id = " + std::to_string(id) + ";";
   deleteInfo(query);
   close();
 }
 
-void InternalDB::InsertUser(const User& user) {
+void InternalDB::InsertUser(const User &user) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Insert User";
   std::string query = "INSERT INTO User (user_id, login, password, device_id, device_name, sync_folder, last_update) VALUES ("
@@ -261,12 +261,13 @@ void InternalDB::InsertUser(const User& user) {
   close();
 }
 
-void InternalDB::UpdateSyncFolder(const std::string& newFolder) {
+void InternalDB::UpdateSyncFolder(const std::string &newFolder) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
-  std::string query = "Update User set sync_folder = \"" + newFolder + "\" where user_id = " +  std::to_string(_userId) + ";";
+  std::string
+      query = "Update User set sync_folder = \"" + newFolder + "\" where user_id = " + std::to_string(_userId) + ";";
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Prepare to update sync folder";
   if (update(query)) {
-	_syncFolder = newFolder;
+    _syncFolder = newFolder;
   }
   close();
 }
@@ -303,7 +304,7 @@ std::string InternalDB::selectLastUpdate() {
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Prepare to select last update";
   std::string query = "SELECT last_update FROM User;";
   std::string date = selectStr(query);
-  return  date;
+  return date;
 }
 
 void InternalDB::SaveLastUpdate() {
@@ -317,9 +318,10 @@ void InternalDB::SaveLastUpdate() {
   close();
 }
 
-void InternalDB::UpdatePassword(const std::string& newPassword) {
+void InternalDB::UpdatePassword(const std::string &newPassword) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
-  std::string query = "Update User set password = \"" + newPassword + "\" where user_id = " +  std::to_string(_userId) + ";";
+  std::string
+      query = "Update User set password = \"" + newPassword + "\" where user_id = " + std::to_string(_userId) + ";";
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Prepare to update password";
   update(query);
   close();
@@ -327,11 +329,11 @@ void InternalDB::UpdatePassword(const std::string& newPassword) {
 
 std::string InternalDB::SelectUserPassword() {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
-  std::string query = "Select password from User where user_id = " +  std::to_string(_userId) + ";";
+  std::string query = "Select password from User where user_id = " + std::to_string(_userId) + ";";
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Prepare to select user password";
   std::string password = selectStr(query);
   close();
-  return  password;
+  return password;
 }
 
 
@@ -342,55 +344,55 @@ void InternalDB::deleteInfo(const std::string &query) {
   sqlite3_prepare_v2(_database.get(), query.c_str(), query.size(), &pStmt, nullptr);
   _stmt.reset(pStmt);
   if (sqlite3_step(_stmt.get()) != SQLITE_DONE) {
-	BOOST_LOG_TRIVIAL(error) << "InternalDB: Don't Deleted";
-	return;
+    BOOST_LOG_TRIVIAL(error) << "InternalDB: Don't Deleted";
+    return;
   }
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Deleted";
 }
 
-std::string InternalDB::selectStr(const std::string& query) {
+std::string InternalDB::selectStr(const std::string &query) {
   std::string string;
   auto pStmt = _stmt.get();
   sqlite3_prepare_v2(_database.get(), query.c_str(), query.size(), &pStmt, nullptr);
   _stmt.reset(pStmt);
-  while(sqlite3_step(_stmt.get()) == SQLITE_ROW) {
-	string =  boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 0));
-	BOOST_LOG_TRIVIAL(debug) << "InternalDB: Selected";
+  while (sqlite3_step(_stmt.get()) == SQLITE_ROW) {
+    string = boost::lexical_cast<std::string>(sqlite3_column_text(_stmt.get(), 0));
+    BOOST_LOG_TRIVIAL(debug) << "InternalDB: Selected";
   }
   return string;
 }
 
-int InternalDB::selectId(const std::string& query) {
+int InternalDB::selectId(const std::string &query) {
   int id = -1;
   auto pStmt = _stmt.get();
   sqlite3_prepare_v2(_database.get(), query.c_str(), query.size(), &pStmt, nullptr);
   _stmt.reset(pStmt);
-  while(sqlite3_step(_stmt.get()) == SQLITE_ROW) {
-	id = sqlite3_column_int(_stmt.get(), 0);
-	BOOST_LOG_TRIVIAL(debug) << "InternalDB: Selected";
+  while (sqlite3_step(_stmt.get()) == SQLITE_ROW) {
+    id = sqlite3_column_int(_stmt.get(), 0);
+    BOOST_LOG_TRIVIAL(debug) << "InternalDB: Selected";
   }
-  return  id;
+  return id;
 }
 
-bool InternalDB::update(const std::string& query) {
+bool InternalDB::update(const std::string &query) {
   auto pStmt = _stmt.get();
   sqlite3_prepare_v2(_database.get(), query.c_str(), query.size(), &pStmt, nullptr);
   _stmt.reset(pStmt);
   if (sqlite3_step(_stmt.get()) != SQLITE_DONE) {
-	BOOST_LOG_TRIVIAL(error) << "InternalDB: Don't Update";
-	return false;
+    BOOST_LOG_TRIVIAL(error) << "InternalDB: Don't Update";
+    return false;
   }
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Updated";
   return true;
 }
 
-void InternalDB::insert(const std::string& query) {
+void InternalDB::insert(const std::string &query) {
   auto pStmt = _stmt.get();
   sqlite3_prepare_v2(_database.get(), query.c_str(), query.size(), &pStmt, nullptr);
   _stmt.reset(pStmt);
   if (sqlite3_step(_stmt.get()) != SQLITE_DONE) {
-	BOOST_LOG_TRIVIAL(error) << "InternalDB: Don't Insert";
-	throw InternalExceptions("Don't insert");
+    BOOST_LOG_TRIVIAL(error) << "InternalDB: Don't Insert";
+    throw InternalExceptions("Don't insert");
   }
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Inserted";
 }
@@ -400,8 +402,8 @@ void InternalDB::insert(const std::string& query) {
 bool InternalDB::connect() {
   auto pDB = _database.get();
   if (SQLITE_OK != sqlite3_open_v2(_databaseName.c_str(), &pDB, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr)) {
-	BOOST_LOG_TRIVIAL(error) << "InternalDB: Failed to connect";
-	return false;
+    BOOST_LOG_TRIVIAL(error) << "InternalDB: Failed to connect";
+    return false;
   }
   _database.reset(pDB);
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Connect";
@@ -422,23 +424,23 @@ void InternalDB::creatTable() {
   sqlite3_prepare(_database.get(), createQueryFiles.c_str(), createQueryFiles.size(), &pStmt, nullptr);
   _stmt.reset(pStmt);
   if (sqlite3_step(_stmt.get()) != SQLITE_DONE) {
-	std::string error = "InternalDB: Didn't Create Table Files";
-	BOOST_LOG_TRIVIAL(error) << error;
-	throw InternalExceptions(error);
+    std::string error = "InternalDB: Didn't Create Table Files";
+    BOOST_LOG_TRIVIAL(error) << error;
+    throw InternalExceptions(error);
   }
   sqlite3_prepare(_database.get(), createQueryChunks.c_str(), createQueryChunks.size(), &pStmt, nullptr);
   _stmt.reset(pStmt);
   if (sqlite3_step(_stmt.get()) != SQLITE_DONE) {
-	std::string error = "InternalDB: Didn't Create Table Chunks";
-	BOOST_LOG_TRIVIAL(error) << error;
-	throw InternalExceptions(error);
+    std::string error = "InternalDB: Didn't Create Table Chunks";
+    BOOST_LOG_TRIVIAL(error) << error;
+    throw InternalExceptions(error);
   }
   sqlite3_prepare(_database.get(), createQueryUser.c_str(), createQueryUser.size(), &pStmt, nullptr);
   _stmt.reset(pStmt);
   if (sqlite3_step(_stmt.get()) != SQLITE_DONE) {
-	std::string error = "InternalDB: Didn't Create Table Users";
-	BOOST_LOG_TRIVIAL(error) << error;
-	throw InternalExceptions(error);
+    std::string error = "InternalDB: Didn't Create Table Users";
+    BOOST_LOG_TRIVIAL(error) << error;
+    throw InternalExceptions(error);
   }
 }
 
@@ -449,7 +451,7 @@ int InternalDB::GetUserId() const {
 }
 
 int InternalDB::GetDeviceId() const {
-  return  _deviceId;
+  return _deviceId;
 }
 
 std::string InternalDB::GetSyncFolder() const {

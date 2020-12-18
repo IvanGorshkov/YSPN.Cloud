@@ -2,17 +2,16 @@
 #include "PostgresExceptions.h"
 #include <boost/lexical_cast.hpp>
 
-MetaDataDB::MetaDataDB(std::string_view info): PostgresSQLDB(info) {
+MetaDataDB::MetaDataDB(std::string_view info)
+    : PostgresSQLDB(info) {
 }
 
-MetaDataDB& MetaDataDB::shared(std::string_view info) {
+MetaDataDB &MetaDataDB::shared(std::string_view info) {
   static MetaDataDB shared(info);
   return shared;
 }
 
-MetaDataDB::~MetaDataDB() = default;
-
-void MetaDataDB::InsertFile(const FileInfo& fileMeta) {
+void MetaDataDB::InsertFile(const FileInfo &fileMeta) {
   try {
   	pqExec("begin;", PostgresExceptions("invalid to start transaction")); // Начало транзакции
   	pqExec("savepoint f_savepoint;", PostgresExceptions("invalid to update")); // Точка сохранения
@@ -60,8 +59,8 @@ void MetaDataDB::InsertFile(const FileInfo& fileMeta) {
 
   	pqExec("commit;", PostgresExceptions("invalid to end transation")); // Завершение транзакции
   }
-  catch (PostgresExceptions& exceptions) {
-	throw exceptions;
+  catch (PostgresExceptions &exceptions) {
+    throw exceptions;
   }
 }
 

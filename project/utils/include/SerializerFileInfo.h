@@ -12,11 +12,12 @@ namespace pt = boost::property_tree;
 class SerializerFileInfo : public SerializerInterface {
  public:
   SerializerFileInfo() = default;
-  explicit SerializerFileInfo(int requestId, int userId, std::vector<FileInfo> fileMetaVector);
+  explicit SerializerFileInfo(int requestId, std::vector<FileInfo> fileInfoVector);
+  explicit SerializerFileInfo(int requestId, const FileInfo& fileInfo);
   explicit SerializerFileInfo(const pt::ptree &val);
 
   int GetRequestId() const;
-  std::vector<FileInfo> GetFileMeta() noexcept(false);
+  std::vector<FileInfo> GetFileInfo() noexcept(false);
   pt::ptree GetJson();
 
  private:
@@ -25,7 +26,6 @@ class SerializerFileInfo : public SerializerInterface {
 
  private:
   int _requestId{};
-  int _userId{};
-  std::vector<FileInfo> _fileMetaVector;
+  std::vector<FileInfo> _fileInfoVector;
   pt::ptree _json{};
 };

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <optional>
+#include <string>
 
 struct FileMeta {
   int fileId;
@@ -10,9 +10,9 @@ struct FileMeta {
   std::string filePath;
   int fileSize;
   int chunksCount;
-  std::optional<bool> isDownload;
-  std::optional<bool> isDeleted;
-  std::optional<bool> isCurrent;
+  bool isDownload;
+  bool isDeleted;
+  bool isCurrent;
   std::string updateDate;
   std::string createDate;
 };

@@ -28,6 +28,8 @@ class ClientApp {
   static void uploadFileCallbackOk();
   static void uploadFileCallbackError(const std::string &msg);
 
+  void changeDefaultFolder();
+
  private:
   App app;
 };

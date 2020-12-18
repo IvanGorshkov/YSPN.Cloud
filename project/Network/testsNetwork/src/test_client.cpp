@@ -1,34 +1,33 @@
 #include "../../Client/include/ClientNetwork.h"
 #include <iostream>
+#include "SerializerChunk.h"
 
 namespace pt = boost::property_tree;
 
 int main(int argc, char *argv[]) {
-  ClientNetwork client;
-  client.Connect();
 
-  srand(time(0));
+  std::vector<Chunk> chunkVector;
+  for (int i = 1; i < 3; ++i) {
+    auto chunk = Chunk{.userId = 1,
+        .chunkId = i,
+        .chunkSize = i * 10,
+        .rHash = "rhash",
+        .sHash = "shash"};
 
-  pt::ptree root;
-  int id = 2;
+    chunk.data.push_back('d');
+    chunk.data.push_back('a');
+    chunk.data.push_back('t');
+    chunk.data.push_back('a');
 
-  root.put("command", "UploadChunk");
-  root.put("requestId", id);
-  pt::ptree data;
-  for (int i = 0; i < 2; i++) {
-    pt::ptree child;
-    child.put("userId", id);
-    child.put("chunkId", i);
-    child.put("sHash", "shash");
-    child.put("rHash", "rhash");
-    child.put("data", "data");
-
-    data.push_back(std::make_pair("", child));
+    chunkVector.push_back(chunk);
   }
 
-  root.add_child("data", data);
+  auto request = SerializerChunk(0, chunkVector);
 
-  client.SendJSON(root);
+    ClientNetwork client;
+  client.Connect();
+
+  client.SendJSON(request.GetJson());
 
   pt::ptree response = client.ReceiveJSON();
 

@@ -2,34 +2,40 @@
 #include <boost/log/trivial.hpp>
 #include <utility>
 
-SerializerFileInfo::SerializerFileInfo(int requestId, int userId, std::vector<FileInfo> fileMetaVector)
+SerializerFileInfo::SerializerFileInfo(int requestId, std::vector<FileInfo> fileInfoVector)
     : _requestId(requestId),
-      _userId(userId),
-      _fileMetaVector(std::move(fileMetaVector)) {
-  BOOST_LOG_TRIVIAL(debug) << "SerializerFileMeta: create serializer chunk from file";
+      _fileInfoVector(std::move(fileInfoVector)) {
+  BOOST_LOG_TRIVIAL(debug) << "SerializerFileInfo: create serializer chunk from file vector";
 }
 
-SerializerFileInfo::SerializerFileInfo(const pt::ptree &val)
+SerializerFileInfo::SerializerFileInfo(int requestId, const FileInfo &fileInfo)
+    : _requestId(requestId) {
+  BOOST_LOG_TRIVIAL(debug) << "SerializerFileInfo: create serializer chunk from file";
+  _fileInfoVector.push_back(fileInfo);
+}
+
+SerializerFileInfo::SerializerFileInfo(
+    const pt::ptree &val)
     : _json(val) {
-  BOOST_LOG_TRIVIAL(debug) << "SerializerFileMeta: create serializer chunk from json";
+  BOOST_LOG_TRIVIAL(debug) << "SerializerFileInfo: create serializer chunk from json";
 }
 
 int SerializerFileInfo::GetRequestId() const {
-  BOOST_LOG_TRIVIAL(debug) << "SerializerFileMeta: GetRequestId";
+  BOOST_LOG_TRIVIAL(debug) << "SerializerFileInfo: GetRequestId";
   return _requestId;
 }
 
-std::vector<FileInfo> SerializerFileInfo::GetFileMeta() noexcept(false) {
-  BOOST_LOG_TRIVIAL(debug) << "SerializerUserChunk: GetChunk";
-  if (_fileMetaVector.empty()) {
+std::vector<FileInfo> SerializerFileInfo::GetFileInfo() noexcept(false) {
+  BOOST_LOG_TRIVIAL(debug) << "SerializerFileInfo: GetChunk";
+  if (_fileInfoVector.empty()) {
     deserialize();
   }
 
-  return _fileMetaVector;
+  return _fileInfoVector;
 }
 
 pt::ptree SerializerFileInfo::GetJson() {
-  BOOST_LOG_TRIVIAL(debug) << "SerializerFileMeta: GetJson";
+  BOOST_LOG_TRIVIAL(debug) << "SerializerFileInfo: GetJson";
   if (_json.empty()) {
     serialize();
   }
@@ -38,15 +44,15 @@ pt::ptree SerializerFileInfo::GetJson() {
 }
 
 void SerializerFileInfo::serialize() {
-  BOOST_LOG_TRIVIAL(debug) << "SerializerFileMeta: serialize";
+  BOOST_LOG_TRIVIAL(debug) << "SerializerFileInfo: serialize";
 
   _json.put("command", "UploadFile");
   _json.put("requestId", _requestId);
 
   pt::ptree data;
-  for (auto &fileMeta: _fileMetaVector) {
+  for (auto &fileMeta: _fileInfoVector) {
     pt::ptree child;
-    child.put("userId", _userId);
+    child.put("userId", fileMeta.userId);
 
     pt::ptree file;
     file.put("fileId", fileMeta.file.fileId);
@@ -56,7 +62,8 @@ void SerializerFileInfo::serialize() {
     file.put("filePath", fileMeta.file.filePath);
     file.put("fileSize", fileMeta.file.fileSize);
     file.put("chunksCount", fileMeta.file.chunksCount);
-    file.put("isCurrent", fileMeta.file.isCurrent.value());
+    file.put("isCurrent", fileMeta.file.isCurrent);
+    file.put("isDeleted", fileMeta.file.isDeleted);
     file.put("updateDate", fileMeta.file.updateDate);
     file.put("createDate", fileMeta.file.createDate);
     child.add_child("file", file);
@@ -87,41 +94,43 @@ void SerializerFileInfo::serialize() {
 }
 
 void SerializerFileInfo::deserialize() {
-  BOOST_LOG_TRIVIAL(debug) << "SerializerFileMeta: deserialize";
+  BOOST_LOG_TRIVIAL(debug) << "SerializerFileInfo: deserialize";
 
   try {
     _requestId = _json.get<int>("requestId");
-    _userId = _json.get<int>("userId");
 
     for (auto &fileMeta : _json.get_child("files")) {
-      auto oneFileMeta = FileInfo{.userId = fileMeta.second.get<int>("userId")};
+      auto oneFileInfo = FileInfo{.userId = fileMeta.second.get<int>("userId")};
 
-      for (auto &val : fileMeta.second.get_child("file")) {
-        oneFileMeta.file = FileMeta{.fileId = val.second.get<int>("fileId"),
-            .version = val.second.get<int>("version"),
-            .fileName = val.second.get<std::string>("fileName"),
-            .fileExtension = val.second.get<std::string>("fileExtension"),
-            .filePath = val.second.get<std::string>("filePath"),
-            .fileSize = val.second.get<int>("fileSize"),
-            .chunksCount = val.second.get<int>("chunksCount"),
-            .isCurrent = val.second.get<int>("isCurrent"),
-            .updateDate = val.second.get<std::string>("updateDate"),
-            .createDate = val.second.get<std::string>("createDate")};
-      }
+      pt::ptree file = fileMeta.second.get_child("file");
+      oneFileInfo.file = FileMeta{.fileId = file.get<int>("fileId"),
+          .version = file.get<int>("version"),
+          .fileName = file.get<std::string>("fileName"),
+          .fileExtension = file.get<std::string>("fileExtension"),
+          .filePath = file.get<std::string>("filePath"),
+          .fileSize = file.get<int>("fileSize"),
+          .chunksCount = file.get<int>("chunksCount"),
+          .isCurrent = file.get<bool>("isCurrent"),
+          .isDeleted = file.get<bool>("isDeleted"),
+          .updateDate = file.get<std::string>("updateDate"),
+          .createDate = file.get<std::string>("createDate")};
 
       for (auto &val : fileMeta.second.get_child("chunks")) {
         auto chunkMeta = ChunkMeta{.chunkId = val.second.get<int>("chunkId")};
 
-        oneFileMeta.chunkMeta.push_back(chunkMeta);
+        oneFileInfo.chunkMeta.push_back(chunkMeta);
       }
 
       for (auto &val : fileMeta.second.get_child("fileChunks")) {
         auto fileChunkMeta = FileChunksMeta{.chunkId = val.second.get<int>("chunkId"),
             .chunkOrder = val.second.get<int>("chunkOrder")};
 
-        oneFileMeta.fileChunksMeta.push_back(fileChunkMeta);
+        oneFileInfo.fileChunksMeta.push_back(fileChunkMeta);
       }
+
+      _fileInfoVector.push_back(oneFileInfo);
     }
+
   } catch (pt::ptree_error &er) {
     throw ParseException(er.what());
   }
