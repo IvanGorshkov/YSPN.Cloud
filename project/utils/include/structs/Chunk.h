@@ -3,8 +3,8 @@
 #include <string>
 #include <vector>
 
-#define CHUNK_SIZE       4096
-#define CHUNK_MOVE_SIZE  1024
+#define CHUNK_SIZE       7
+#define CHUNK_MOVE_SIZE  2
 
 struct Chunk {
   int userId;
@@ -12,5 +12,5 @@ struct Chunk {
   int chunkSize = 0;
   std::string sHash;
   std::string rHash;
-  std::vector<char> data;
+  std::vector<char> data{};
 };

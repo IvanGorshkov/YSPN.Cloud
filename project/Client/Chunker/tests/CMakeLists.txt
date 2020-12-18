@@ -35,9 +35,9 @@ include_directories(../../../utils/include/structs)
 
 add_executable(tests_gtest_client main.cpp test_Chunker.cpp)
 if (APPLE)
-    target_link_libraries(tests_gtest_client ${GTEST_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} libChunker Crypto ZLIB::ZLIB)
+    target_link_libraries(tests_gtest_client ${GTEST_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} Chunker-dev Crypto ZLIB::ZLIB)
 else ()
-    target_link_libraries(tests_gtest_client ${GTEST_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} libChunker OpenSSL::Crypto ZLIB::ZLIB)
+    target_link_libraries(tests_gtest_client ${GTEST_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} Chunker-dev OpenSSL::Crypto ZLIB::ZLIB)
 endif ()
 
 ADD_TEST(NAME Test COMMAND ${PROJECT_NAME})

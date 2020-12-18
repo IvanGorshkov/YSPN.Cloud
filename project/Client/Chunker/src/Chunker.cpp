@@ -1,50 +1,86 @@
 #include "Chunker.h"
 
-Chunker::Chunker(const File& file)
+Chunker::Chunker(const File &file)
     : _file(file) {}
 
-int Chunker::SentNewChunk() {
-  return 0;
-}
-
-int Chunker::SentNewPosition() {
-  return 0;
-}
-
-void Chunker::ChunkCompare(Chunk data) {
-  return;
-}
-
-std::vector<Chunk> Chunker::UpdateChunkFile(const std::vector<Chunk>& old_chunks) {
+std::vector<Chunk> Chunker::UpdateChunkFile(const std::vector<Chunk> &old_chunks) {
   std::ifstream fileStream(std::move(_file.Read()));
-  size_t size = fileStream.seekg(0, std::ios::end).tellg();
-  fileStream.seekg(0,std::ios::beg);
-  std::vector<Chunk> chunks;
-  Chunk new_chunk;
+  int size = fileStream.seekg(0, std::ios::end).tellg();
+  fileStream.seekg(0, std::ios::beg);
+  std::vector<Chunk> chunks{};
+  Chunk new_chunk{};
+  std::vector<char> data;
+  std::istreambuf_iterator<char>fileIterator (fileStream);
   if (fileStream.is_open()) {
-    std::vector<char> data(CHUNK_SIZE);
-    fileStream.read(data.data(), CHUNK_SIZE);
+    std::copy_n(fileIterator, size<CHUNK_SIZE? size : CHUNK_SIZE, std::inserter(data, data.begin()));
+    size -= CHUNK_SIZE;
     while (!fileStream.eof()) {
-      std::string chunksRHash = getRHash(data.data(), static_cast<int>(fileStream.gcount()));
-      auto match = std::find_if(old_chunks.begin(), old_chunks.end(), [&chunksRHash](const Chunk& old_chunk){
+      std::string chunksRHash = getRHash(data.data(), data.size());
+      auto match = std::find_if(old_chunks.begin(), old_chunks.end(), [&chunksRHash](const Chunk &old_chunk) {
         return old_chunk.rHash == chunksRHash;
       });
-      if(match != old_chunks.end()){
-        chunks.push_back(*match);
-        fileStream.read(data.data(), CHUNK_SIZE);
-        // smothing more
+      if (match != old_chunks.end()) {
+        std::string chunksSHash = getSHash(data.data(), data.size());
+        if(chunksSHash == match->sHash) {
+          if(new_chunk.chunkSize != 0) {
+            new_chunk.rHash = getRHash(new_chunk.data.data(), new_chunk.chunkSize);
+            new_chunk.sHash = getSHash(new_chunk.data.data(), new_chunk.chunkSize);
+            chunks.push_back(std::move(new_chunk));
+            new_chunk.chunkSize = 0;
+          }
+          chunks.push_back(*match);
+          if(size == -1)
+            break;
+          data.clear();
+          if(size>CHUNK_SIZE) {
+            std::copy_n(std::next(fileIterator),
+                        CHUNK_SIZE,
+                        std::back_inserter(data));
+            size -= CHUNK_SIZE;
+          } else {
+            std::copy_n(std::next(fileIterator),
+                        size,
+                        std::back_inserter(data));
+            size = -1;
+          }
+        }
       } else {
-        new_chunk.chunkSize += static_cast<int>(fileStream.gcount()); // check size
+        if(size == -1)
+          break;
+        new_chunk.chunkSize += data.size() < CHUNK_MOVE_SIZE? static_cast<int>(fileStream.gcount()) : CHUNK_MOVE_SIZE;// check size
         std::copy(data.begin(), data.begin() + CHUNK_MOVE_SIZE, std::back_inserter(new_chunk.data));
-        data.erase(data.begin(), data.begin()+CHUNK_MOVE_SIZE);
-        fileStream.read(data.data() + 3072, CHUNK_MOVE_SIZE);
+        if(new_chunk.chunkSize == CHUNK_SIZE){
+          new_chunk.rHash = getRHash(new_chunk.data.data(), new_chunk.chunkSize);
+          new_chunk.sHash = getSHash(new_chunk.data.data(), new_chunk.chunkSize);
+          chunks.push_back(std::move(new_chunk));
+          new_chunk.chunkSize = 0;
+        }
+        data.erase(data.begin(), data.begin() + CHUNK_MOVE_SIZE);
+        if(size>CHUNK_MOVE_SIZE) {
+          std::copy_n(std::next(fileIterator),
+                      CHUNK_MOVE_SIZE,
+                      std::back_inserter(data));
+          size -= CHUNK_MOVE_SIZE;
+        } else {
+          std::copy_n(std::next(fileIterator),
+                      size,
+                      std::back_inserter(data));
+          size = -1;
+        }
       }
-
-//      getSHash(chunk);
-//      chunks.push_back(std::move(chunk));
     }
   }
   fileStream.close();
+  std::copy(new_chunk.data.begin(),new_chunk.data.end(),std::inserter(data, data.begin()));
+  while(!data.empty()){
+    if(data.size() > CHUNK_SIZE) {
+      chunks.push_back(std::move(createChunk(std::vector<char>(data.begin(),data.begin()+CHUNK_SIZE), CHUNK_SIZE)));
+      data.erase(data.begin(), data.begin()+CHUNK_SIZE);
+    } else {
+      chunks.push_back(std::move(createChunk(data, data.size())));
+      break;
+    }
+  }
   return chunks;
 }
 
@@ -72,35 +108,34 @@ std::string Chunker::getRHash(char *data, int chunkSize) {
   return result.str();
 }
 
-std::string Chunker::getOldCheckSums() {
-  return "";
-}
-
 std::vector<Chunk> Chunker::ChunkFile() {
   int a = 0;
   std::ifstream fileStream(std::move(_file.Read()));
   size_t size = fileStream.seekg(0, std::ios::end).tellg();
-  fileStream.seekg(0,std::ios::beg);
+  fileStream.seekg(0, std::ios::beg);
   std::vector<Chunk> chunks;
   if (fileStream.is_open()) {
     while (!fileStream.eof()) {
 
       std::vector<char> data(CHUNK_SIZE);
       fileStream.read(data.data(), CHUNK_SIZE);
-      // createchunk
-      Chunk chunk{
-          .chunkSize = static_cast<int>(fileStream.gcount()),
-      };
-      std::copy(data.begin(), std::find(data.begin(), data.end(), '\0'), std::back_inserter(chunk.data));
-      chunk.rHash = getRHash(chunk.data.data(), chunk.chunkSize);
-      chunk.sHash = getSHash(chunk.data.data(), chunk.chunkSize);
-
-      chunks.push_back(std::move(chunk));
+      chunks.push_back(std::move(createChunk(data, static_cast<int>(fileStream.gcount()))));
 
     }
   }
   fileStream.close();
   return chunks;
+}
+
+Chunk Chunker::createChunk(std::vector<char> data, int chunkSize){
+  Chunk chunk{
+      .chunkSize = chunkSize,
+  };
+  std::copy(data.begin(), std::find(data.begin(), data.end(), '\0'), std::back_inserter(chunk.data));
+  chunk.rHash = getRHash(chunk.data.data(), chunk.chunkSize);
+  chunk.sHash = getSHash(chunk.data.data(), chunk.chunkSize);
+
+  return chunk;
 }
 
 void Chunker::MergeFile(std::vector<Chunk> chunks) {

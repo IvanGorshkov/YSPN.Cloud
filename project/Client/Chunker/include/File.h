@@ -2,14 +2,15 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include <boost/filesystem.hpp>
 
 class File {
  public:
-  explicit File(std::string);
+  explicit File(boost::filesystem::path);
   ~File();
   std::ifstream Read();
   std::ofstream Write();
 
  private:
-  std::string _path;
+  boost::filesystem::path _path;
 };

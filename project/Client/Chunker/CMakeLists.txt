@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD 14)
 
 find_package(ZLIB REQUIRED)
 find_package(OpenSSL REQUIRED)
+FIND_PACKAGE(Boost COMPONENTS system filesystem REQUIRED)
+INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 if (OPENSSL_FOUND)
     if (APPLE)
         include_directories(/usr/local/Cellar/openssl@1.1/1.1.1i/include)
@@ -28,9 +30,9 @@ ADD_LIBRARY(${PROJECT_NAME}-dev SHARED
         include/File.h
         )
 if (APPLE)
-    target_link_libraries(${PROJECT_NAME}-dev Crypto ZLIB::ZLIB)
+    target_link_libraries(${PROJECT_NAME}-dev Crypto ZLIB::ZLIB ${Boost_LIBRARIES})
 else ()
-    target_link_libraries(${PROJECT_NAME}-dev OpenSSL::Crypto ZLIB::ZLIB)
+    target_link_libraries(${PROJECT_NAME}-dev OpenSSL::Crypto ZLIB::ZLIB ${Boost_LIBRARIES})
 endif ()
 
 ADD_SUBDIRECTORY(tests)
