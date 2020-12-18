@@ -23,14 +23,14 @@ using bsoncxx::builder::stream::finalize;
 
 class MongoDB {
  public:
-  static MongoDB& shared();
+  static MongoDB &shared();
   ~MongoDB();
-  void InsertChunk(const std::vector<Chunk>& chunks) const;
-  std::vector<Chunk> GetChunk(const std::vector<UserChunk>& userChunks) const;
+  void InsertChunk(const std::vector<Chunk> &chunks) const;
+  std::vector<Chunk> GetChunk(const std::vector<UserChunk> &userChunks) const;
  private:
   MongoDB();
-  MongoDB(const MongoDB& mongo_db) = delete;
-  MongoDB& operator=(const MongoDB& mongo_db) = delete;
+  MongoDB(const MongoDB &mongo_db) = delete;
+  MongoDB &operator=(const MongoDB &mongo_db) = delete;
 
   mongocxx::instance _instance{};
   mongocxx::database _database;

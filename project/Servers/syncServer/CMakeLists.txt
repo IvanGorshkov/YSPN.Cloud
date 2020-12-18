@@ -16,6 +16,9 @@ INCLUDE_DIRECTORIES(../server/include)
 FIND_LIBRARY(Network-dev REQUIRED)
 INCLUDE_DIRECTORIES(../../Network/Server/include)
 
+FIND_LIBRARY(MetDataDB-dev REQUIRED)
+INCLUDE_DIRECTORIES(../../DataBases/PostgresDB/MetaDataDB/include)
+INCLUDE_DIRECTORIES(../../DataBases/PostgresDB/Base/include)
 
 INCLUDE_DIRECTORIES(include)
 
@@ -26,4 +29,4 @@ ADD_EXECUTABLE(${PROJECT_NAME}
         src/SyncServer.cpp
         src/TestPostgra.cpp
         )
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${Boost_LIBRARIES} Utils-dev Server-dev )
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${Boost_LIBRARIES} Utils-dev Server-dev MetDataDB-dev)
