@@ -36,5 +36,6 @@ int main() {
   f.push_back(fileInfo);
   myDB.InsertFileInfo(f);
   auto d = myDB.GetUsersChunks(3);
+  myDB.DeleteFile(file);
   return 0;
 }
