@@ -31,6 +31,7 @@ int main() {
 	fileChunksMetaVector.push_back(fileChunkMeta);
   }
 
+
   auto fileInfo = FileInfo{.file = file, .chunkMeta = chunksMetaVector, .fileChunksMeta = fileChunksMetaVector};
   std::vector<FileInfo> f;
   f.push_back(fileInfo);
