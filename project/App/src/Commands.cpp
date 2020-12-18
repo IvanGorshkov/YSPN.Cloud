@@ -2,6 +2,7 @@
 #include <boost/log/trivial.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <utility>
+#include <variant>
 
 namespace pt = boost::property_tree;
 
@@ -14,6 +15,23 @@ BaseCommand::BaseCommand(std::function<void()> callbackOk,
   BOOST_LOG_TRIVIAL(debug) << "BaseCommand: create command";
 }
 
+void BaseCommand::connect(ClientNetwork &network,
+                          const NetworkConfig &config,
+                          const pt::ptree &request,
+                          pt::ptree &response) noexcept(false) {
+  try {
+    network.Connect(config.host, config.port);
+    network.SendJSON(request);
+    response = network.ReceiveJSON();
+    BOOST_LOG_TRIVIAL(info) << "BaseCommand: send and receive";
+
+  } catch (ClientNetworkExceptions &er) {
+    BOOST_LOG_TRIVIAL(error) << "BaseCommand: " << er.what();
+    throw NetworkException(er.what());
+  }
+  network.Disconnect();
+}
+
 RefreshCommand::RefreshCommand(std::function<void()> callbackOk,
                                std::function<void(const std::string &msg)> callbackError,
                                std::shared_ptr<InternalDB> internalDB)
@@ -22,23 +40,18 @@ RefreshCommand::RefreshCommand(std::function<void()> callbackOk,
 }
 
 void RefreshCommand::Do() {
-  BOOST_LOG_TRIVIAL(debug) << "RefreshCommand: do";
+  BOOST_LOG_TRIVIAL(debug) << "RefreshCommand: Do";
 
   auto syncConfig = ClientConfig::getSyncConfig();
+  auto network = ClientNetwork();
 
-  // TODO refreshCommand Do Meta from Internal DB (userId, lastUpdate)
-  auto userDate = UserDate{.userId = 1, .date = "31.12.1970"};
+  auto userDate = _internalDB->GetLastUpdate();
+  auto request = SerializerUserDate(0, userDate).GetJson();
 
-  auto requestSerializer = SerializerUserDate(0, userDate);
-
-  auto sync = ClientNetwork();
   pt::ptree response;
   try {
-    sync.Connect(syncConfig.host, syncConfig.port);
-    sync.SendJSON(requestSerializer.GetJson());
-    response = sync.ReceiveJSON();
-  } catch (ClientNetworkExceptions &er) {
-    BOOST_LOG_TRIVIAL(error) << "RefreshCommand: " << er.what();
+    connect(network, syncConfig, request, response);
+  } catch (NetworkException &er) {
     callbackError(er.what());
     return;
   }
@@ -50,17 +63,17 @@ void RefreshCommand::Do() {
   // test
 
   try {
-    BOOST_LOG_TRIVIAL(info) << "RefreshCommand: parse response";
-    auto responseSerializer = SerializerFileInfo(response);
-    auto fileMeta = responseSerializer.GetFileMeta();
+    auto fileInfo = SerializerFileInfo(response).GetFileInfo();
+    BOOST_LOG_TRIVIAL(info) << "RefreshCommand: get fileInfo";
 
-    // TODO refreshCommand Do Insert file to internal DB
+    // TODO refreshCommand check is working
+//    _internalDB->InsertFileInfo(fileInfo);
 
     callbackOk();
     return;
 
   } catch (ParseException &er) {
-    BOOST_LOG_TRIVIAL(info) << "RefreshCommand: " << er.what();
+    BOOST_LOG_TRIVIAL(error) << "RefreshCommand: " << er.what();
     auto responseSerializer = SerializerAnswer(response);
     auto error = std::get<StatusError>(responseSerializer.GetStatus());
     callbackError(error.msg);
@@ -71,36 +84,25 @@ void RefreshCommand::Do() {
 DownloadFileCommand::DownloadFileCommand(std::function<void()> callbackOk,
                                          std::function<void(const std::string &msg)> callbackError,
                                          std::shared_ptr<InternalDB> internalDB,
-                                         Files &file)
+                                         FileMeta &file)
     : BaseCommand(std::move(callbackOk), std::move(callbackError), std::move(internalDB)),
       _file(file) {
   BOOST_LOG_TRIVIAL(debug) << "DownloadFileCommand: create command";
 }
 
 void DownloadFileCommand::Do() {
-  BOOST_LOG_TRIVIAL(debug) << "DownloadFileCommand: do";
-  // TODO downloadCommand Do
+  BOOST_LOG_TRIVIAL(debug) << "DownloadFileCommand: Do";
 
   auto storageConfig = ClientConfig::getStorageConfig();
+  auto network = ClientNetwork();
 
-  // TODO downloadCommand Do UserChunk vector from InternalDB
-  auto vec = std::vector<UserChunk>();
-  int id = 1;
-  for (int i = 1; i < 3; ++i) {
-    auto userChunk = UserChunk{.userId = id, .chunkId = i};
-    vec.push_back(userChunk);
-  }
+  auto userChunkVector = _internalDB->GetUsersChunks(_file.fileId);
+  auto request = SerializerUserChunk(0, userChunkVector).GetJson();
 
-  auto requestSerializer = SerializerUserChunk(0, vec);
-
-  auto storage = ClientNetwork();
   pt::ptree response;
   try {
-    storage.Connect(storageConfig.host, storageConfig.port);
-    storage.SendJSON(requestSerializer.GetJson());
-    response = storage.ReceiveJSON();
-  } catch (ClientNetworkExceptions &er) {
-    BOOST_LOG_TRIVIAL(error) << "DownloadFileCommand: " << er.what();
+    connect(network, storageConfig, request, response);
+  } catch (NetworkException &er) {
     callbackError(er.what());
     return;
   }
@@ -112,11 +114,17 @@ void DownloadFileCommand::Do() {
   // test
 
   try {
-    BOOST_LOG_TRIVIAL(info) << "DownloadFileCommand: parse response";
-    auto responseSerializer = SerializerChunk(response);
-    auto chunks = responseSerializer.GetChunk();
+    auto chunks = SerializerChunk(response).GetChunk();
+    BOOST_LOG_TRIVIAL(info) << "DownloadFileCommand: get chunks";
 
-    // TODO downloadCommand Do Chunker create file
+    std::string filePath = _internalDB->GetSyncFolder() + _file.filePath + _file.fileName + '.' + _file.fileExtension;
+    std::cout << filePath << std::endl;
+
+    File file(filePath);
+    Chunker chunker(file);
+    chunker.MergeFile(chunks);
+
+    // TODO internalDB isDownloaded = true
 
     callbackOk();
     return;
@@ -130,117 +138,88 @@ void DownloadFileCommand::Do() {
   }
 }
 
-CreateFileCommand::CreateFileCommand(std::function<void()> callbackOk,
-                                     std::function<void(const std::string &msg)> callbackError,
-                                     std::shared_ptr<InternalDB> internalDB,
-                                     fs::path path)
+FileCommand::FileCommand(std::function<void()> callbackOk,
+                         std::function<void(const std::string &msg)> callbackError,
+                         std::shared_ptr<InternalDB> internalDB,
+                         fs::path path,
+                         bool isDeleted)
     : BaseCommand(std::move(callbackOk), std::move(callbackError), std::move(internalDB)),
-      _filePath(std::move(path)) {
+      _filePath(std::move(path)),
+      _isDeleted(isDeleted) {
   BOOST_LOG_TRIVIAL(debug) << "CreateFileCommand: create command";
 }
 
-void CreateFileCommand::Do() {
-  BOOST_LOG_TRIVIAL(debug) << "CreateFileCommand: do";
-  // TODO createFileCommand Do
+void FileCommand::Do() {
+  BOOST_LOG_TRIVIAL(debug) << "FileCommand: do";
 
   auto storageConfig = ClientConfig::getStorageConfig();
   auto syncConfig = ClientConfig::getSyncConfig();
+  auto network = ClientNetwork();
 
-  std::cout << _filePath.string() << std::endl;
+  File file(_filePath.string());
+  Chunker chunker(file);
+  auto chunkVector = chunker.ChunkFile();
 
-  // Indexer -> fs index file and insert to Internal DB (get file id) -> return file
+  Indexer indexer(_internalDB);
+  auto fileMeta = indexer.GetFileMeta(_filePath, _isDeleted);
+  auto fileInfo = indexer.GetFileInfo(fileMeta, chunkVector);
+  auto storageRequest = SerializerChunk(0, chunkVector).GetJson();
 
-  // File -> fs chunk file -> return Chunk
+  pt::ptree responseStorage;
+  try {
+    connect(network, storageConfig, storageRequest, responseStorage);
+  } catch (NetworkException &er) {
+    callbackError(er.what());
+    return;
+  }
 
+  // test
+  std::stringstream ss;
+  pt::write_json(ss, responseStorage);
+  std::cout << "Storage: " << ss.str() << std::endl;
+  // test
 
-  // chunk file
-  // create chunkmeta
-  // create filechunksmeta (isCurrent = true)
+  auto responseStorageStatus = SerializerAnswer(responseStorage).GetStatus();
+  bool isError = false;
+  std::visit(overloaded{
+      [&](const StatusOk &val) {
+        BOOST_LOG_TRIVIAL(info) << "FileCommand: Status Ok sync";
+      },
+      [&](const StatusError &val) {
+        BOOST_LOG_TRIVIAL(error) << "FileCommand: Status Error sync";
+        auto error = std::get<StatusError>(responseStorageStatus);
+        callbackError(error.msg);
+        isError = true;
+      }
+  }, responseStorageStatus);
+  if (isError) {
+    return;
+  }
 
-  // serialize allData
-  // storageNetwork -> uploadChunks(Chunk ptree)
+  auto syncRequest = SerializerFileInfo(0, fileInfo).GetJson();
+  pt::ptree responseSync;
+  try {
+    connect(network, syncConfig, syncRequest, responseSync);
+  } catch (NetworkException &er) {
+    callbackError(er.what());
+    return;
+  }
 
-  // serialize MetaInfo
-  // syncNetwork -> uploadMeta
+  // test
+  std::stringstream ss2;
+  pt::write_json(ss2, responseSync);
+  std::cout << "Sync: " << ss2.str() << std::endl;
+  // test
 
-  callbackError("test");
-}
-
-RemoveFileCommand::RemoveFileCommand(std::function<void()> callbackOk,
-                                     std::function<void(const std::string &msg)> callbackError,
-                                     std::shared_ptr<InternalDB> internalDB)
-    : BaseCommand(std::move(callbackOk), std::move(callbackError), std::move(internalDB)) {
-  BOOST_LOG_TRIVIAL(debug) << "RemoveFileCommand: create command";
-}
-
-void RemoveFileCommand::Do() {
-  BOOST_LOG_TRIVIAL(debug) << "RemoveFileCommand: do";
-  // TODO removeFileCommand Do
-
-  auto syncConfig = ClientConfig::getSyncConfig();
-
-  // chunk file
-  // create chunkmeta
-  // create filechunksmeta (isCurrent = false)
-
-  // serialize allData
-  // storageNetwork -> uploadChunks(Chunk ptree)
-
-  // serialize MetaInfo
-  // syncNetwork -> uploadMeta
-
-  callbackError("test");
-}
-
-RenameFileCommand::RenameFileCommand(std::function<void()> callbackOk,
-                                     std::function<void(const std::string &msg)> callbackError,
-                                     std::shared_ptr<InternalDB> internalDB)
-    : BaseCommand(std::move(callbackOk), std::move(callbackError), std::move(internalDB)) {
-  BOOST_LOG_TRIVIAL(debug) << "RenameFileCommand: create command";
-}
-
-void RenameFileCommand::Do() {
-  BOOST_LOG_TRIVIAL(debug) << "RenameFileCommand: do";
-  // TODO removeFileCommand Do
-
-  auto syncConfig = ClientConfig::getSyncConfig();
-
-  // chunk file
-  // create chunkmeta
-  // create filechunksmeta (isCurrent = true)
-
-  // serialize allData
-  // storageNetwork -> uploadChunks(Chunk ptree)
-
-  // serialize MetaInfo
-  // syncNetwork -> uploadMeta
-
-  callbackError("test");
-}
-
-ModifyFileCommand::ModifyFileCommand(std::function<void()> callbackOk,
-                                     std::function<void(const std::string &msg)> callbackError,
-                                     std::shared_ptr<InternalDB> internalDB)
-    : BaseCommand(std::move(callbackOk), std::move(callbackError), std::move(internalDB)) {
-  BOOST_LOG_TRIVIAL(debug) << "ModifyFileCommand: create command";
-}
-
-void ModifyFileCommand::Do() {
-  BOOST_LOG_TRIVIAL(debug) << "ModifyFileCommand: do";
-  // TODO modifyFileCommand Do
-
-  auto storageConfig = ClientConfig::getStorageConfig();
-  auto syncConfig = ClientConfig::getSyncConfig();
-
-  // chunk file
-  // create chunkmeta
-  // create filechunksmeta (isCurrent = true)
-
-  // serialize allData
-  // storageNetwork -> uploadChunks(Chunk ptree)
-
-  // serialize MetaInfo
-  // syncNetwork -> uploadMeta
-
-  callbackError("test");
+  auto responseSyncStatus = SerializerAnswer(responseSync).GetStatus();
+  std::visit(overloaded{
+      [&](const StatusOk &val) {
+        BOOST_LOG_TRIVIAL(info) << "FileCommand: Status Ok sync";
+      },
+      [&](const StatusError &val) {
+        BOOST_LOG_TRIVIAL(error) << "FileCommand: Status Error sync";
+        auto error = std::get<StatusError>(responseSyncStatus);
+        callbackError(error.msg);
+      }
+  }, responseSyncStatus);
 }

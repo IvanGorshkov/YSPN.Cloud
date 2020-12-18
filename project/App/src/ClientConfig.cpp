@@ -31,7 +31,7 @@ void ClientConfig::Log(const std::string &state, const std::string &file) {
   if (state == "release") {
     logging::core::get()->set_filter
         (
-            logging::trivial::severity >= logging::trivial::info
+            logging::trivial::severity >= logging::trivial::fatal
         );
   }
 

@@ -1,26 +1,23 @@
 #pragma once
-#include "Notification.h"
-#include "File.h"
-#include "SyncUtils.h"
-#include "ChunkData.h"
-#include "stdlib.h"
+
+#include "structs/FileMeta.h"
+#include "structs/Chunk.h"
+#include "structs/ChunkMeta.h"
+#include "structs/FileChunksMeta.h"
+#include "structs/FileInfo.h"
+#include "InternalDB.h"
 #include <boost/filesystem.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
+namespace bfs = boost::filesystem;
+
 class Indexer {
  public:
+  Indexer(std::shared_ptr<InternalDB> internalDB);
+  FileMeta GetFileMeta(boost::filesystem::path, bool);
+  FileInfo GetFileInfo(const FileMeta&, std::vector<Chunk>&);
 
-  void GetWatcherEvent(Notification notification);
-  void CreateNewFile(boost::filesystem::path);
  private:
-  InternalDB _internalDB;
-  int sentUpdatetoLocalDB(void структура_для_мета_данных);
-  void DeleteFile(boost::filesystem::path);
-  void ModifyFile(boost::filesystem::path);
-  void ChangeMetaData(boost::filesystem::path);
-  int invokeChunker(boost::filesystem::path file, bool is_new_file, ChunkData data);
-  int sentUpdateToQueue(void структура_для_мета_данных);
-  void updateLocalDB();
-  boost::property_tree::ptree createNewMetaData();
+  std::shared_ptr<InternalDB> _internalDB;
 };

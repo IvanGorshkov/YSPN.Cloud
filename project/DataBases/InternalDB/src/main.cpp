@@ -1,6 +1,3 @@
-//
-// Created by Ivan Gorshkov on 23.11.2020.
-//
 #include <iostream>
 #include "InternalDB.h"
 #include <vector>
@@ -21,14 +18,14 @@ int main() {
 
   std::vector<ChunkMeta> chunksMetaVector;
   for (int i = 0; i < 2; ++i) {
-	auto chunkMeta = ChunkMeta{.chunkId = i};
-	chunksMetaVector.push_back(chunkMeta);
+    auto chunkMeta = ChunkMeta{.chunkId = i};
+    chunksMetaVector.push_back(chunkMeta);
   }
 
   std::vector<FileChunksMeta> fileChunksMetaVector;
   for (int i = 0; i < 2; ++i) {
-	auto fileChunkMeta = FileChunksMeta{.chunkId = i, .chunkOrder = i};
-	fileChunksMetaVector.push_back(fileChunkMeta);
+    auto fileChunkMeta = FileChunksMeta{.chunkId = i, .chunkOrder = i};
+    fileChunksMetaVector.push_back(fileChunkMeta);
   }
 
 

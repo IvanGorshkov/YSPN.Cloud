@@ -24,10 +24,10 @@ TEST(FileMeta, Struct) {
     fileChunksMetaVector.push_back(fileChunkMeta);
   }
 
-  auto fileMeta = FileInfo{.file = file, .chunkMeta = chunksMetaVector, .fileChunksMeta = fileChunksMetaVector};
+  auto fileInfo = FileInfo{.file = file, .chunkMeta = chunksMetaVector, .fileChunksMeta = fileChunksMetaVector};
 
   std::vector<FileInfo> vec;
-  vec.push_back(fileMeta);
+  vec.push_back(fileInfo);
 
   auto serializer = SerializerFileInfo(1, 1, vec);
 

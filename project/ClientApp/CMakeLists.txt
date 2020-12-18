@@ -10,6 +10,8 @@ INCLUDE_DIRECTORIES(../App)
 INCLUDE_DIRECTORIES(../DataBases/InternalDB/include)
 INCLUDE_DIRECTORIES(../utils/include)
 INCLUDE_DIRECTORIES(../Network/Client/include)
+INCLUDE_DIRECTORIES(../Client/Indexer/include)
+INCLUDE_DIRECTORIES(../Client/Chunker/include)
 
 INCLUDE_DIRECTORIES(include)
 

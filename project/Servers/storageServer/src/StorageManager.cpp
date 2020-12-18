@@ -15,12 +15,12 @@ std::shared_ptr<pt::ptree> StorageManager::GetRequest(pt::ptree &val) {
     command = getCommand(val);
 
   } catch (NoCommand &er) {
-    BOOST_LOG_TRIVIAL(warning) << "StorageManager: " << er.what();
+    BOOST_LOG_TRIVIAL(error) << "StorageManager: " << er.what();
     auto answer = SerializerAnswer(userId, er.what());
     return std::make_shared<pt::ptree>(answer.GetJson());
 
   } catch (WrongCommand &er) {
-    BOOST_LOG_TRIVIAL(warning) << "StorageManager: " << er.what();
+    BOOST_LOG_TRIVIAL(error) << "StorageManager: " << er.what();
     auto answer = SerializerAnswer(userId, er.what());
     return std::make_shared<pt::ptree>(answer.GetJson());
   }
@@ -34,6 +34,7 @@ std::unique_ptr<Command> StorageManager::getCommand(const pt::ptree &val) {
 
   try {
     command = val.get<std::string>("command");
+    BOOST_LOG_TRIVIAL(info) << "StorageManager: command = " << command;
   } catch (pt::ptree_error &er) {
     throw NoCommand(er.what());
   }

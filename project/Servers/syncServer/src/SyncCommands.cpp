@@ -1,75 +1,114 @@
 #include "SyncCommands.h"
 #include <boost/log/trivial.hpp>
+#include "TestPostgra.h"
 
 DataUpdateCommand::DataUpdateCommand(std::shared_ptr<pt::ptree> &request)
     : _request(request),
+      _db(MetaDataDB::shared("user=ysnp dbname=ysnpcloud")),
       _userDate(*request) {
   BOOST_LOG_TRIVIAL(debug) << "DataUpdateCommand: create command";
-
-  // TODO DataUpdateCommand constructor PostgreSQL
 }
 
 std::shared_ptr<pt::ptree> DataUpdateCommand::Do() {
   BOOST_LOG_TRIVIAL(debug) << "DataUpdateCommand: Do";
-  // TODO DataUpdateCommand Do PostgreSQL
+
+  try {
+    _db.Connect();
+    BOOST_LOG_TRIVIAL(info) << "DataUpdateCommand: connect to database";
+
+  } catch (PostgresExceptions &er) {
+    BOOST_LOG_TRIVIAL(error) << "DataUpdateCommand: " << er.what();
+    auto answer = SerializerAnswer(_userDate.GetRequestId(), "Database error");
+    return std::make_shared<pt::ptree>(answer.GetJson());
+  }
 
   UserDate requestUserDate;
   try {
     requestUserDate = _userDate.GetUserDate();
+    BOOST_LOG_TRIVIAL(info) << "DataUpdateCommand: parse json, user = " << requestUserDate.userId;
+
   } catch (ParseException &er) {
-    BOOST_LOG_TRIVIAL(debug) << "UploadChunkCommand: " << er.what();
+    BOOST_LOG_TRIVIAL(error) << "DataUpdateCommand: " << er.what();
     auto answer = SerializerAnswer(_userDate.GetRequestId(), "Error in json");
     return std::make_shared<pt::ptree>(answer.GetJson());
   }
 
-  std::vector<FileInfo> responseFileMeta;
+  std::vector<FileInfo> responseFileInfo;
+  // TODO DataUpdateCommand get FileInfo vector
+
   try {
-    // Get fileMeta
-  } catch (std::exception &er) {
-    BOOST_LOG_TRIVIAL(error) << "UploadChunkCommand: " << er.what();
+    // Get fileInfo
+    BOOST_LOG_TRIVIAL(error) << "DataUpdateCommand: get files from database";
+
+  } catch (PostgresExceptions &er) {
+    BOOST_LOG_TRIVIAL(error) << "DataUpdateCommand: " << er.what();
     auto answer = SerializerAnswer(_userDate.GetRequestId(), "Fail to get file");
     return std::make_shared<pt::ptree>(answer.GetJson());
   }
 
-  auto answer = SerializerFileInfo(_userDate.GetRequestId(), requestUserDate.userId, responseFileMeta);
+  // test
+  auto &testPostgra = TestPostgra::GetInstance();
+  responseFileInfo = testPostgra.GetFileInfo();
+  // test
+
+  BOOST_LOG_TRIVIAL(info) << "DataUpdateCommand: Status Ok";
+  auto answer = SerializerFileInfo(_userDate.GetRequestId(), responseFileInfo);
   return std::make_shared<pt::ptree>(answer.GetJson());
 }
 
 UploadFileCommand::UploadFileCommand(std::shared_ptr<pt::ptree> &request)
     : _request(request),
-      _fileMeta(*request) {
+      _db(MetaDataDB::shared("user=ysnp dbname=ysnpcloud")),
+      _fileInfo(*request) {
   BOOST_LOG_TRIVIAL(debug) << "UploadFileCommand: create command";
-
-  // TODO UploadFileCommand constructor PostgreSQL
 }
 
 std::shared_ptr<pt::ptree> UploadFileCommand::Do() {
   BOOST_LOG_TRIVIAL(debug) << "UploadFileCommand: Do";
   // TODO UploadFileCommand Do PostgreSQL
-
-  std::vector<FileInfo> requestFileMeta;
   try {
-    requestFileMeta = _fileMeta.GetFileMeta();
+    _db.Connect();
+    BOOST_LOG_TRIVIAL(info) << "UploadFileCommand: connect to database";
+
+  } catch (PostgresExceptions &er) {
+    BOOST_LOG_TRIVIAL(error) << "DataUpdateCommand: " << er.what();
+    auto answer = SerializerAnswer(_fileInfo.GetRequestId(), "Database error");
+    return std::make_shared<pt::ptree>(answer.GetJson());
+  }
+
+  std::vector<FileInfo> requestFileInfo;
+  try {
+    requestFileInfo = _fileInfo.GetFileInfo();
+    BOOST_LOG_TRIVIAL(info) << "UploadFileCommand: parse json, user = " << requestFileInfo[0].userId;
+
   } catch (ParseException &er) {
-    BOOST_LOG_TRIVIAL(debug) << "UploadChunkCommand: " << er.what();
-    auto answer = SerializerAnswer(_fileMeta.GetRequestId(), "Error in json");
+    BOOST_LOG_TRIVIAL(error) << "UploadFileCommand: " << er.what();
+    auto answer = SerializerAnswer(_fileInfo.GetRequestId(), "Error in json");
     return std::make_shared<pt::ptree>(answer.GetJson());
   }
 
-  if (requestFileMeta.empty()) {
-    BOOST_LOG_TRIVIAL(error) << "UploadChunkCommand: empty chunk vector";
-    auto answer = SerializerAnswer(_fileMeta.GetRequestId(), "Empty json");
+  if (requestFileInfo.empty()) {
+    BOOST_LOG_TRIVIAL(error) << "UploadFileCommand: empty chunk vector";
+    auto answer = SerializerAnswer(_fileInfo.GetRequestId(), "Empty json");
     return std::make_shared<pt::ptree>(answer.GetJson());
   }
 
   try {
-    // Insert fileMeta
-  } catch (std::exception &er) {
-    BOOST_LOG_TRIVIAL(error) << "UploadChunkCommand: " << er.what();
-    auto answer = SerializerAnswer(_fileMeta.GetRequestId(), "Fail to insert file");
+    _db.InsertFile(requestFileInfo[0]);
+    BOOST_LOG_TRIVIAL(error) << "UploadFileCommand: insert file to database";
+
+  } catch (PostgresExceptions &er) {
+    BOOST_LOG_TRIVIAL(error) << "UploadFileCommand: " << er.what();
+    auto answer = SerializerAnswer(_fileInfo.GetRequestId(), "Fail to insert file");
     return std::make_shared<pt::ptree>(answer.GetJson());
   }
 
-  auto answer = SerializerAnswer(_fileMeta.GetRequestId());
+  // test
+  auto &testPostgra = TestPostgra::GetInstance();
+  testPostgra.SetFileInfo(requestFileInfo);
+  // test
+
+  BOOST_LOG_TRIVIAL(info) << "UploadFileCommand: Status Ok";
+  auto answer = SerializerAnswer(_fileInfo.GetRequestId());
   return std::make_shared<pt::ptree>(answer.GetJson());
 }

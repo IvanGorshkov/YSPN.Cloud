@@ -38,7 +38,7 @@ class InternalDB {
   FileMeta SelectFile(size_t idFile);
   void InsertChunk(FileChunksMeta& chunks, const int idFile) ;
   void SelectChunk();
-  void UpdateFile(const FileMeta& file);
+  void UpdateFile(const FileMeta &file);
   UserDate GetLastUpdate();
   void SaveLastUpdate();
   void InsertOrUpdateFileInfo(FileInfo& fileInfo);
@@ -73,7 +73,7 @@ class InternalDB {
   std::string selectStr(const std::string &query);
   FileMeta getOneFile();
   bool existUser();
-  void insertOneFile(const FileMeta& file);
-  void updateOneFile(const FileMeta& file);
+  void insertOneFile(const FileMeta &file);
+  void updateOneFile(const FileMeta &file);
   void updateOneChunk(const FileChunksMeta &chunk, const int id);
 };

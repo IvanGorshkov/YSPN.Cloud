@@ -4,14 +4,14 @@
 #include <string>
 #include <utility>
 
-class InternalExceptions: public std::exception {
+class InternalExceptions : public std::exception {
  public:
   explicit InternalExceptions(std::string msg)
-	  : _msg(std::move(msg)) {
+      : _msg(std::move(msg)) {
   }
 
   const char *what() const noexcept override {
-	return _msg.c_str();
+    return _msg.c_str();
   }
 
  private:
