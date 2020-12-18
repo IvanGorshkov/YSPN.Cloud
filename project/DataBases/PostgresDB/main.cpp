@@ -15,8 +15,8 @@ int main() {
       .isCurrent = true,
       .isDownload = true,
       .isDeleted = false,
-      .updateDate = "31.12.1970",
-      .createDate = "31.12.1970"};
+      .updateDate = "2020-12-12 0:47:25",
+      .createDate = "2020-12-12 0:47:25"};
 
   std::vector<ChunkMeta> chunksMetaVector;
   for (int i = 0; i < 2; ++i) {
@@ -34,6 +34,8 @@ int main() {
       FileInfo{.userId = 3, .file = file, .chunkMeta = chunksMetaVector, .fileChunksMeta = fileChunksMetaVector};
   try {
     postgres_sqldb.InsertFile(fileInfo);
+    auto tt = UserDate{3, "2020-12-19 0:47:25"};
+	postgres_sqldb.GetUserFilesByTime(tt);
   } catch (PostgresExceptions exceptions) {
     std::cout << exceptions.what() << std::endl;
   }

@@ -2,7 +2,6 @@
 #include <string>
 #include <sqlite3.h>
 #include <memory>
-#include <boost/date_time.hpp>
 #include "structs/FileChunksMeta.h"
 #include "User.h"
 #include "structs/FileMeta.h"
@@ -56,7 +55,7 @@ class InternalDB {
   int _deviceId;
   std::string _syncFolder;
   std::string _lastUpdate;
-  boost::posix_time::ptime _lastTMPUpdate;
+  std::string  _lastTMPUpdate;
   std::unique_ptr<sqlite3, sqlite3_deleter> _database;
   std::unique_ptr<sqlite3_stmt, sqlite3_stmt_deleter> _stmt;
   int selectDeviceId();
