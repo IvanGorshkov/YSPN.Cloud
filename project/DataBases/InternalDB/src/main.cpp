@@ -7,7 +7,7 @@
 
 int main() {
   InternalDB myDB("myDB.sqlite");
-  auto file = FileMeta{.fileId = 1,
+  auto file = FileMeta{.fileId = -1,
 	  .version = 1,
 	  .fileName = "test",
 	  .fileExtension = "txt",
@@ -34,7 +34,7 @@ int main() {
   auto fileInfo = FileInfo{.file = file, .chunkMeta = chunksMetaVector, .fileChunksMeta = fileChunksMetaVector};
   std::vector<FileInfo> f;
   f.push_back(fileInfo);
-  myDB.InsertFileInfo(f);
+  myDB.InsertOrUpdateFilesInfo(fileInfo);
   auto d = myDB.GetUsersChunks(3);
   myDB.DeleteFile(file);
   return 0;

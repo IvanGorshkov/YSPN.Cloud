@@ -36,21 +36,28 @@ bool InternalDB::IsFileExist(const int idFile) {
   return count != 0;
 }
 
-void InternalDB::InsertFileInfo(const std::vector<FileInfo>& filesInfo) {
+void InternalDB::InsertOrUpdateFilesInfo(std::vector<FileInfo>& filesInfo) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
-  for (const auto& fileInfo: filesInfo) {
-	if (!IsFileExist(fileInfo.file.fileId)) {
-	  insertOneFile(fileInfo.file);
-	  int id = selectId("SELECT id FROM Files ORDER  BY  id  DESC Limit 1");
-	  for (const auto& fileChunksMeta: fileInfo.fileChunksMeta) {
-		InsertChunk(fileChunksMeta, id);
-	  }
-	} else {
-	  updateOneFile(fileInfo.file);
-	  int id = selectId("SELECT id FROM Files WHERE id = " + std::to_string(fileInfo.file.fileId)+";");
-	  for (const auto& fileChunksMeta: fileInfo.fileChunksMeta) {
-		updateOneChunk(fileChunksMeta, id);
-	  }
+  for (auto& fileInfo: filesInfo) {
+	InsertOrUpdateFilesInfo(fileInfo);
+  }
+  close();
+}
+
+void InternalDB::InsertOrUpdateFilesInfo(FileInfo& fileInfo) {
+  if (!connect()) { throw InternalExceptions("Don't connect"); }
+  if (!IsFileExist(fileInfo.file.fileId)) {
+	insertOneFile(fileInfo.file);
+	int id = selectId("SELECT id FROM Files ORDER  BY  id  DESC Limit 1");
+	fileInfo.file.fileId = id;
+	for (auto& fileChunksMeta: fileInfo.fileChunksMeta) {
+	  InsertChunk(fileChunksMeta, id);
+	}
+  } else {
+	updateOneFile(fileInfo.file);
+	int id = selectId("SELECT id FROM Files WHERE id = " + std::to_string(fileInfo.file.fileId)+";");
+	for (const auto& fileChunksMeta: fileInfo.fileChunksMeta) {
+	  updateOneChunk(fileChunksMeta, id);
 	}
   }
   close();
@@ -178,13 +185,15 @@ void InternalDB::DowloadFile(const FileMeta& filesInfo) {
 
 //MARK: Работа с Chunks
 
-void InternalDB::InsertChunk(const FileChunksMeta& chunks, const int idFile) {
+void InternalDB::InsertChunk(FileChunksMeta& chunks, const int idFile) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
-  BOOST_LOG_TRIVIAL(debug) << "InternalDB: Insert Chunck";
+  BOOST_LOG_TRIVIAL(debug) << "InternalDB: Insert Chunks";
   std::string query = "INSERT INTO Chunks (id_file, chunk_order) VALUES ("
 					  + std::to_string(idFile) + ", "
 					  + std::to_string(chunks.chunkOrder) + ");";
   insert(query);
+  int id = selectId("SELECT id FROM Chunks ORDER  BY  id  DESC Limit 1");
+  chunks.chunkId = id;
   close();
 }
 
