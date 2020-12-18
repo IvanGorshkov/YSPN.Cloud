@@ -39,12 +39,12 @@ bool InternalDB::IsFileExist(const int idFile) {
 void InternalDB::InsertOrUpdateFilesInfo(std::vector<FileInfo>& filesInfo) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
   for (auto& fileInfo: filesInfo) {
-	InsertOrUpdateFilesInfo(fileInfo);
+	InsertOrUpdateFileInfo(fileInfo);
   }
   close();
 }
 
-void InternalDB::InsertOrUpdateFilesInfo(FileInfo& fileInfo) {
+void InternalDB::InsertOrUpdateFileInfo(FileInfo& fileInfo) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
   if (!IsFileExist(fileInfo.file.fileId)) {
 	insertOneFile(fileInfo.file);
@@ -182,6 +182,12 @@ void InternalDB::DowloadFile(const FileMeta& filesInfo) {
   update(query);
   close();
 }
+
+int InternalDB::FindIdFile(std::string path, std::string name, std::string extention) {
+  std::string query = "SELECT id FROM Files Where file_path like '" + path + "'and file_name like '" + name + "'and file_extention like '" + extention + "';";
+  return selectId(query);
+}
+
 
 //MARK: Работа с Chunks
 
@@ -454,5 +460,8 @@ UserDate InternalDB::GetLastUpdate() {
   _lastTMPUpdate = boost::posix_time::second_clock::universal_time();
   return UserDate{.userId = _userId, .date = _lastUpdate};
 }
+
+
+
 
 

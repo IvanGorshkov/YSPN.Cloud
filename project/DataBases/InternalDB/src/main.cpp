@@ -34,8 +34,9 @@ int main() {
   auto fileInfo = FileInfo{.file = file, .chunkMeta = chunksMetaVector, .fileChunksMeta = fileChunksMetaVector};
   std::vector<FileInfo> f;
   f.push_back(fileInfo);
-  myDB.InsertOrUpdateFilesInfo(fileInfo);
+  myDB.InsertOrUpdateFileInfo(fileInfo);
   auto d = myDB.GetUsersChunks(3);
-  myDB.DeleteFile(file);
+  int a = myDB.FindIdFile("static/", "test", "txt");
+  std::cout << a << std::endl;
   return 0;
 }

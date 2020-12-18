@@ -41,13 +41,14 @@ class InternalDB {
   void UpdateFile(const FileMeta& file);
   UserDate GetLastUpdate();
   void SaveLastUpdate();
-  void InsertOrUpdateFilesInfo(FileInfo& fileInfo);
+  void InsertOrUpdateFileInfo(FileInfo& fileInfo);
   std::vector<FileMeta> SelectAllFiles();
   void InsertOrUpdateFilesInfo(std::vector<FileInfo>& filesInfo);
   std::vector<UserChunk> GetUsersChunks(const int idFile);
   bool IsFileExist(const int idFile);
   void DeleteFile(const FileMeta& filesInfo);
   void DowloadFile(const FileMeta& filesInfo);
+  int FindIdFile(std::string path, std::string name, std::string extention);
 
  private:
   std::string _databaseName;
