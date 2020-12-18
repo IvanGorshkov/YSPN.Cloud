@@ -1,23 +1,41 @@
 #include <iostream>
 #include "PostgreSQLDB.h"
 #include "MetaDataDB.h"
-#include "FileMeta.h"
 
 int main() {
-  MetaDataDB& postgres_sqldb = MetaDataDB::shared("user=ysnp dbname=ysnpcloud");
+  MetaDataDB &postgres_sqldb = MetaDataDB::shared("user=ysnp dbname=ysnpcloud");
   postgres_sqldb.Connect();
-  FileMeta file_meta;
-  file_meta.fileSize = 12;
-  file_meta.fileExtension = "btc";
-  file_meta.fileName = "asd";
-  file_meta.fileId = 23;
-  file_meta.isCurrent = true;
-  file_meta.version = 1;
-  file_meta.chunksCount = 32;
-  file_meta.userId = 3;
-  file_meta.createDate = "ads";
-  file_meta.updateDate = "ads";
+  auto file = FileMeta{.fileId = 1,
+      .version = 1,
+      .fileName = "test",
+      .fileExtension = "txt",
+      .filePath = "static/",
+      .fileSize = 1,
+      .chunksCount = 1,
+      .isCurrent = true,
+      .isDownload = true,
+      .isDeleted = false,
+      .updateDate = "31.12.1970",
+      .createDate = "31.12.1970"};
 
-  postgres_sqldb.InsertFile(file_meta);
+  std::vector<ChunkMeta> chunksMetaVector;
+  for (int i = 0; i < 2; ++i) {
+    auto chunkMeta = ChunkMeta{.chunkId = i};
+    chunksMetaVector.push_back(chunkMeta);
+  }
+
+  std::vector<FileChunksMeta> fileChunksMetaVector;
+  for (int i = 0; i < 2; ++i) {
+    auto fileChunkMeta = FileChunksMeta{.chunkId = i, .chunkOrder = i};
+    fileChunksMetaVector.push_back(fileChunkMeta);
+  }
+
+  auto fileInfo =
+      FileInfo{.userId = 3, .file = file, .chunkMeta = chunksMetaVector, .fileChunksMeta = fileChunksMetaVector};
+  try {
+    postgres_sqldb.InsertFile(fileInfo);
+  } catch (PostgresExceptions exceptions) {
+    std::cout << exceptions.what() << std::endl;
+  }
   return 0;
 }

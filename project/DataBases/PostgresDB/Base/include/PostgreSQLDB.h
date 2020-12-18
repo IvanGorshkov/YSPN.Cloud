@@ -2,6 +2,7 @@
 
 #include <string>
 #include <libpq-fe.h>
+#include "PostgresExceptions.h"
 
 class PostgresSQLDB {
  public:
@@ -11,6 +12,7 @@ class PostgresSQLDB {
   explicit PostgresSQLDB(std::string_view info);
   PGconn *_conn{};
   std::string _connInfo;
+  void pqExec(const std::string &query, PostgresExceptions exceptions);
  private:
   void close();
 };

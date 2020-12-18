@@ -28,6 +28,12 @@ class BaseCommand {
   virtual void Do() = 0;
 
  protected:
+  static void connect(ClientNetwork &network,
+               const NetworkConfig &config,
+               const pt::ptree& request,
+               pt::ptree &response) noexcept(false);
+
+ protected:
   std::function<void()> callbackOk;
   std::function<void(const std::string &msg)> callbackError;
 
@@ -63,10 +69,6 @@ class FileCommand : public BaseCommand {
                        fs::path path,
                        bool isDeleted = false);
   void Do() override;
-
- private:
-  void operator()(const StatusOk &val) const;
-  void operator()(const StatusError &val) const;
 
  private:
   fs::path _filePath;

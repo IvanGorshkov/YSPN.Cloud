@@ -14,8 +14,10 @@ std::shared_ptr<pt::ptree> UploadChunkCommand::Do() {
   std::vector<Chunk> requestVector;
   try {
     requestVector = _chunk.GetChunk();
+    BOOST_LOG_TRIVIAL(info) << "UploadChunkCommand: parse json";
+
   } catch (ParseException &er) {
-    BOOST_LOG_TRIVIAL(debug) << "UploadChunkCommand: " << er.what();
+    BOOST_LOG_TRIVIAL(error) << "UploadChunkCommand: " << er.what();
     auto answer = SerializerAnswer(_chunk.GetRequestId(), "Error in json");
     return std::make_shared<pt::ptree>(answer.GetJson());
   }
@@ -28,12 +30,15 @@ std::shared_ptr<pt::ptree> UploadChunkCommand::Do() {
 
   try {
     _db.InsertChunk(requestVector);
+    BOOST_LOG_TRIVIAL(info) << "UploadChunkCommand: insert chunks to database";
+
   } catch (MongoExceptions &er) {
     BOOST_LOG_TRIVIAL(error) << "UploadChunkCommand: " << er.what();
     auto answer = SerializerAnswer(_chunk.GetRequestId(), "Fail to insert Chunk");
     return std::make_shared<pt::ptree>(answer.GetJson());
   }
 
+  BOOST_LOG_TRIVIAL(info) << "UploadChunkCommand: Status Ok";
   auto answer = SerializerAnswer(_chunk.GetRequestId());
   return std::make_shared<pt::ptree>(answer.GetJson());
 }
@@ -51,8 +56,10 @@ std::shared_ptr<pt::ptree> DownloadChunkCommand::Do() {
   std::vector<UserChunk> requestVector;
   try {
     requestVector = _userChunk.GetChunk();
+    BOOST_LOG_TRIVIAL(info) << "DownloadChunkCommand: parse json";
+
   } catch (ParseException &er) {
-    BOOST_LOG_TRIVIAL(debug) << "DownloadChunkCommand: " << er.what();
+    BOOST_LOG_TRIVIAL(error) << "DownloadChunkCommand: " << er.what();
     auto answer = SerializerAnswer(_userChunk.GetRequestId(), "Error in json");
     return std::make_shared<pt::ptree>(answer.GetJson());
   }
@@ -66,12 +73,15 @@ std::shared_ptr<pt::ptree> DownloadChunkCommand::Do() {
   std::vector<Chunk> responseVector;
   try {
     responseVector = _db.GetChunk(requestVector);
+    BOOST_LOG_TRIVIAL(info) << "DownloadChunkCommand: get chunks from database";
+
   } catch (MongoExceptions &er) {
     BOOST_LOG_TRIVIAL(error) << "DownloadChunkCommand: " << er.what();
     auto answer = SerializerAnswer(_userChunk.GetRequestId(), "Fail to get Chunk");
     return std::make_shared<pt::ptree>(answer.GetJson());
   }
 
+  BOOST_LOG_TRIVIAL(info) << "DownloadChunkCommand: Status Ok";
   auto answer = SerializerChunk(_userChunk.GetRequestId(), responseVector);
   return std::make_shared<pt::ptree>(answer.GetJson());
 }

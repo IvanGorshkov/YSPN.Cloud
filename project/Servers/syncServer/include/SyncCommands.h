@@ -2,6 +2,8 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include "Command.h"
+#include "MetaDataDB.h"
+#include "PostgresExceptions.h"
 #include "SerializerAnswer.h"
 #include "SerializerUserDate.h"
 #include "SerializerFileInfo.h"
@@ -15,6 +17,7 @@ class DataUpdateCommand : public Command {
 
  private:
   std::shared_ptr<pt::ptree> _request;
+  MetaDataDB &_db;
   SerializerUserDate _userDate;
 };
 
@@ -25,5 +28,6 @@ class UploadFileCommand : public Command {
 
  private:
   std::shared_ptr<pt::ptree> _request;
+  MetaDataDB &_db;
   SerializerFileInfo _fileInfo;
 };
