@@ -7,6 +7,7 @@ Indexer::Indexer(std::shared_ptr<InternalDB> internalDB)
 FileMeta Indexer::GetFileMeta(bfs::path file, bool IsDeleted = false) {
   FileMeta new_file_meta{.fileName = file.stem().string(),
       .fileExtension = file.extension().string(),
+      .filePath = file.parent_path().string(),
       .fileSize = static_cast<int>(boost::filesystem::file_size(file)),
       .isDeleted = IsDeleted,
       .updateDate = boost::lexical_cast<std::string>(boost::filesystem::last_write_time(file)),
@@ -17,7 +18,7 @@ FileMeta Indexer::GetFileMeta(bfs::path file, bool IsDeleted = false) {
 
 FileInfo Indexer::GetFileInfo(const FileMeta &file, std::vector<Chunk> &chunks) {
 
-  //TODO: InternalDB(FileMeta.fileid, &vector<Chunk>) получаем id
+
   std::vector<ChunkMeta> chunk_meta;
   std::vector<FileChunksMeta> file_chunks_meta;
   int i = 0;
@@ -31,5 +32,6 @@ FileInfo Indexer::GetFileInfo(const FileMeta &file, std::vector<Chunk> &chunks) 
       .chunkMeta = chunk_meta,
       .fileChunksMeta = file_chunks_meta
   };
+  _internalDB->InsertFileInfo(info);
   return info;
 }

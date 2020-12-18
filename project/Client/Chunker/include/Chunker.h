@@ -1,6 +1,6 @@
 #pragma once
 
-#define CHUNK_SIZE 4096
+#define CHUNK_SIZE 7
 
 #include "structs/Chunk.h"
 #include "File.h"
@@ -17,17 +17,13 @@
 class Chunker {
  public:
   explicit Chunker(const File&);
-  int SentNewChunk();
-  int SentNewPosition();
-  File *GetFile();
+
   std::vector<Chunk> ChunkFile();
   std::vector<Chunk> UpdateChunkFile(const std::vector<Chunk>&);
   void MergeFile(std::vector<Chunk>);
-  void ChunkCompare(Chunk data);
  private:
   File _file;
   std::string getRHash(char*, int);
   std::string getSHash(char*, int);
-  std::string getOldCheckSums();
-
+  Chunk createChunk(std::vector<char>, int);
 };

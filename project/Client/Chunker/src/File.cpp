@@ -1,6 +1,10 @@
 #include "File.h"
 
-File::File(std::string path) : _path(path) {}
+File::File(boost::filesystem::path path) : _path(path) {
+  if(!boost::filesystem::exists(path.parent_path())){
+    boost::filesystem::create_directories(path.parent_path());
+  }
+}
 
 std::ifstream File::Read() {
   std::ifstream fileStream;
