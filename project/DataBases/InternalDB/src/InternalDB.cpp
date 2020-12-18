@@ -68,11 +68,11 @@ void InternalDB::updateOneFile(const FileMeta &file) {
 					  "file_name = '" + file.fileName +
 					  "', file_extention = '" + file.fileExtension +
 					  "', file_size = " + std::to_string(file.fileSize) +
-					  ",file_path = '" + file.filePath +
+					  ",  file_path = '" + file.filePath +
 					  "', count_chunks = " + std::to_string(file.chunksCount) +
 					  ", version=" + std::to_string(file.version) +
-					  ", is_download=0, update_date = '" + file.updateDate +
-					  ", create_date = '"+ file.createDate + "' WHERE id=" + std::to_string(file.fileId) + ";";
+					  ", is_download=0, update_date = '" + file.updateDate
+					  + "' WHERE id=" + std::to_string(file.fileId) + ";";
   update(query);
 }
 
@@ -82,10 +82,9 @@ void InternalDB::insertOneFile(const FileMeta& file) {
 	  + file.fileName + "', '" + file.fileExtension
 	  + "', " + std::to_string(file.fileSize)
 	  + ", '" + file.filePath + "', " +
-	  std::to_string(file.chunksCount) + ", "
-	  + std::to_string(file.version) + ", "
+	  std::to_string(file.chunksCount) + ", 1 "
 	  + "0, '"
-	  + file.updateDate + "', '" + file.createDate + "');";
+	  + file.updateDate + "', '" + file.updateDate + "');";
   insert(query);
 }
 
@@ -459,7 +458,10 @@ std::string InternalDB::GetSyncFolder() const {
 }
 
 UserDate InternalDB::GetLastUpdate() {
-  _lastTMPUpdate = boost::posix_time::second_clock::universal_time();
+  time_t ttime = time(nullptr);
+  tm *local_time = localtime(&ttime);
+  _lastTMPUpdate = std::to_string(1900 + local_time->tm_year) + "-" + std::to_string(1 + local_time->tm_mon) + "-" + std::to_string(local_time->tm_mday) + " " + std::to_string(local_time->tm_hour) + ":" + std::to_string(local_time->tm_min) + ":" + std::to_string(local_time->tm_sec);
+  puts(_lastTMPUpdate.c_str());
   return UserDate{.userId = _userId, .date = _lastUpdate};
 }
 

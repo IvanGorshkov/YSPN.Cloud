@@ -2,6 +2,7 @@
 
 #include "PostgreSQLDB.h"
 #include "structs/FileInfo.h"
+#include "structs/UserDate.h"
 
 class MetaDataDB : public PostgresSQLDB {
  protected:
@@ -14,7 +15,7 @@ class MetaDataDB : public PostgresSQLDB {
   void SelectChunk();
   void SelectFileChunkVersion();
   void SelectFilesByUser();
-
+  std::vector<FileInfo> GetUserFilesByTime(const UserDate& userDate);
  private:
   explicit MetaDataDB(std::string_view info);
   ~MetaDataDB() override = default;

@@ -28,12 +28,14 @@ int main() {
     fileChunksMetaVector.push_back(fileChunkMeta);
   }
 
+
   auto fileInfo = FileInfo{.file = file, .chunkMeta = chunksMetaVector, .fileChunksMeta = fileChunksMetaVector};
   std::vector<FileInfo> f;
   f.push_back(fileInfo);
   myDB.InsertOrUpdateFileInfo(fileInfo);
-  auto d = myDB.GetUsersChunks(3);
+  myDB.GetUsersChunks(3);
   int a = myDB.FindIdFile("static/", "test", "txt");
   std::cout << a << std::endl;
+  myDB.GetLastUpdate();
   return 0;
 }
