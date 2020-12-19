@@ -4,7 +4,7 @@ ClientNetwork::ClientNetwork()
     : _socket(_service) {
   BOOST_LOG_TRIVIAL(debug) << "ClientNetwork: create ClientNetwork";
 }
-
+#include <iostream>
 void ClientNetwork::SendJSON(const pt::ptree &jsonRequest) {
   BOOST_LOG_TRIVIAL(debug) << "ClientNetwork: SendJSON";
   std::stringstream ss;
@@ -17,6 +17,7 @@ void ClientNetwork::SendJSON(const pt::ptree &jsonRequest) {
   char sendBuf[1024];
 
   // TODO Varia тут как бы размер быть больше 1024 ...
+  std::cout << ss.str() << std::endl;
   size_t request_length = ss.str().length();
   strncpy(sendBuf, ss.str().c_str(), request_length);
   sendBuf[request_length - 1] = 0;

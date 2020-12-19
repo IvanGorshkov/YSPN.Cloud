@@ -16,7 +16,7 @@ ADD_LIBRARY(Network-dev SHARED
         )
 TARGET_LINK_LIBRARIES(Network-dev ${Boost_LIBRARIES})
 
-ADD_LIBRARY(ClientNetwork-dev SHARED
+ADD_LIBRARY(ClientNetwork-dev STATIC
         Client/src/ClientNetwork.cpp)
 TARGET_LINK_LIBRARIES(ClientNetwork-dev ${Boost_LIBRARIES})
 
