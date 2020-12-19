@@ -16,6 +16,7 @@ void ClientNetwork::SendJSON(const pt::ptree &jsonRequest) {
   }
   char sendBuf[1024];
 
+  // TODO Varia тут как бы размер быть больше 1024 ...
   size_t request_length = ss.str().length();
   strncpy(sendBuf, ss.str().c_str(), request_length);
   sendBuf[request_length - 1] = 0;

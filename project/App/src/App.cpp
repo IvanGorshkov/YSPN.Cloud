@@ -6,7 +6,7 @@
 App::App()
     : _internalDB(std::make_shared<InternalDB>("myDB.sqlite")) {
   BOOST_LOG_TRIVIAL(debug) << "App: create app";
-//  ClientConfig::Log("release", "sample");
+//  ClientConfig::Log("release");
 }
 
 App::~App() {

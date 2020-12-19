@@ -48,7 +48,8 @@ void SerializerChunk::serialize() {
     child.put("chunkSize", el.chunkSize);
     child.put("sHash", el.sHash);
     child.put("rHash", el.rHash);
-    child.put("data", el.data.data());
+    std::string s(el.data.data(), el.data.size());
+    child.put("data", s);
 
     data.push_back(std::make_pair("", child));
   }
