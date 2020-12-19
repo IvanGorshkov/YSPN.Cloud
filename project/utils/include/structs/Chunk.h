@@ -3,8 +3,8 @@
 #include <string>
 #include <vector>
 
-#define CHUNK_SIZE       7
-#define CHUNK_MOVE_SIZE  2
+#define CHUNK_SIZE       4096
+#define CHUNK_MOVE_SIZE  1024
 
 struct Chunk {
   int userId;

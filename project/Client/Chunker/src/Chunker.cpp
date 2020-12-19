@@ -116,11 +116,9 @@ std::vector<Chunk> Chunker::ChunkFile() {
   std::vector<Chunk> chunks;
   if (fileStream.is_open()) {
     while (!fileStream.eof()) {
-
       std::vector<char> data(CHUNK_SIZE);
       fileStream.read(data.data(), CHUNK_SIZE);
       chunks.push_back(std::move(createChunk(data, static_cast<int>(fileStream.gcount()))));
-
     }
   }
   fileStream.close();
@@ -131,7 +129,7 @@ Chunk Chunker::createChunk(std::vector<char> data, int chunkSize){
   Chunk chunk{
       .chunkSize = chunkSize,
   };
-  std::copy(data.begin(), std::find(data.begin(), data.end(), '\0'), std::back_inserter(chunk.data));
+  std::copy(data.begin(), data.begin()+chunkSize, std::back_inserter(chunk.data));
   chunk.rHash = getRHash(chunk.data.data(), chunk.chunkSize);
   chunk.sHash = getSHash(chunk.data.data(), chunk.chunkSize);
 

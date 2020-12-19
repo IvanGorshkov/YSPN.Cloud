@@ -157,10 +157,11 @@ void Watcher::readEventsFromBuffer(
     if (bfs::is_directory(path)) {
       path = path / std::string(event->name);
     }
-    if (path.extension() == ".tmp" || path.extension().string().back() == '~') {
+    if (path.extension() == "" || path.extension() == ".tmp" || path.extension().string().back() == '~') {
       i += EVENT_SIZE + event->len;
       continue;
     }
+    //printf(path.extension().string().c_str());
     if (bfs::is_directory(path)) {
       event->mask |= IN_ISDIR;
     }
