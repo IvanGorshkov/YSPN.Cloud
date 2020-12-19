@@ -20,10 +20,10 @@ class Chunker {
 
   std::vector<Chunk> ChunkFile();
   std::vector<Chunk> UpdateChunkFile(const std::vector<Chunk>&);
-  void MergeFile(std::vector<Chunk>);
+  void MergeFile(const std::vector<Chunk>&);
  private:
   File _file;
-  std::string getRHash(char*, int);
-  std::string getSHash(char*, int);
+  static std::string getRHash(char*, int);
+  static std::string getSHash(char*, int);
   Chunk createChunk(std::vector<char>, int);
 };
