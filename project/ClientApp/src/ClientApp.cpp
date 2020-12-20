@@ -92,7 +92,7 @@ void ClientApp::showFiles() {
 
   for (auto &&file: files) {
     std::cout << file.fileId << ")";
-    std::cout << " file: " << file.filePath << file.fileName << '.' << file.fileExtension;
+    std::cout << " file: " << file.filePath << "/"<< file.fileName << file.fileExtension;
     std::cout << " version: " << file.version;
     std::cout << " size: " << file.fileSize;
     std::cout << " download: " << file.isDownload;
@@ -154,8 +154,8 @@ void ClientApp::uploadFile() {
   std::cout << "Chose file: ";
 
   std::string path = "/Users/s.alekhin/cloud/test.txt";
-  std::cout << path << std::endl;
-//  std::cin >> path;
+  //std::cout << path << std::endl;
+  std::cin >> path;
 
   try {
     app.UploadFile(path, &ClientApp::uploadFileCallbackOk, &ClientApp::uploadFileCallbackError);

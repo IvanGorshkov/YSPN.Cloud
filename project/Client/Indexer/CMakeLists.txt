@@ -14,7 +14,7 @@ FIND_LIBRARY(InternalDB-dev REQUIRED)
 INCLUDE_DIRECTORIES(../../DataBases/InternalDB/include)
 
 INCLUDE_DIRECTORIES(include)
-ADD_LIBRARY(${PROJECT_NAME}-dev SHARED
+ADD_LIBRARY(${PROJECT_NAME}-dev STATIC
         include/Indexer.h
         src/Indexer.cpp
         )

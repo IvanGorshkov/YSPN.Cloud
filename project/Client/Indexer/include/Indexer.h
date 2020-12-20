@@ -17,7 +17,7 @@ class Indexer {
  public:
   Indexer(std::shared_ptr<InternalDB> internalDB);
   FileMeta GetFileMeta(const bfs::path &, bool, boost::optional<bfs::path> = boost::none);
-  FileInfo GetFileInfo(const FileMeta &, std::vector<Chunk> &);
+  FileInfo GetFileInfo(FileMeta &, std::vector<Chunk> &);
 
  private:
   std::shared_ptr<InternalDB> _internalDB;

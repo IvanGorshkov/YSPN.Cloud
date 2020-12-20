@@ -13,6 +13,7 @@ FileMeta Indexer::GetFileMeta(const bfs::path &file,
       .fileExtension = file.extension().string(),
       .filePath = file.parent_path().string(),
       .fileSize = static_cast<int>(boost::filesystem::file_size(file)),
+	  .isDownload = true,
       .isDeleted = IsDeleted,
       .isCurrent = true,
       .updateDate = boost::lexical_cast<std::string>(boost::filesystem::last_write_time(file))
@@ -27,10 +28,11 @@ FileMeta Indexer::GetFileMeta(const bfs::path &file,
   return new_file_meta;
 }
 
-FileInfo Indexer::GetFileInfo(const FileMeta &file, std::vector<Chunk> &chunks) {
+FileInfo Indexer::GetFileInfo(FileMeta &file, std::vector<Chunk> &chunks) {
   std::vector<ChunkMeta> chunk_meta;
   std::vector<FileChunksMeta> file_chunks_meta;
   int i = 0;
+  file.chunksCount = chunks.size();
   std::for_each(chunks.begin(), chunks.end(), [&chunk_meta, &file_chunks_meta, &i](const Chunk &chunk) {
     chunk_meta.push_back(ChunkMeta{chunk.chunkId});
     file_chunks_meta.push_back(FileChunksMeta{chunk.chunkId, ++i});
