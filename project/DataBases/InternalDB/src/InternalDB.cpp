@@ -61,6 +61,8 @@ void InternalDB::InsertOrUpdateFileInfo(FileInfo &fileInfo) {
 	fileInfo.file.version = version;
 	updateOneFile(fileInfo.file);
 	int id = selectId("SELECT id FROM Files WHERE id = " + std::to_string(fileInfo.file.fileId) + ";");
+	std::string query = "DELETE FROM Chunks WHERE id_file = " + std::to_string(id) + ";";
+	deleteInfo(query);
 	for (auto &fileChunksMeta: fileInfo.fileChunksMeta) {
 	  updateOneChunk(fileChunksMeta, id);
 	}
@@ -213,7 +215,7 @@ void InternalDB::DowloadFile(const FileMeta &filesInfo) {
   close();
 }
 
-int InternalDB::FindIdFile(std::string path, std::string name, std::string extention) {
+int InternalDB::FindIdFile(const std::string& path, const std::string& name, const std::string& extention) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
   std::string query = "SELECT id FROM Files Where file_path like '" + path + "' and file_name like '" + name
 	  + "' and file_extention like '" + extention + "';";
@@ -226,7 +228,6 @@ int InternalDB::FindIdFile(std::string path, std::string name, std::string exten
 //MARK: Работа с Chunks
 
 void InternalDB::InsertChunk(FileChunksMeta &chunks, const int idFile) {
-  if (!connect()) { throw InternalExceptions("Don't connect"); }
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Insert Chunks";
   std::string query = "INSERT INTO Chunks (id_file, chunk_order) VALUES ("
 	  + std::to_string(idFile) + ", "
@@ -234,15 +235,10 @@ void InternalDB::InsertChunk(FileChunksMeta &chunks, const int idFile) {
   insert(query);
   int id = selectId("SELECT id FROM Chunks ORDER  BY  id  DESC Limit 1");
   chunks.chunkId = id;
-  close();
 }
 
 void InternalDB::updateOneChunk(FileChunksMeta &chunk, const int id) {
-  if (!connect()) { throw InternalExceptions("Don't connect"); }
-  std::string query = "DELETE FROM Chunks WHERE id_file = " + std::to_string(id) + ";";
-  deleteInfo(query);
   InsertChunk(chunk, id);
-  close();
 }
 
 std::vector<UserChunk> InternalDB::GetUsersChunks(const int idFile) {

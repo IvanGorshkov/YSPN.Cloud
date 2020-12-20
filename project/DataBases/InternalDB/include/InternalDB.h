@@ -47,7 +47,7 @@ class InternalDB {
   bool IsFileExist(const int idFile);
   void DeleteFile(const FileMeta& filesInfo);
   void DowloadFile(const FileMeta& filesInfo);
-  int FindIdFile(std::string path, std::string name, std::string extention);
+  int FindIdFile(const std::string& path, const std::string& name, const std::string& extention);
 
  private:
   std::string _databaseName;
