@@ -88,6 +88,12 @@ void App::UpdateSyncFolder(const fs::path &path) {
   _internalDB->UpdateSyncFolder(path.string());
 }
 
+std::string App::GetSyncFolder() {
+  BOOST_LOG_TRIVIAL(debug) << "App: GetSyncFolder";
+
+  return _internalDB->GetSyncFolder();
+}
+
 void App::runWorker() {
   BOOST_LOG_TRIVIAL(debug) << "App: runWorker";
 

@@ -24,26 +24,28 @@ boost::asio::ip::tcp::socket &UserSession::Sock() {
 
 void UserSession::receiveRequest() {
   BOOST_LOG_TRIVIAL(debug) << "UserSession: receiveRequest";
-  int maxLength = 1024;
+  boost::asio::streambuf buf;
   boost::system::error_code ec;
-  _socket.read_some(boost::asio::buffer(_readBuf, maxLength), ec);
+  boost::asio::read_until(_socket, buf, '\n', ec);
   if (ec) {
-    BOOST_LOG_TRIVIAL(error) << "UserSession: error read from user" << ec.message().c_str();
+    BOOST_LOG_TRIVIAL(error) << "UserSession: error read from user length: " << ec.message().c_str();
     _socket.async_write_some(
         boost::asio::buffer(ec.message()),
-        [self = shared_from_this()](const boost::system::error_code &e,
+        [self = shared_from_this()](const boost::system::error_code &ec,
                                     std::size_t) -> void {
           self->receiveRequest();
-          if (e)
-            BOOST_LOG_TRIVIAL(error) << "UserSession: error send error-response to user: " << e.message().c_str();
+          if (ec)
+            BOOST_LOG_TRIVIAL(error) << "UserSession: error send error-response to user: "
+                                     << ec.message().c_str();
         });
     return;
   }
-  std::stringstream ss(_readBuf);
+
+  std::stringstream ss(boost::asio::buffer_cast<const char *>(buf.data()));
   try {
     pt::read_json(ss, _jsonReceive);
-  } catch (pt::ptree_error &e) {
-    BOOST_LOG_TRIVIAL(error) << "UserSession: error write to ptree: " << e.what();
+  } catch (pt::ptree_error &er) {
+    BOOST_LOG_TRIVIAL(error) << "UserSession: error write to ptree: " << er.what();
     return;
   }
 }
@@ -53,19 +55,18 @@ void UserSession::receiveResponse(const pt::ptree &jsonSend) {
   std::stringstream ss;
   try {
     pt::json_parser::write_json(ss, jsonSend, false);
-  } catch (pt::ptree_error &e) {
-    BOOST_LOG_TRIVIAL(error) << "UserSession: error read from ptree: " << e.what();
+  } catch (pt::ptree_error &er) {
+    BOOST_LOG_TRIVIAL(error) << "UserSession: error read from ptree: " << er.what();
     return;
   }
-  char sendBuf[1024];
-  strncpy(sendBuf, ss.str().c_str(), ss.str().length());
-  sendBuf[ss.str().length() - 1] = 0;
+
   _socket.async_write_some(
-      boost::asio::buffer(sendBuf),
+      boost::asio::buffer(ss.str() + '\n'),
       [self = shared_from_this()](const boost::system::error_code &ec,
                                   std::size_t) -> void {
         if (ec) {
           BOOST_LOG_TRIVIAL(error) << "UserSession: error send response to user: " << ec.message().c_str();
+          return;
         }
       });
 }
