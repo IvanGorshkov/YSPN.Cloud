@@ -40,8 +40,10 @@ void UserSession::receiveRequest() {
         });
     return;
   }
+#include <iostream>
 
   std::stringstream ss(boost::asio::buffer_cast<const char *>(buf.data()));
+  std::cout << ss.str() << std::endl;
   try {
     pt::read_json(ss, _jsonReceive);
   } catch (pt::ptree_error &er) {

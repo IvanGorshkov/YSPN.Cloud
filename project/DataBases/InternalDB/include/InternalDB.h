@@ -75,5 +75,5 @@ class InternalDB {
   void insertOneFile(const FileMeta &file);
   void updateOneFile(const FileMeta &file);
   void updateOneChunk(FileChunksMeta &chunk, const int id);
-  std::string getTime(const std::string& time);
+  std::string getTime(std::string& time);
 };

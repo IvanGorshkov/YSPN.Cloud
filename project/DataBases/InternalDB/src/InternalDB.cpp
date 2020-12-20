@@ -4,6 +4,7 @@
 #include <iostream>
 #include <boost/lexical_cast.hpp>
 #include <utility>
+#include <iomanip>
 #include "InternalExceptions.h"
 
 InternalDB::InternalDB(std::string databaseName) : _databaseName(std::move(databaseName)),
@@ -68,7 +69,8 @@ void InternalDB::InsertOrUpdateFileInfo(FileInfo &fileInfo) {
 }
 
 void InternalDB::updateOneFile(const FileMeta &file) {
-  std::string date = getTime(file.updateDate);
+  auto time = file.updateDate;
+  std::string date = getTime(time);
   std::string query = "Update Files SET "
 					  "file_name = '" + file.fileName +
 	  "', file_extention = '" + file.fileExtension +
@@ -81,8 +83,18 @@ void InternalDB::updateOneFile(const FileMeta &file) {
   update(query);
 }
 
-std::string InternalDB::getTime(const std::string &time) {
-  std::time_t ttime = boost::lexical_cast<int>(time);
+std::string InternalDB::getTime(std::string &time) {
+  time.erase(std::find(time.begin(), time.end(), '.'), time.end());
+
+  std::time_t ttime;
+  try {
+	ttime = boost::lexical_cast<int>(time);
+  } catch (std::exception& exception) {
+	struct std::tm tm{};
+	std::istringstream ss(time);
+	ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
+	ttime = mktime(&tm);
+  }
   tm *local_time = localtime(&ttime);
   std::string date = std::to_string(1900 + local_time->tm_year) + "-" + std::to_string(1 + local_time->tm_mon) + "-"
 	  + std::to_string(local_time->tm_mday) + " " + std::to_string(local_time->tm_hour) + ":"
@@ -91,7 +103,8 @@ std::string InternalDB::getTime(const std::string &time) {
 }
 
 void InternalDB::insertOneFile(const FileMeta &file) {
-  std::string date = getTime(file.updateDate);
+  auto time = file.updateDate;
+  std::string date = getTime(time);
   std::string query = "INSERT INTO Files (file_name, file_extention, file_size, file_path,"
 					  " count_chunks, version, is_download, update_date, create_date) VALUES ('"
 	  + file.fileName + "', '" + file.fileExtension
@@ -115,7 +128,8 @@ void InternalDB::InsertFile(const std::vector<FileMeta> &files) {
 
 void InternalDB::UpdateFile(const FileMeta &file) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
-  std::string date = getTime(file.updateDate);
+  auto time = file.updateDate;
+  std::string date = getTime(time);
   std::string query = "Update Files SET "
 					  "file_name = '" + file.fileName +
 	  "', file_extention = '" + file.fileExtension +
