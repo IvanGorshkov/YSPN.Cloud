@@ -73,6 +73,10 @@ void Watcher::Run(const boost::filesystem::path &path, const std::function<void(
   }
 }
 
+bool Watcher::IsWorking() {
+  return true;
+}
+
 void Watcher::runOnce() {
   auto newEvent = getNextEvent();
   if (!newEvent) {

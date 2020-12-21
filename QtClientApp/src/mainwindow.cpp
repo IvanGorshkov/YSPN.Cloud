@@ -275,7 +275,7 @@ void MainWindow::rename_file() {
     QString newPath = QString::fromStdString(getAbsoluteFilePath(fileMeta));
 
     QFile::rename(oldPath, newPath);
-    // TODO rename in db
+    _app.RenameFile(oldPath.toStdString(), newPath.toStdString());
   } else {
     _msg = "File not downloaded";
     Q_EMIT printMsgBoxSignal();
@@ -365,9 +365,7 @@ void MainWindow::onBtnAddFile() {
   dialog.setFileMode(QFileDialog::AnyFile);
   if (dialog.exec()) {
     for (auto &file : dialog.selectedFiles()) {
-      _app.UploadFile(file.toStdString(),
-                      std::bind(&MainWindow::uploadFileCallbackOk, this),
-                      std::bind(&MainWindow::uploadFileCallbackError, this, std::placeholders::_1));
+      _app.UploadFile(file.toStdString());
     }
   }
 }

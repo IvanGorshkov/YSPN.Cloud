@@ -1,7 +1,7 @@
 #include <boost/log/trivial.hpp>
 #include "InternalDB.h"
 #include "SQLiteQuery.h"
-#include <iostream>
+#include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
 #include <utility>

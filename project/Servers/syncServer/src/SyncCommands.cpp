@@ -38,7 +38,7 @@ std::shared_ptr<pt::ptree> DataUpdateCommand::Do() {
 
   try {
 	responseFileInfo = _db.GetUserFilesByTime(requestUserDate);
-    BOOST_LOG_TRIVIAL(error) << "DataUpdateCommand: get files from database";
+    BOOST_LOG_TRIVIAL(info) << "DataUpdateCommand: get files from database";
 
   } catch (PostgresExceptions &er) {
     BOOST_LOG_TRIVIAL(error) << "DataUpdateCommand: " << er.what();
@@ -61,13 +61,13 @@ UploadFileCommand::UploadFileCommand(std::shared_ptr<pt::ptree> &request)
 
 std::shared_ptr<pt::ptree> UploadFileCommand::Do() {
   BOOST_LOG_TRIVIAL(debug) << "UploadFileCommand: Do";
-  // TODO UploadFileCommand Do PostgreSQL
+
   try {
     _db.Connect();
     BOOST_LOG_TRIVIAL(info) << "UploadFileCommand: connect to database";
 
   } catch (PostgresExceptions &er) {
-    BOOST_LOG_TRIVIAL(error) << "DataUpdateCommand: " << er.what();
+    BOOST_LOG_TRIVIAL(error) << "UploadFileCommand: " << er.what();
     auto answer = SerializerAnswer(_fileInfo.GetRequestId(), "Database error");
     return std::make_shared<pt::ptree>(answer.GetJson());
   }
@@ -91,7 +91,7 @@ std::shared_ptr<pt::ptree> UploadFileCommand::Do() {
 
   try {
     _db.InsertFile(requestFileInfo[0]);
-    BOOST_LOG_TRIVIAL(error) << "UploadFileCommand: insert file to database";
+    BOOST_LOG_TRIVIAL(info) << "UploadFileCommand: insert file to database";
 
   } catch (PostgresExceptions &er) {
     BOOST_LOG_TRIVIAL(error) << "UploadFileCommand: " << er.what();

@@ -1,4 +1,5 @@
 #pragma once
+
 #include "stdlib.h"
 #include <boost/filesystem.hpp>
 #include <sys/inotify.h>

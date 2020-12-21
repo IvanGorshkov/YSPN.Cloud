@@ -23,6 +23,14 @@ INCLUDE_DIRECTORIES(../project/Client/Chunker/include)
 INCLUDE_DIRECTORIES(../project/Client/Indexer/include)
 INCLUDE_DIRECTORIES(../project/Client/Watcher/include)
 
+if (APPLE)
+    INCLUDE_DIRECTORIES(../project/Client/Watcher/Apple/include)
+    INCLUDE_DIRECTORIES(../project/Client/Watcher/include)
+else ()
+    INCLUDE_DIRECTORIES(../project/Client/Watcher/include)
+    INCLUDE_DIRECTORIES(../project/Client/Watcher/Linux/include)
+endif ()
+
 INCLUDE_DIRECTORIES(include)
 
 add_executable(${PROJECT_NAME}

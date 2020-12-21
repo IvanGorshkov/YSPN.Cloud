@@ -3,11 +3,18 @@
 #include <boost/property_tree/ptree.hpp>
 #include <string>
 #include <vector>
+#include <openssl/bio.h>
+#include <openssl/evp.h>
+#include <openssl/buffer.h>
 #include "structs/Chunk.h"
 #include "SerializerInterface.h"
 #include "SerializerExceptions.h"
 
 namespace pt = boost::property_tree;
+
+size_t calcDecodeLength(std::string  &b64input);
+int Base64Decode(std::string  &b64message, char **buffer, size_t *length);
+std::string Base64Encode(char *buffer, size_t length);
 
 class SerializerChunk : public SerializerInterface {
  public:

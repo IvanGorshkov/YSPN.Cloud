@@ -40,10 +40,8 @@ void UserSession::receiveRequest() {
         });
     return;
   }
-#include <iostream>
 
   std::stringstream ss(boost::asio::buffer_cast<const char *>(buf.data()));
-  std::cout << ss.str() << std::endl;
   try {
     pt::read_json(ss, _jsonReceive);
   } catch (pt::ptree_error &er) {
@@ -62,13 +60,20 @@ void UserSession::receiveResponse(const pt::ptree &jsonSend) {
     return;
   }
 
-  _socket.async_write_some(
-      boost::asio::buffer(ss.str() + '\n'),
-      [self = shared_from_this()](const boost::system::error_code &ec,
-                                  std::size_t) -> void {
-        if (ec) {
-          BOOST_LOG_TRIVIAL(error) << "UserSession: error send response to user: " << ec.message().c_str();
-          return;
-        }
-      });
+  boost::system::error_code ec;
+  boost::asio::write(_socket, boost::asio::buffer(ss.str() + '\n'), ec);
+  if (ec) {
+    BOOST_LOG_TRIVIAL(error) << "UserSession: error send response to user: " << ec.message().c_str();
+    return;
+  }
+
+//  _socket.async_write_some(
+//      boost::asio::buffer(ss.str() + '\0'),
+//      [self = shared_from_this()](const boost::system::error_code &ec,
+//                                  std::size_t) -> void {
+//        if (ec) {
+//          BOOST_LOG_TRIVIAL(error) << "UserSession: error send response to user: " << ec.message().c_str();
+//          return;
+//        }
+//      });
 }

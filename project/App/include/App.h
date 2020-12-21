@@ -12,7 +12,7 @@
 #include "InternalExceptions.h"
 #include "structs/CloudEvents.h"
 #include "Watcher.h"
-#include "Notification.h"
+
 
 namespace fs = boost::filesystem;
 
@@ -28,12 +28,10 @@ class App {
                     const std::function<void()> &callbackOk,
                     const std::function<void(const std::string &msg)> &callbackError) noexcept(false);
 
-  std::vector<Notification> GetEvents();
-  void execEvents();
-
-  void UploadFile(const fs::path &path,
-                  const std::function<void()> &callbackOk,
-                  const std::function<void(const std::string &msg)> &callbackError);
+  void UploadFile(const fs::path &path);
+  void RenameFile(const fs::path &oldPath, const fs::path &newPath);
+  void DeleteFile(const fs::path &path);
+  void ModifyFile(const fs::path &path);
 
   void UpdateSyncFolder(const fs::path &path);
   std::string GetSyncFolder();
@@ -42,11 +40,16 @@ class App {
   void runWorker();
   void callBack(CloudNotification);
 
+  void runWatcher();
+  void stopWatcher();
+  void execEvent();
+  void watcherCallback(CloudNotification event);
+
  private:
-  std::queue<CloudNotification> _events;
   std::queue<std::shared_ptr<BaseCommand>> _commands;
   std::shared_ptr<InternalDB> _internalDB;
 
+  std::queue<CloudNotification> _events;
   std::thread _watcherThread;
   Watcher _watcher;
 };
