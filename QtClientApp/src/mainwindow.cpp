@@ -15,9 +15,7 @@ MainWindow::MainWindow(QWidget *parent)
   ui->treeView->setEditTriggers(QAbstractItemView::NoEditTriggers);
   ui->treeView->setContextMenuPolicy(Qt::CustomContextMenu);
 
-  _filesInfo = _app.GetFiles();
-  parseVectorFiles();
-  ui->treeView->setModel(&_cloudModel);
+  updateFiles();
 
   connect(ui->treeView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slotCustomMenuRequested(QPoint)));
   connect(ui->btn_refresh, SIGNAL(clicked(bool)), this, SLOT(onBtnRefresh()));
@@ -51,20 +49,28 @@ int MainWindow::getFileId() {
 }
 
 std::string MainWindow::getAbsoluteFilePath(const FileMeta &file) {
-  return _app.GetSyncFolder() + '/' + file.filePath + file.fileName + file.fileExtension;
+  return _app.GetSyncFolder() + '/' + getFilePath(file);
 }
 
 std::string MainWindow::getFilePath(const FileMeta &file) {
-  return file.filePath + file.fileName + file.fileExtension;
+  return (file.filePath.empty() ? file.filePath : file.filePath + '/') + file.fileName + file.fileExtension;
 }
 
 bool MainWindow::compareFileMeta(const FileMeta &x, const FileMeta &y) {
   return getFilePath(x) < getFilePath(y);
 }
 
+void MainWindow::updateFiles() {
+  _cloudModel.clear();
+  _filesInfo = _app.GetFiles();
+  parseVectorFiles();
+  ui->treeView->setModel(&_cloudModel);
+}
+
 void MainWindow::downloadFileCallbackOk() {
   _msg = "Download complete";
   Q_EMIT printMsgBoxSignal();
+  updateFiles();
 }
 
 void MainWindow::downloadFileCallbackError(const std::string &msg) {
@@ -75,10 +81,7 @@ void MainWindow::downloadFileCallbackError(const std::string &msg) {
 void MainWindow::refreshCallbackOk() {
   _msg = "refresh complete";
   Q_EMIT printMsgBoxSignal();
-  _cloudModel.clear();
-  _filesInfo = _app.GetFiles();
-  parseVectorFiles();
-//  ui->treeView->setModel(&_cloudModel);
+  updateFiles();
 }
 
 void MainWindow::refreshCallbackError(const std::string &msg) {
@@ -89,10 +92,7 @@ void MainWindow::refreshCallbackError(const std::string &msg) {
 void MainWindow::uploadFileCallbackOk() {
   _msg = "upload complete";
   Q_EMIT printMsgBoxSignal();
-  _cloudModel.clear();
-  _filesInfo = _app.GetFiles();
-  parseVectorFiles();
-//  ui->treeView->setModel(&_cloudModel);
+  updateFiles();
 }
 
 void MainWindow::uploadFileCallbackError(const std::string &msg) {
@@ -112,7 +112,11 @@ void MainWindow::parseVectorFiles() {
   QList<QString> files_paths;
   for (auto &file : _filesInfo) {
     std::string full_path = getFilePath(file);
-    files_paths.append(QString(full_path.c_str()));
+    QString path = QString(full_path.c_str());
+    if (path[0] == '/') {
+      path.remove(0, 1);
+    }
+    files_paths.append(path);
   }
   std::sort(files_paths.begin(), files_paths.end());
   std::sort(_filesInfo.begin(), _filesInfo.end(), compareFileMeta);
@@ -288,6 +292,8 @@ void MainWindow::download_on_device() {
     if (reply == QMessageBox::Cancel) {
       return;
     }
+
+    qDebug() << "FileId = " << idFile;
 
     _app.DownloadFile(idFile,
                       std::bind(&MainWindow::downloadFileCallbackOk, this),
