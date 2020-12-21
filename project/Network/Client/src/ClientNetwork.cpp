@@ -10,43 +10,35 @@ void ClientNetwork::SendJSON(const pt::ptree &jsonRequest) {
   std::stringstream ss;
   try {
     pt::json_parser::write_json(ss, jsonRequest, false);
-  } catch (pt::ptree_error &ec) {
-    BOOST_LOG_TRIVIAL(error) << "ClientNetwork: error read JSON, while sending:" << ec.what();
-    throw SendToServerParseJsonException(ec.what());
+  } catch (pt::ptree_error &er) {
+    BOOST_LOG_TRIVIAL(error) << "ClientNetwork: error read JSON, while sending: " << er.what();
+    throw SendToServerParseJsonException(er.what());
   }
-  char sendBuf[1024];
-
-  // TODO Varia тут как бы размер быть больше 1024 ...
-  size_t request_length = ss.str().length();
-  strncpy(sendBuf, ss.str().c_str(), request_length);
-  sendBuf[request_length - 1] = 0;
 
   boost::system::error_code ec;
-  boost::asio::write(_socket, boost::asio::buffer(sendBuf, request_length), ec);
+  boost::asio::write(_socket, boost::asio::buffer(ss.str() + '\n'), ec);
   if (ec) {
-    BOOST_LOG_TRIVIAL(error) << "ClientNetwork: error send to server:" << ec.message().c_str();
+    BOOST_LOG_TRIVIAL(error) << "ClientNetwork: error send to server: " << ec.message().c_str();
     throw SendToServerException(ec.message());
   }
 }
 
 pt::ptree ClientNetwork::ReceiveJSON() {
   BOOST_LOG_TRIVIAL(debug) << "ClientNetwork: ReceiveJSON";
-  auto buf = std::make_shared<std::vector<char>>(1024);
   boost::system::error_code ec;
-  boost::asio::read(_socket, boost::asio::buffer(*buf), ec);
-  if (ec) {
-    BOOST_LOG_TRIVIAL(error) << "ClientNetwork: error read from server:" << ec.message().c_str();
-    throw ReadFromServerException(ec.message());
+  boost::asio::streambuf buf;
+  boost::asio::read(_socket, buf, boost::asio::transfer_all(), ec);
+  if (ec && ec != boost::asio::error::eof) {
+    BOOST_LOG_TRIVIAL(error) << "ClientNetwork: error read from server: " << ec.message().c_str();
   }
 
-  std::string response = buf->data();
-  std::stringstream ss(response);
+  std::stringstream ss(boost::asio::buffer_cast<const char *>(buf.data()));
   pt::ptree jsonResponse;
   try {
     pt::read_json(ss, jsonResponse);
-  } catch (pt::ptree_error &ec) {
-    BOOST_LOG_TRIVIAL(error) << "ClientNetwork: error write JSON to ptree, while receiving: " << ec.what();
-    throw ReadFromServerParseJsonException(ec.what());
+  } catch (pt::ptree_error &er) {
+    BOOST_LOG_TRIVIAL(error) << "ClientNetwork: error write JSON to ptree, while receiving: " << er.what();
+    throw ReadFromServerParseJsonException(er.what());
   }
   return jsonResponse;
 }

@@ -72,9 +72,13 @@ void RefreshCommand::Do() {
     auto fileInfo = SerializerFileInfo(response).GetFileInfo();
     BOOST_LOG_TRIVIAL(info) << "RefreshCommand: get fileInfo";
 
-    // TODO refreshCommand check is working
-    _internalDB->InsertOrUpdateFilesInfo(fileInfo);
+    std::for_each(fileInfo.begin(), fileInfo.end(), [](FileInfo &file_info) {
+      file_info.file.isDownload = false;
+    });
 
+
+    _internalDB->InsertOrUpdateFilesInfo(fileInfo);
+	_internalDB->SaveLastUpdate();
     callbackOk();
     return;
 
@@ -129,7 +133,7 @@ void DownloadFileCommand::Do() {
     auto chunks = SerializerChunk(response).GetChunk();
     BOOST_LOG_TRIVIAL(info) << "DownloadFileCommand: get chunks";
 
-    std::string filePath = _internalDB->GetSyncFolder() + _file.filePath + _file.fileName + '.' + _file.fileExtension;
+    std::string filePath = _internalDB->GetSyncFolder() + _file.filePath + "/" + _file.fileName + _file.fileExtension;
     std::cout << filePath << std::endl;
 
     File file(filePath);
@@ -177,11 +181,11 @@ void FileCommand::Do() {
   auto fileInfo = indexer.GetFileInfo(fileMeta, chunkVector);
   auto storageRequest = SerializerChunk(0, chunkVector).GetJson();
 
-  if (fileInfo.file.fileSize > 1024) {
-    BOOST_LOG_TRIVIAL(error) << "FileCommand: too much file length";
-    callbackError("too much file length");
-    return;
-  }
+ // if (fileInfo.file.fileSize > 1024) {
+ //   BOOST_LOG_TRIVIAL(error) << "FileCommand: too much file length";
+ //   callbackError("too much file length");
+ //   return;
+ // }
 
   // test
   std::stringstream ssRequestStorage;

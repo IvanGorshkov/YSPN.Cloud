@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.16.5)
 project(Watcher)
 
 find_package(Boost 1.54.0 COMPONENTS system filesystem REQUIRED)

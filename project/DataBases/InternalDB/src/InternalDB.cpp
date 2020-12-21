@@ -4,13 +4,15 @@
 #include <iostream>
 #include <boost/lexical_cast.hpp>
 #include <utility>
+#include <iomanip>
 #include "InternalExceptions.h"
 
-InternalDB::InternalDB(std::string databaseName) : _databaseName(std::move(databaseName)),
-                                                   _userId(-1),
-                                                   _deviceId(-1),
-                                                   _syncFolder(""),
-                                                   _lastUpdate("") {
+InternalDB::InternalDB(std::string databaseName)
+    : _databaseName(std::move(databaseName)),
+      _userId(-1),
+      _deviceId(-1),
+      _syncFolder(""),
+      _lastUpdate("") {
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Init DB";
   if (connect()) {
     creatTable();
@@ -19,6 +21,11 @@ InternalDB::InternalDB(std::string databaseName) : _databaseName(std::move(datab
       _deviceId = selectDeviceId();
       _syncFolder = selectFolder();
       _lastUpdate = selectLastUpdate();
+    } else {
+      User user = {.userId = 1,
+          .deviceId = 1,
+          .syncFolder = "/Users/s.alekhin/cloud"};
+      InsertUser(user);
     }
     close();
   }
@@ -55,9 +62,13 @@ void InternalDB::InsertOrUpdateFileInfo(FileInfo &fileInfo) {
       InsertChunk(fileChunksMeta, id);
     }
   } else {
+    int version = selectId("SELECT version FROM Files WHERE id = " + std::to_string(fileInfo.file.fileId) + ";");
+    ++version;
+    fileInfo.file.version = version;
     updateOneFile(fileInfo.file);
-    // TODO инкрементируй версии
     int id = selectId("SELECT id FROM Files WHERE id = " + std::to_string(fileInfo.file.fileId) + ";");
+    std::string query = "DELETE FROM Chunks WHERE id_file = " + std::to_string(id) + ";";
+    deleteInfo(query);
     for (auto &fileChunksMeta: fileInfo.fileChunksMeta) {
       updateOneChunk(fileChunksMeta, id);
     }
@@ -66,27 +77,50 @@ void InternalDB::InsertOrUpdateFileInfo(FileInfo &fileInfo) {
 }
 
 void InternalDB::updateOneFile(const FileMeta &file) {
-  std::string query = "Update Files SET"
-                      " file_name = '" + file.fileName +
+  auto time = file.updateDate;
+  std::string date = getTime(time);
+  std::string query = "Update Files SET "
+                      "file_name = '" + file.fileName +
       "', file_extention = '" + file.fileExtension +
       "', file_size = " + std::to_string(file.fileSize) +
-      ",  file_path = '" + file.filePath +
+      ",file_path = '" + file.filePath +
       "', count_chunks = " + std::to_string(file.chunksCount) +
       ", version=" + std::to_string(file.version) +
-      ", is_download=0, update_date = '" + file.updateDate
-      + "' WHERE id=" + std::to_string(file.fileId) + ";";
+      ", update_date = '" + date +
+      "'" " WHERE id=" + std::to_string(file.fileId) + ";";
   update(query);
 }
 
+std::string InternalDB::getTime(std::string &time) {
+  time.erase(std::find(time.begin(), time.end(), '.'), time.end());
+
+  std::time_t ttime;
+  try {
+    ttime = boost::lexical_cast<int>(time);
+  } catch (std::exception &exception) {
+    struct std::tm tm{};
+    std::istringstream ss(time);
+    ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
+    ttime = mktime(&tm);
+  }
+  tm *local_time = localtime(&ttime);
+  std::string date = std::to_string(1900 + local_time->tm_year) + "-" + std::to_string(1 + local_time->tm_mon) + "-"
+      + std::to_string(local_time->tm_mday) + " " + std::to_string(local_time->tm_hour) + ":"
+      + std::to_string(local_time->tm_min) + ":" + std::to_string(local_time->tm_sec);
+  return date;
+}
+
 void InternalDB::insertOneFile(const FileMeta &file) {
+  auto time = file.updateDate;
+  std::string date = getTime(time);
   std::string query = "INSERT INTO Files (file_name, file_extention, file_size, file_path,"
                       " count_chunks, version, is_download, update_date, create_date) VALUES ('"
       + file.fileName + "', '" + file.fileExtension
       + "', " + std::to_string(file.fileSize)
       + ", '" + file.filePath + "', " +
       std::to_string(file.chunksCount) + ", 1, "
-      + "0, '"
-      + file.updateDate + "', '" + file.updateDate + "');";
+      + std::to_string(file.isDownload) + ", '"
+      + date + "', '" + date + "');";
 
   insert(query);
 }
@@ -102,15 +136,17 @@ void InternalDB::InsertFile(const std::vector<FileMeta> &files) {
 
 void InternalDB::UpdateFile(const FileMeta &file) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
+  auto time = file.updateDate;
+  std::string date = getTime(time);
   std::string query = "Update Files SET "
                       "file_name = '" + file.fileName +
       "', file_extention = '" + file.fileExtension +
       "', file_size = " + std::to_string(file.fileSize) +
-      ",file_path = '" + file.filePath +
+      ", file_path = '" + file.filePath +
       "', count_chunks = " + std::to_string(file.chunksCount) +
-      ", version=" + std::to_string(file.version) +
-      ", is_download=0, update_date = '" + file.updateDate +
-      ", create_date = '" + file.createDate + "' WHERE id=" + std::to_string(file.fileId) + ";";
+      ", version = " + std::to_string(file.version) +
+      ", update_date = '" + date +
+      "'" " WHERE id =" + std::to_string(file.fileId) + ";";
   update(query);
 
   close();
@@ -185,7 +221,7 @@ void InternalDB::DowloadFile(const FileMeta &filesInfo) {
   close();
 }
 
-int InternalDB::FindIdFile(std::string path, std::string name, std::string extention) {
+int InternalDB::FindIdFile(const std::string &path, const std::string &name, const std::string &extention) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
   std::string query = "SELECT id FROM Files Where file_path like '" + path + "' and file_name like '" + name
       + "' and file_extention like '" + extention + "';";
@@ -198,7 +234,6 @@ int InternalDB::FindIdFile(std::string path, std::string name, std::string exten
 //MARK: Работа с Chunks
 
 void InternalDB::InsertChunk(FileChunksMeta &chunks, const int idFile) {
-  if (!connect()) { throw InternalExceptions("Don't connect"); }
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Insert Chunks";
   std::string query = "INSERT INTO Chunks (id_file, chunk_order) VALUES ("
       + std::to_string(idFile) + ", "
@@ -206,19 +241,10 @@ void InternalDB::InsertChunk(FileChunksMeta &chunks, const int idFile) {
   insert(query);
   int id = selectId("SELECT id FROM Chunks ORDER  BY  id  DESC Limit 1");
   chunks.chunkId = id;
-  close();
 }
 
 void InternalDB::updateOneChunk(FileChunksMeta &chunk, const int id) {
-  if (!connect()) { throw InternalExceptions("Don't connect"); }
-  std::string query = "Update Chunks SET "
-                      "chunk_order = " + std::to_string(chunk.chunkOrder) +
-      " WHERE id_file = " + std::to_string(id) + ";";
-  update(query);
-
-  // TODO Вставил получение последнего id из таблицы чанков
-  chunk.chunkId = selectId("SELECT id FROM Chunks ORDER  BY  id  DESC Limit 1");
-  close();
+  InsertChunk(chunk, id);
 }
 
 std::vector<UserChunk> InternalDB::GetUsersChunks(const int idFile) {
@@ -261,7 +287,7 @@ void InternalDB::InsertUser(const User &user) {
       + "', " + std::to_string(user.deviceId)
       + ", '" + user.deviceName
       + "', '" + user.syncFolder
-      + "', '1970-Dec-31 12:30:02'"
+      + "', '1970-12-31 12:30:02"
       + "');";
   insert(query);
   _userId = user.userId;
@@ -474,7 +500,6 @@ UserDate InternalDB::GetLastUpdate() {
   _lastTMPUpdate = std::to_string(1900 + local_time->tm_year) + "-" + std::to_string(1 + local_time->tm_mon) + "-"
       + std::to_string(local_time->tm_mday) + " " + std::to_string(local_time->tm_hour) + ":"
       + std::to_string(local_time->tm_min) + ":" + std::to_string(local_time->tm_sec);
-  puts(_lastTMPUpdate.c_str());
   return UserDate{.userId = _userId, .date = _lastUpdate};
 }
 

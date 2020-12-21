@@ -34,6 +34,7 @@ class App {
                   const std::function<void(const std::string &msg)> &callbackError);
 
   void UpdateSyncFolder(const fs::path &path);
+  std::string GetSyncFolder();
 
  private:
   void runWorker();

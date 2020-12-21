@@ -20,7 +20,6 @@ class UserSession
 
  private:
   boost::asio::ip::tcp::socket _socket;
-  char _readBuf[1024];
   pt::ptree _jsonReceive;
   void receiveRequest();
   void receiveResponse(const pt::ptree &jsonSend);
