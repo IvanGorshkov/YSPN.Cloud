@@ -65,7 +65,7 @@ std::shared_ptr<pt::ptree> DownloadChunkCommand::Do() {
   }
 
   if (requestVector.empty()) {
-    BOOST_LOG_TRIVIAL(debug) << "DownloadChunkCommand: empty user chunk vector";
+    BOOST_LOG_TRIVIAL(error) << "DownloadChunkCommand: empty user chunk vector";
     auto answer = SerializerAnswer(_userChunk.GetRequestId(), "Empty json");
     return std::make_shared<pt::ptree>(answer.GetJson());
   }

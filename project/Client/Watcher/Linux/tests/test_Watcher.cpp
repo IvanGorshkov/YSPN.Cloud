@@ -2,7 +2,7 @@
 #include <thread>
 
 TEST(TestWatcher, RunTest) {
-  Watcher test_watch;
+  AppleWatcher test_watch;
   std::string path = "/home/dantedoyl/watch";
   boost::filesystem::path fpath(path);
 
