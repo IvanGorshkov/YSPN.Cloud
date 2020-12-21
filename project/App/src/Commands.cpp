@@ -72,9 +72,9 @@ void RefreshCommand::Do() {
     auto fileInfo = SerializerFileInfo(response).GetFileInfo();
     BOOST_LOG_TRIVIAL(info) << "RefreshCommand: get fileInfo";
 
-	std::for_each(fileInfo.begin(), fileInfo.end(),[](FileInfo& file_info){
-	  file_info.file.isDownload = false;
-	});
+    std::for_each(fileInfo.begin(), fileInfo.end(), [](FileInfo &file_info) {
+      file_info.file.isDownload = false;
+    });
 
 
     _internalDB->InsertOrUpdateFilesInfo(fileInfo);
@@ -133,7 +133,7 @@ void DownloadFileCommand::Do() {
     auto chunks = SerializerChunk(response).GetChunk();
     BOOST_LOG_TRIVIAL(info) << "DownloadFileCommand: get chunks";
 
-    std::string filePath = _internalDB->GetSyncFolder() + _file.filePath + "/"+ _file.fileName  + _file.fileExtension;
+    std::string filePath = _internalDB->GetSyncFolder() + _file.filePath + "/" + _file.fileName + _file.fileExtension;
     std::cout << filePath << std::endl;
 
     File file(filePath);
