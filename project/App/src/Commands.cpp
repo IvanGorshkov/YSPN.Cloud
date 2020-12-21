@@ -76,9 +76,9 @@ void RefreshCommand::Do() {
 	  file_info.file.isDownload = false;
 	});
 
-    // TODO refreshCommand check is working
-    _internalDB->InsertOrUpdateFilesInfo(fileInfo);
 
+    _internalDB->InsertOrUpdateFilesInfo(fileInfo);
+	_internalDB->SaveLastUpdate();
     callbackOk();
     return;
 
@@ -181,11 +181,11 @@ void FileCommand::Do() {
   auto fileInfo = indexer.GetFileInfo(fileMeta, chunkVector);
   auto storageRequest = SerializerChunk(0, chunkVector).GetJson();
 
-  if (fileInfo.file.fileSize > 1024) {
-    BOOST_LOG_TRIVIAL(error) << "FileCommand: too much file length";
-    callbackError("too much file length");
-    return;
-  }
+ // if (fileInfo.file.fileSize > 1024) {
+ //   BOOST_LOG_TRIVIAL(error) << "FileCommand: too much file length";
+ //   callbackError("too much file length");
+ //   return;
+ // }
 
   // test
   std::stringstream ssRequestStorage;

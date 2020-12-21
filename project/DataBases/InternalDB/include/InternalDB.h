@@ -47,7 +47,7 @@ class InternalDB {
   bool IsFileExist(const int idFile);
   void DeleteFile(const FileMeta& filesInfo);
   void DowloadFile(const FileMeta& filesInfo);
-  int FindIdFile(std::string path, std::string name, std::string extention);
+  int FindIdFile(const std::string& path, const std::string& name, const std::string& extention);
 
  private:
   std::string _databaseName;
@@ -75,5 +75,5 @@ class InternalDB {
   void insertOneFile(const FileMeta &file);
   void updateOneFile(const FileMeta &file);
   void updateOneChunk(FileChunksMeta &chunk, const int id);
-  std::string getTime(const std::string& time);
+  std::string getTime(std::string& time);
 };

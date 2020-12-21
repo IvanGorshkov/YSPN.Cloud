@@ -4,7 +4,7 @@ ClientNetwork::ClientNetwork()
     : _socket(_service) {
   BOOST_LOG_TRIVIAL(debug) << "ClientNetwork: create ClientNetwork";
 }
-#include <iostream>
+
 void ClientNetwork::SendJSON(const pt::ptree &jsonRequest) {
   BOOST_LOG_TRIVIAL(debug) << "ClientNetwork: SendJSON";
   std::stringstream ss;

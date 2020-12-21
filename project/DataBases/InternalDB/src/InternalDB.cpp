@@ -4,6 +4,7 @@
 #include <iostream>
 #include <boost/lexical_cast.hpp>
 #include <utility>
+#include <iomanip>
 #include "InternalExceptions.h"
 
 InternalDB::InternalDB(std::string databaseName) : _databaseName(std::move(databaseName)),
@@ -60,6 +61,8 @@ void InternalDB::InsertOrUpdateFileInfo(FileInfo &fileInfo) {
 	fileInfo.file.version = version;
 	updateOneFile(fileInfo.file);
 	int id = selectId("SELECT id FROM Files WHERE id = " + std::to_string(fileInfo.file.fileId) + ";");
+	std::string query = "DELETE FROM Chunks WHERE id_file = " + std::to_string(id) + ";";
+	deleteInfo(query);
 	for (auto &fileChunksMeta: fileInfo.fileChunksMeta) {
 	  updateOneChunk(fileChunksMeta, id);
 	}
@@ -68,7 +71,8 @@ void InternalDB::InsertOrUpdateFileInfo(FileInfo &fileInfo) {
 }
 
 void InternalDB::updateOneFile(const FileMeta &file) {
-  std::string date = getTime(file.updateDate);
+  auto time = file.updateDate;
+  std::string date = getTime(time);
   std::string query = "Update Files SET "
 					  "file_name = '" + file.fileName +
 	  "', file_extention = '" + file.fileExtension +
@@ -81,8 +85,18 @@ void InternalDB::updateOneFile(const FileMeta &file) {
   update(query);
 }
 
-std::string InternalDB::getTime(const std::string &time) {
-  std::time_t ttime = boost::lexical_cast<int>(time);
+std::string InternalDB::getTime(std::string &time) {
+  time.erase(std::find(time.begin(), time.end(), '.'), time.end());
+
+  std::time_t ttime;
+  try {
+	ttime = boost::lexical_cast<int>(time);
+  } catch (std::exception& exception) {
+	struct std::tm tm{};
+	std::istringstream ss(time);
+	ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
+	ttime = mktime(&tm);
+  }
   tm *local_time = localtime(&ttime);
   std::string date = std::to_string(1900 + local_time->tm_year) + "-" + std::to_string(1 + local_time->tm_mon) + "-"
 	  + std::to_string(local_time->tm_mday) + " " + std::to_string(local_time->tm_hour) + ":"
@@ -91,7 +105,8 @@ std::string InternalDB::getTime(const std::string &time) {
 }
 
 void InternalDB::insertOneFile(const FileMeta &file) {
-  std::string date = getTime(file.updateDate);
+  auto time = file.updateDate;
+  std::string date = getTime(time);
   std::string query = "INSERT INTO Files (file_name, file_extention, file_size, file_path,"
 					  " count_chunks, version, is_download, update_date, create_date) VALUES ('"
 	  + file.fileName + "', '" + file.fileExtension
@@ -115,7 +130,8 @@ void InternalDB::InsertFile(const std::vector<FileMeta> &files) {
 
 void InternalDB::UpdateFile(const FileMeta &file) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
-  std::string date = getTime(file.updateDate);
+  auto time = file.updateDate;
+  std::string date = getTime(time);
   std::string query = "Update Files SET "
 					  "file_name = '" + file.fileName +
 	  "', file_extention = '" + file.fileExtension +
@@ -199,7 +215,7 @@ void InternalDB::DowloadFile(const FileMeta &filesInfo) {
   close();
 }
 
-int InternalDB::FindIdFile(std::string path, std::string name, std::string extention) {
+int InternalDB::FindIdFile(const std::string& path, const std::string& name, const std::string& extention) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
   std::string query = "SELECT id FROM Files Where file_path like '" + path + "' and file_name like '" + name
 	  + "' and file_extention like '" + extention + "';";
@@ -212,7 +228,6 @@ int InternalDB::FindIdFile(std::string path, std::string name, std::string exten
 //MARK: Работа с Chunks
 
 void InternalDB::InsertChunk(FileChunksMeta &chunks, const int idFile) {
-  if (!connect()) { throw InternalExceptions("Don't connect"); }
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Insert Chunks";
   std::string query = "INSERT INTO Chunks (id_file, chunk_order) VALUES ("
 	  + std::to_string(idFile) + ", "
@@ -220,15 +235,10 @@ void InternalDB::InsertChunk(FileChunksMeta &chunks, const int idFile) {
   insert(query);
   int id = selectId("SELECT id FROM Chunks ORDER  BY  id  DESC Limit 1");
   chunks.chunkId = id;
-  close();
 }
 
 void InternalDB::updateOneChunk(FileChunksMeta &chunk, const int id) {
-  if (!connect()) { throw InternalExceptions("Don't connect"); }
-  std::string query = "DELETE FROM Chunks WHERE id_file = " + std::to_string(id) + ";";
-  deleteInfo(query);
   InsertChunk(chunk, id);
-  close();
 }
 
 std::vector<UserChunk> InternalDB::GetUsersChunks(const int idFile) {

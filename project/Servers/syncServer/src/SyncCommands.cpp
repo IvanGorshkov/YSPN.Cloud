@@ -37,7 +37,7 @@ std::shared_ptr<pt::ptree> DataUpdateCommand::Do() {
   // TODO DataUpdateCommand get FileInfo vector
 
   try {
-    // Get fileInfo
+	responseFileInfo = _db.GetUserFilesByTime(requestUserDate);
     BOOST_LOG_TRIVIAL(error) << "DataUpdateCommand: get files from database";
 
   } catch (PostgresExceptions &er) {
@@ -46,10 +46,6 @@ std::shared_ptr<pt::ptree> DataUpdateCommand::Do() {
     return std::make_shared<pt::ptree>(answer.GetJson());
   }
 
-  // test
-  auto &testPostgra = TestPostgra::GetInstance();
-  responseFileInfo = testPostgra.GetFileInfo();
-  // test
 
   BOOST_LOG_TRIVIAL(info) << "DataUpdateCommand: Status Ok";
   auto answer = SerializerFileInfo(_userDate.GetRequestId(), responseFileInfo);
@@ -102,11 +98,6 @@ std::shared_ptr<pt::ptree> UploadFileCommand::Do() {
     auto answer = SerializerAnswer(_fileInfo.GetRequestId(), "Fail to insert file");
     return std::make_shared<pt::ptree>(answer.GetJson());
   }
-
-  // test
-  auto &testPostgra = TestPostgra::GetInstance();
-  testPostgra.SetFileInfo(requestFileInfo);
-  // test
 
   BOOST_LOG_TRIVIAL(info) << "UploadFileCommand: Status Ok";
   auto answer = SerializerAnswer(_fileInfo.GetRequestId());
