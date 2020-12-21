@@ -3,7 +3,7 @@ project(Watcher)
 
 find_package(Boost 1.54.0 COMPONENTS system filesystem REQUIRED)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 ADD_SUBDIRECTORY(tests)
 

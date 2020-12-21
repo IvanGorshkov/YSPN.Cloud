@@ -1,6 +1,6 @@
 #pragma once
 
-#define CHUNK_SIZE 7
+#define CHUNK_SIZE 4096
 
 #include "structs/Chunk.h"
 #include "File.h"

@@ -5,11 +5,11 @@ FIND_PACKAGE(Boost COMPONENTS log REQUIRED)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 
 SET(CMAKE_CXX_STANDARD 17)
-SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -Wpedantic")
+#SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -Wpedantic")
 
 INCLUDE_DIRECTORIES(include)
 
-ADD_LIBRARY(${PROJECT_NAME}-dev SHARED
+ADD_LIBRARY(${PROJECT_NAME}-dev STATIC
         src/SerializerChunk.cpp
         src/SerializerUserChunk.cpp
         src/SerializerAnswer.cpp

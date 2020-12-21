@@ -1,5 +1,7 @@
 #include "Watcher.h"
 
+#include <utility>
+
 namespace bfs = boost::filesystem;
 
 Watcher::Watcher() :
@@ -7,6 +9,7 @@ Watcher::Watcher() :
     _lastEventTime(std::chrono::steady_clock::now()),
     _inotifyFd(0),
     _stopped(false),
+    _isReanameEvent(false),
     _eventBuffer(MAX_EVENTS * (EVENT_SIZE + 16), 0) {
   _inotifyFd = inotify_init1(IN_NONBLOCK);
   if (_inotifyFd == -1) {
@@ -38,16 +41,18 @@ void Watcher::Run(const boost::filesystem::path &path, std::function<void(Notifi
     Stop();
   }
 
-  auto events = {Event::_moved_to,
-                 Event::_moved_from,
-                 Event::_create,
-                 Event::_remove,
-                 Event::_modify,
-                 Event::_close_write};
-  for (auto event : events) {
-    _eventMask = _eventMask | static_cast<std::uint32_t>(event);
-    _eventCallbacks[event] = callBack;
-  }
+//  auto events = {Event::_moved_to,
+//                 Event::_moved_from,
+//                 Event::_create,
+//                 Event::_remove,
+//                 Event::_modify,
+//                 Event::_close_write};
+//  for (auto event : events) {
+//    _eventMask = _eventMask | static_cast<std::uint32_t>(event);
+//    _eventCallbacks[event] = callBack;
+//  }
+    _eventCallback = std::move(callBack);
+
 
   while (true) {
     if (hasStopped()) {
@@ -65,17 +70,42 @@ void Watcher::runOnce() {
 
   Event currentEvent = static_cast<Event>(newEvent->mask);
 
+  switch(currentEvent){
+    case 256:
+      currentEvent = Event::_create;
+      break;
+    case 64:
+      currentEvent = Event::_moved_from;
+      break;
+    case 128:
+      currentEvent = Event::_moved_to;
+      break;
+    case 512:
+      currentEvent = Event::_remove;
+      break;
+    case 8:
+      currentEvent = Event::_modify;
+      break;
+    default:
+      currentEvent = Event ::_ignored;
+      break;
+  }
+
   Notification notification{currentEvent, newEvent->path, newEvent->eventTime};
 
-  for (auto &eventAndCallback : _eventCallbacks) {
-    auto &event = eventAndCallback.first;
-    auto &callbackFunc = eventAndCallback.second;
+//  for (auto &eventAndCallback : _eventCallbacks) {
+//    auto &event = eventAndCallback.first;
+//    auto &callbackFunc = eventAndCallback.second;
+//
+//    if (event == currentEvent) {
+  if(notification.event != Event::_ignored)
+    _eventCallback(notification);
 
-    if (event == currentEvent) {
-      callbackFunc(notification);
+      //callbackFunc(notification);
       return;
-    }
-  }
+   // }
+ // }
+
 }
 
 bool Watcher::hasStopped() const {
