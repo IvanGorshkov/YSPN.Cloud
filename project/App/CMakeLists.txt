@@ -22,6 +22,17 @@ INCLUDE_DIRECTORIES(../Client/Indexer/include)
 FIND_LIBRARY(Chunker-dev REQUIRED)
 INCLUDE_DIRECTORIES(../Client/Chunker/include)
 
+if (APPLE)
+    FIND_LIBRARY(WatcherApple-dev REQUIRED)
+    INCLUDE_DIRECTORIES(../Client/Watcher/Apple/include)
+    INCLUDE_DIRECTORIES(../Client/Watcher/include)
+    MESSAGE(STATUS "Apple Watcher")
+else ()
+    FIND_LIBRARY(WatcherLinux-dev REQUIRED)
+    INCLUDE_DIRECTORIES(../Client/Watcher/include)
+    INCLUDE_DIRECTORIES(../Client/Watcher/Linux/include)
+endif ()
+
 INCLUDE_DIRECTORIES(include)
 
 ADD_LIBRARY(${PROJECT_NAME}-dev
@@ -30,4 +41,8 @@ ADD_LIBRARY(${PROJECT_NAME}-dev
         src/Commands.cpp
         src/ClientConfig.cpp
         )
-TARGET_LINK_LIBRARIES(${PROJECT_NAME}-dev ${Boost_LIBRARIES} InternalDB-dev ClientNetwork-dev Utils-dev Indexer-dev Chunker-dev)
+if (APPLE)
+    TARGET_LINK_LIBRARIES(${PROJECT_NAME}-dev ${Boost_LIBRARIES} InternalDB-dev ClientNetwork-dev Utils-dev Indexer-dev WatcherApple-dev Chunker-dev)
+else ()
+    TARGET_LINK_LIBRARIES(${PROJECT_NAME}-dev ${Boost_LIBRARIES} InternalDB-dev ClientNetwork-dev Utils-dev Indexer-dev WatcherLinux-dev Chunker-dev)
+endif ()
