@@ -8,14 +8,14 @@ set(CMAKE_CXX_STANDARD 17)
 ADD_SUBDIRECTORY(tests)
 
 INCLUDE_DIRECTORIES(include)
-INCLUDE_DIRECTORIES(../utils)
+INCLUDE_DIRECTORIES(../../utils/include)
 
 #add_executable(Watcher Watcher.cpp)
 
-ADD_LIBRARY(libWatcher STATIC
+ADD_LIBRARY(${PROJECT_NAME}-dev STATIC
         include/FileSystemEvent.h
         include/Watcher.h
-        Watcher.cpp
-        FileSystemEvent.cpp
-        ../utils/Notification.h)
+        src/Watcher.cpp
+        src/FileSystemEvent.cpp
+        include/Notification.h)
 

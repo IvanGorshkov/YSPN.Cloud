@@ -3,6 +3,7 @@
 #include "SQLiteQuery.h"
 #include <iostream>
 #include <boost/lexical_cast.hpp>
+#include <boost/filesystem.hpp>
 #include <utility>
 #include <iomanip>
 #include "InternalExceptions.h"
@@ -22,9 +23,12 @@ InternalDB::InternalDB(std::string databaseName)
       _syncFolder = selectFolder();
       _lastUpdate = selectLastUpdate();
     } else {
+      std::string path = std::getenv("HOME");
+      path += "/cloud";
+      boost::filesystem::create_directories(path);
       User user = {.userId = 1,
           .deviceId = 1,
-          .syncFolder = "/Users/s.alekhin/cloud"};
+          .syncFolder = path};
       InsertUser(user);
     }
     close();

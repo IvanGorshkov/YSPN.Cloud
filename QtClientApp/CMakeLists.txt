@@ -21,6 +21,7 @@ INCLUDE_DIRECTORIES(../project/DataBases/InternalDB/include)
 INCLUDE_DIRECTORIES(../project/Network/Client/include)
 INCLUDE_DIRECTORIES(../project/Client/Chunker/include)
 INCLUDE_DIRECTORIES(../project/Client/Indexer/include)
+INCLUDE_DIRECTORIES(../project/Client/Watcher/include)
 
 INCLUDE_DIRECTORIES(include)
 

@@ -13,6 +13,9 @@ INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 FIND_LIBRARY(ClientNetwork-dev REQUIRED)
 INCLUDE_DIRECTORIES(../Network/Client/include)
 
+FIND_LIBRARY(Watcher-dev REQUIRED)
+INCLUDE_DIRECTORIES(../Client/Watcher/include)
+
 FIND_LIBRARY(Utils-dev REQUIRED)
 INCLUDE_DIRECTORIES(../utils/include)
 
@@ -30,4 +33,4 @@ ADD_LIBRARY(${PROJECT_NAME}-dev
         src/Commands.cpp
         src/ClientConfig.cpp
         )
-TARGET_LINK_LIBRARIES(${PROJECT_NAME}-dev ${Boost_LIBRARIES} InternalDB-dev ClientNetwork-dev Utils-dev Indexer-dev Chunker-dev)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME}-dev ${Boost_LIBRARIES} InternalDB-dev Watcher-dev ClientNetwork-dev Utils-dev Indexer-dev Chunker-dev)

@@ -7,11 +7,15 @@ App::App()
     : _internalDB(std::make_shared<InternalDB>("myDB.sqlite")) {
   BOOST_LOG_TRIVIAL(debug) << "App: create app";
 //  ClientConfig::Log("release");
+  _watcherThread = std::thread([&]() { _watcher.Run(_internalDB->GetSyncFolder(), std::bind(&App::callBack, this, std::placeholders::_1)); });
+std::cout<<std::getenv("HOME");
 }
 
 App::~App() {
   BOOST_LOG_TRIVIAL(debug) << "App: delete app";
-}
+  _watcherThread.join();
+  }
+
 
 void App::Refresh(const std::function<void()> &callbackOk,
                   const std::function<void(const std::string &msg)> &callbackError) {
@@ -50,17 +54,21 @@ void App::DownloadFile(int fileId,
   runWorker();
 }
 
-std::vector<int> App::GetEvents() {
-  BOOST_LOG_TRIVIAL(debug) << "App: GetEvents";
-  // TODO getEvents return events queue
+void App::callBack(CloudNotification new_event){
+  _events.push(new_event);
+  std::cout<<new_event.event<<std::endl;
 }
 
-void App::SaveEvents(const std::function<void()> &callbackOk,
-                     const std::function<void(const std::string &msg)> &callbackError) {
+//std::vector<Notification> App::GetEvents() {
+//  BOOST_LOG_TRIVIAL(debug) << "App: GetEvents";
+//  return _events;
+//}
+
+void App::execEvents() {
   BOOST_LOG_TRIVIAL(debug) << "App: SaveEvents";
   // TODO SaveEvents loop create event command and send to queue
-
-  callbackError("test");
+  CloudNotification new_notif = _events.front();
+  _events.pop();
 }
 
 void App::UploadFile(const fs::path &path,
@@ -80,12 +88,14 @@ void App::UploadFile(const fs::path &path,
 
 void App::UpdateSyncFolder(const fs::path &path) {
   BOOST_LOG_TRIVIAL(debug) << "App: UpdateSyncFolder";
-
+  _watcher.Stop();
+  _watcherThread.join();
   if (!fs::exists(path)) {
     throw FolderNotExistsException("this folder does not exist");
   }
-
   _internalDB->UpdateSyncFolder(path.string());
+  _watcherThread = std::thread([&]() { _watcher.Run(_internalDB->GetSyncFolder(), std::bind(&App::callBack, this, std::placeholders::_1)); });
+
 }
 
 std::string App::GetSyncFolder() {

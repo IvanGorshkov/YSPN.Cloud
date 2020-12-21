@@ -33,6 +33,13 @@ constexpr Event operator|(Event lhs, Event rhs) {
           | static_cast<std::underlying_type<Event>::type>(rhs));
 }
 
+constexpr Event operator&(Event lhs, Event rhs)
+{
+  return static_cast<Event>(
+      static_cast<std::underlying_type<Event>::type>(lhs)
+          & static_cast<std::underlying_type<Event>::type>(rhs));
+}
+
 struct Notification {
   Event event;
   boost::filesystem::path path;

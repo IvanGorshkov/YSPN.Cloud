@@ -10,6 +10,7 @@
 #include "Notification.h"
 #include "FileSystemEvent.h"
 #include "WatcherExceptions.h"
+#include "structs/CloudEvents.h"
 
 #define EVENT_SIZE  sizeof(inotify_event)
 #define MAX_EVENTS 4096
@@ -19,7 +20,7 @@ class Watcher {
   Watcher();
   ~Watcher();
   void Stop();
-  void Run(const boost::filesystem::path &, std::function<void(Notification)>);
+  void Run(const boost::filesystem::path &, const std::function<void(CloudNotification)>&);
   std::exception_ptr GetLastException();
 
  private:
@@ -35,7 +36,7 @@ class Watcher {
   std::chrono::steady_clock::time_point _lastEventTime;
   epoll_event _epollEvents[1];
   std::map<Event, std::function<void(Notification)>> _eventCallbacks;
-  std::function<void(Notification)> _eventCallback;
+  std::function<void(CloudNotification)> _eventCallback;
   bool _isReanameEvent;
 
   void removeWatch(int wd) const;
