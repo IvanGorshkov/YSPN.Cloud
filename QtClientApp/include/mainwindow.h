@@ -42,6 +42,7 @@ class MainWindow : public QMainWindow, public QStandardItem {
   FileMeta &getFile();
   int getFileId();
   static bool compareFileMeta(const FileMeta &x, const FileMeta &y);
+  void updateFiles();
 
  private:
   void downloadFileCallbackOk();
