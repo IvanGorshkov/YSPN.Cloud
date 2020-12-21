@@ -2,9 +2,16 @@
 
 #include <QAbstractItemModel>
 #include <QAbstractItemView>
+#include <QHBoxLayout>
+#include <QDesktopServices>
+#include <QFile>
+#include <QFileDialog>
+#include <QInputDialog>
 #include <QMainWindow>
 #include <QMessageBox>
 #include <QModelIndex>
+#include <QMovie>
+#include <QSettings>
 #include <QSizePolicy>
 #include <QStandardItem>
 #include <QStandardItemModel>
@@ -16,13 +23,8 @@
 #include <iostream>
 #include <vector>
 #include "App.h"
-#include "structs/FileMeta.h"
-
-#include <QFileDialog>
-#include <QDesktopServices>
-#include <QInputDialog>
-#include <QFile>
 #include "AppExceptions.h"
+#include "structs/FileMeta.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -43,6 +45,8 @@ class MainWindow : public QMainWindow, public QStandardItem {
   int getFileId();
   static bool compareFileMeta(const FileMeta &x, const FileMeta &y);
   void updateFiles();
+  void startLoadingLabel();
+  void stopLoadingLabel();
 
  private:
   void downloadFileCallbackOk();
@@ -61,6 +65,7 @@ class MainWindow : public QMainWindow, public QStandardItem {
 
  private slots:
   void slotCustomMenuRequested(QPoint pos);
+  void changeDirectory();
   void open_file();
   void rename_file();
   void download_on_device();
@@ -68,13 +73,15 @@ class MainWindow : public QMainWindow, public QStandardItem {
   void delete_from_cloud();
   void view_history_file();
   void view_properties();
-  void on_treeView_clicked(const QModelIndex &index);
   void onBtnAddFile();
+  void onBtnSettings();
   void onBtnRefresh();
   static void onBtnAbout();
 
  private:
   Ui::MainWindow *ui;
+  QWidget* _settingsForm;
+  QMovie *_movie;
   QStandardItemModel _cloudModel;
   std::vector<FileMeta> _filesInfo;
   App _app;
