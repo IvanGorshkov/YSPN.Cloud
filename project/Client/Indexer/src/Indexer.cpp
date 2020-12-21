@@ -60,7 +60,6 @@ FileInfo Indexer::GetFileInfo(FileMeta &file, std::vector<Chunk> &chunks) {
   };
   _internalDB->InsertOrUpdateFileInfo(info);
 
-  // TODO Maxim for each
   for (int j = 0; j < chunks.size(); j++) {
     chunks[j].userId = info.userId;
     chunks[j].chunkId = info.fileChunksMeta[j].chunkId;

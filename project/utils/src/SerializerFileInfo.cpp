@@ -110,8 +110,8 @@ void SerializerFileInfo::deserialize() {
           .filePath = file.get<std::string>("filePath"),
           .fileSize = file.get<int>("fileSize"),
           .chunksCount = file.get<int>("chunksCount"),
-          .isCurrent = file.get<bool>("isCurrent"),
           .isDeleted = file.get<bool>("isDeleted"),
+          .isCurrent = file.get<bool>("isCurrent"),
           .updateDate = file.get<std::string>("updateDate"),
           .createDate = file.get<std::string>("createDate")};
 

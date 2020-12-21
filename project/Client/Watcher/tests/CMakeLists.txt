@@ -8,8 +8,8 @@ find_package(
 INCLUDE_DIRECTORIES("${GTEST_INCLUDE_DIRS}")
 
 PROJECT(tests_gtest)
-SET(CMAKE_CXX_STANDARD 14)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -Wpedantic")
+SET(CMAKE_CXX_STANDARD 17)
+#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -Wpedantic")
 
 include_directories(${GTEST_INCLUDE_DIRS})
 include_directories(include)

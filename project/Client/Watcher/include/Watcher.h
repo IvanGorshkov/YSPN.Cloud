@@ -35,6 +35,8 @@ class Watcher {
   std::chrono::steady_clock::time_point _lastEventTime;
   epoll_event _epollEvents[1];
   std::map<Event, std::function<void(Notification)>> _eventCallbacks;
+  std::function<void(Notification)> _eventCallback;
+  bool _isReanameEvent;
 
   void removeWatch(int wd) const;
   boost::filesystem::path wdToPath(int wd);
