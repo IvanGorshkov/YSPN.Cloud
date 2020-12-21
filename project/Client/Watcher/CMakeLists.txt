@@ -1,21 +1,12 @@
-cmake_minimum_required(VERSION 3.16.5)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.13.4)
 project(Watcher)
 
-find_package(Boost 1.54.0 COMPONENTS system filesystem REQUIRED)
+FIND_PACKAGE(Boost COMPONENTS system filesystem REQUIRED)
+INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 
 set(CMAKE_CXX_STANDARD 17)
 
-ADD_SUBDIRECTORY(tests)
+INCLUDE_DIRECTORIES(../../utils/include)
 
-INCLUDE_DIRECTORIES(include)
-INCLUDE_DIRECTORIES(../utils)
-
-#add_executable(Watcher Watcher.cpp)
-
-ADD_LIBRARY(libWatcher STATIC
-        include/FileSystemEvent.h
-        include/Watcher.h
-        Watcher.cpp
-        FileSystemEvent.cpp
-        ../utils/Notification.h)
-
+ADD_SUBDIRECTORY(Linux)
+ADD_SUBDIRECTORY(Apple)

@@ -1,5 +1,5 @@
 #include "Watcher.h"
-
+#include <iostream>
 #include <utility>
 
 namespace bfs = boost::filesystem;
@@ -31,9 +31,14 @@ Watcher::Watcher() :
 
 Watcher::~Watcher() {
   epoll_ctl(_epollFd, EPOLL_CTL_DEL, _inotifyFd, nullptr);
+  for (boost::bimap<int, boost::filesystem::path>::left_map::const_iterator iter = _directorieMap.left.begin(),
+           iend = _directorieMap.left.end();
+       iter != iend; ++iter) {
+    removeWatch(iter->first);
+  }
 }
 
-void Watcher::Run(const boost::filesystem::path &path, std::function<void(Notification)> callBack) {
+void Watcher::Run(const boost::filesystem::path &path, const std::function<void(CloudNotification)> &callBack) {
   try {
     watchDirectory(path);
   } catch (std::exception &e) {
@@ -51,15 +56,25 @@ void Watcher::Run(const boost::filesystem::path &path, std::function<void(Notifi
 //    _eventMask = _eventMask | static_cast<std::uint32_t>(event);
 //    _eventCallbacks[event] = callBack;
 //  }
-    _eventCallback = std::move(callBack);
-
+  _eventCallback = std::move(callBack);
 
   while (true) {
     if (hasStopped()) {
+      for (boost::bimap<int, boost::filesystem::path>::left_map::const_iterator iter = _directorieMap.left.begin(),
+               iend = _directorieMap.left.end();
+           iter != iend; ++iter) {
+        removeWatch(iter->first);
+      }
+      _directorieMap.clear();
+      _eventBuffer.clear();
       break;
     }
     runOnce();
   }
+}
+
+bool Watcher::IsWorking() {
+  return true;
 }
 
 void Watcher::runOnce() {
@@ -69,42 +84,69 @@ void Watcher::runOnce() {
   }
 
   Event currentEvent = static_cast<Event>(newEvent->mask);
+  CloudEvent clevent;
 
-  switch(currentEvent){
+  switch (currentEvent) {
+    case 1073742080:
+      watchDirectory(newEvent->path);
+      currentEvent = Event::_ignored;
+      break;
+    case 1073741888:
+      break;
     case 256:
-      currentEvent = Event::_create;
+      if (!_eventQueue.empty() /*&& _eventQueue.front().mask == 32*/) {
+        while (!_eventQueue.empty())
+          _eventQueue.pop();
+      }
+      clevent = CREATE;
       break;
     case 64:
-      currentEvent = Event::_moved_from;
+      if (!_eventQueue.empty() && _eventQueue.front().mask == 128) {
+        boost::filesystem::path new_path(_eventQueue.front().path);
+        _eventQueue.pop();
+        clevent = RENAME;
+      } else {
+        clevent = DELETE;
+      }
       break;
     case 128:
-      currentEvent = Event::_moved_to;
+      if (!_eventQueue.empty() && _eventQueue.front().mask == 8) {
+        _eventQueue.pop();
+        currentEvent = Event::_ignored;
+      } else {
+        clevent = CREATE;
+      }
       break;
-    case 512:
-      currentEvent = Event::_remove;
+    case 512:clevent = DELETE;
       break;
+    case 2:
     case 8:
-      currentEvent = Event::_modify;
+      if (!_eventQueue.empty() && (_eventQueue.front().mask == 128 || _eventQueue.front().mask == 32)) {
+        while (!_eventQueue.empty())
+          _eventQueue.pop();
+      }
+      clevent = MODIFY;
       break;
-    default:
-      currentEvent = Event ::_ignored;
+    default:currentEvent = Event::_ignored;
       break;
   }
 
-  Notification notification{currentEvent, newEvent->path, newEvent->eventTime};
+  //Notification notification{currentEvent, newEvent->path, newEvent->eventTime};
 
 //  for (auto &eventAndCallback : _eventCallbacks) {
 //    auto &event = eventAndCallback.first;
 //    auto &callbackFunc = eventAndCallback.second;
 //
 //    if (event == currentEvent) {
-  if(notification.event != Event::_ignored)
-    _eventCallback(notification);
 
-      //callbackFunc(notification);
-      return;
-   // }
- // }
+  if (currentEvent != Event::_ignored) {
+    CloudNotification notification{.event = clevent, .path = newEvent->path, .time = newEvent->eventTime};
+    _eventCallback(notification);
+  }
+  //callbackFunc(notification);
+  return;
+  // }
+  // }
 
 }
 
@@ -187,7 +229,8 @@ void Watcher::readEventsFromBuffer(
     if (bfs::is_directory(path)) {
       path = path / std::string(event->name);
     }
-    if (path.extension() == "" || path.extension() == ".tmp" || path.extension().string().back() == '~') {
+    if ((path.extension() == "" || path.extension() == ".tmp" || path.extension().string().back() == '~')
+        && event->mask != 1073742080 && event->mask != 1073741888) {
       i += EVENT_SIZE + event->len;
       continue;
     }
@@ -224,10 +267,6 @@ void Watcher::watchDirectory(bfs::path path) {
 
   for (auto &new_path : paths)
     watchFile(new_path);
-}
-
-void Watcher::UnwatcFile(const bfs::path &file) {
-  removeWatch(_directorieMap.right.at(file));
 }
 
 void Watcher::removeWatch(int wd) const {

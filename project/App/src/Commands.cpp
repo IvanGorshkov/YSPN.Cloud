@@ -48,12 +48,6 @@ void RefreshCommand::Do() {
   auto userDate = _internalDB->GetLastUpdate();
   auto request = SerializerUserDate(0, userDate).GetJson();
 
-  // test
-  std::stringstream ssRequest;
-  pt::write_json(ssRequest, request);
-  std::cout << "Request: " << ssRequest.str() << std::endl;
-  // test
-
   pt::ptree response;
   try {
     connect(network, syncConfig, request, response);
@@ -61,12 +55,6 @@ void RefreshCommand::Do() {
     callbackError(er.what());
     return;
   }
-
-  // test
-  std::stringstream ssResponse;
-  pt::write_json(ssResponse, response);
-  std::cout << "Response: " << ssResponse.str() << std::endl;
-  // test
 
   try {
     auto fileInfo = SerializerFileInfo(response).GetFileInfo();
@@ -76,9 +64,8 @@ void RefreshCommand::Do() {
       file_info.file.isDownload = false;
     });
 
-
     _internalDB->InsertOrUpdateFilesInfo(fileInfo);
-	_internalDB->SaveLastUpdate();
+    _internalDB->SaveLastUpdate();
     callbackOk();
     return;
 
@@ -109,12 +96,6 @@ void DownloadFileCommand::Do() {
   auto userChunkVector = _internalDB->GetUsersChunks(_file.fileId);
   auto request = SerializerUserChunk(0, userChunkVector).GetJson();
 
-  // test
-  std::stringstream ssRequest;
-  pt::write_json(ssRequest, request);
-  std::cout << "Request: " << ssRequest.str() << std::endl;
-  // test
-
   pt::ptree response;
   try {
     connect(network, storageConfig, request, response);
@@ -122,12 +103,6 @@ void DownloadFileCommand::Do() {
     callbackError(er.what());
     return;
   }
-
-  // test
-  std::stringstream ssResponse;
-  pt::write_json(ssResponse, response);
-  std::cout << "Response: " << ssResponse.str() << std::endl;
-  // test
 
   try {
     auto chunks = SerializerChunk(response).GetChunk();
@@ -158,9 +133,11 @@ FileCommand::FileCommand(std::function<void()> callbackOk,
                          std::function<void(const std::string &msg)> callbackError,
                          std::shared_ptr<InternalDB> internalDB,
                          fs::path path,
+                         boost::optional<fs::path> newPath,
                          bool isDeleted)
     : BaseCommand(std::move(callbackOk), std::move(callbackError), std::move(internalDB)),
       _filePath(std::move(path)),
+      _newFilePath(std::move(newPath)),
       _isDeleted(isDeleted) {
   BOOST_LOG_TRIVIAL(debug) << "CreateFileCommand: create command";
 }
@@ -177,21 +154,9 @@ void FileCommand::Do() {
   auto chunkVector = chunker.ChunkFile();
 
   Indexer indexer(_internalDB);
-  auto fileMeta = indexer.GetFileMeta(_filePath, _isDeleted);
+  auto fileMeta = indexer.GetFileMeta(_filePath, _isDeleted, _newFilePath);
   auto fileInfo = indexer.GetFileInfo(fileMeta, chunkVector);
   auto storageRequest = SerializerChunk(0, chunkVector).GetJson();
-
- // if (fileInfo.file.fileSize > 1024) {
- //   BOOST_LOG_TRIVIAL(error) << "FileCommand: too much file length";
- //   callbackError("too much file length");
- //   return;
- // }
-
-  // test
-  std::stringstream ssRequestStorage;
-  pt::write_json(ssRequestStorage, storageRequest);
-  std::cout << "Request storage: " << ssRequestStorage.str() << std::endl;
-  // test
 
   pt::ptree responseStorage;
   try {
@@ -200,12 +165,6 @@ void FileCommand::Do() {
     callbackError(er.what());
     return;
   }
-
-  // test
-  std::stringstream ssResponseStorage;
-  pt::write_json(ssResponseStorage, responseStorage);
-  std::cout << "Response storage: " << ssResponseStorage.str() << std::endl;
-  // test
 
   auto responseStorageStatus = SerializerAnswer(responseStorage).GetStatus();
   bool isError = false;
@@ -226,12 +185,6 @@ void FileCommand::Do() {
 
   auto syncRequest = SerializerFileInfo(0, fileInfo).GetJson();
 
-  // test
-  std::stringstream ssRequestSync;
-  pt::write_json(ssRequestSync, syncRequest);
-  std::cout << "Request sync: " << ssRequestSync.str() << std::endl;
-  // test
-
   pt::ptree responseSync;
   try {
     connect(network, syncConfig, syncRequest, responseSync);
@@ -239,12 +192,6 @@ void FileCommand::Do() {
     callbackError(er.what());
     return;
   }
-
-  // test
-  std::stringstream ssResponseSync;
-  pt::write_json(ssResponseSync, responseSync);
-  std::cout << "Response sync: " << ssResponseSync.str() << std::endl;
-  // test
 
   auto responseSyncStatus = SerializerAnswer(responseSync).GetStatus();
   std::visit(overloaded{

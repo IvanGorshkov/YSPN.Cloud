@@ -29,9 +29,9 @@ class BaseCommand {
 
  protected:
   static void connect(ClientNetwork &network,
-               const NetworkConfig &config,
-               const pt::ptree& request,
-               pt::ptree &response) noexcept(false);
+                      const NetworkConfig &config,
+                      const pt::ptree &request,
+                      pt::ptree &response) noexcept(false);
 
  protected:
   std::function<void()> callbackOk;
@@ -67,10 +67,13 @@ class FileCommand : public BaseCommand {
                        std::function<void(const std::string &msg)> callbackError,
                        std::shared_ptr<InternalDB> internalDB,
                        fs::path path,
+                       boost::optional<fs::path> newPath = boost::none,
                        bool isDeleted = false);
+
   void Do() override;
 
  private:
   fs::path _filePath;
+  boost::optional<fs::path> _newFilePath;
   bool _isDeleted;
 };

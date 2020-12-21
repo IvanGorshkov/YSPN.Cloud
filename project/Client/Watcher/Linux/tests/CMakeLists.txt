@@ -18,7 +18,7 @@ include_directories(../../utils)
 
 add_executable(tests_gtest main.cpp test_Watcher.cpp)
 
-target_link_libraries(tests_gtest ${GTEST_BOTH_LIBRARIES}  ${CMAKE_THREAD_LIBS_INIT} libWatcher  Boost::system
+target_link_libraries(tests_gtest ${GTEST_BOTH_LIBRARIES}  ${CMAKE_THREAD_LIBS_INIT} Watcher-dev  Boost::system
         Boost::filesystem)
 
 ADD_TEST(NAME Test COMMAND ${PROJECT_NAME})
