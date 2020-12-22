@@ -13,11 +13,15 @@ variables:
   NO_ERROR_PATTERN: "ERROR SUMMARY: 0 errors"
 
 stages:
-  - build
-  - pages
   - test_style
+  - build
   - test_bin
   - test_mem
+
+test_style:
+  stage: test_style
+  script:
+    - ./linters/run.sh
 
 build:
   stage: build
@@ -29,27 +33,6 @@ build:
   artifacts:
     paths:
       - "build"
-
-pages:
-  stage: pages
-  script:
-    # Устанавливаем пакеты
-    - apt-get -y install doxygen
-    - apt-get -y install graphviz
-    # Прогоняем Doxygen
-    - doxygen doc/Doxyfile.cfg
-    # Диплоим
-    - mv doc/html/ public/
-  artifacts:
-    paths:
-      - public
-  only:
-    - master
-
-test_style:
-  stage: test_style
-  script:
-    - ./linters/run.sh
 
 test_bin:
   stage: test_bin
