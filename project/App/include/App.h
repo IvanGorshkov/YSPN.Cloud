@@ -13,12 +13,12 @@
 #include "structs/CloudEvents.h"
 #include "Watcher.h"
 
-
 namespace fs = boost::filesystem;
 
 class App {
  public:
-  App();
+  App(const std::function<void()> &callbackOk,
+      const std::function<void(const std::string &msg)> &callbackError);
   ~App();
   void Refresh(const std::function<void()> &callbackOk,
                const std::function<void(const std::string &msg)> &callbackError);
@@ -44,6 +44,10 @@ class App {
   void stopWatcher();
   void execEvent();
   void watcherCallback(CloudNotification event);
+
+ private:
+  std::function<void()> ok;
+  std::function<void(const std::string &msg)> ne0k;
 
  private:
   std::queue<std::shared_ptr<BaseCommand>> _commands;

@@ -67,6 +67,7 @@ class MainWindow : public QMainWindow, public QStandardItem {
   void slotCustomMenuRequested(QPoint pos);
   void changeDirectory();
   void open_file();
+  void save_file();
   void rename_file();
   void download_on_device();
   void delete_from_device();

@@ -3,8 +3,11 @@
 #include <string>
 #include <boost/log/trivial.hpp>
 
-App::App()
-    : _internalDB(std::make_shared<InternalDB>("myDB.sqlite")) {
+App::App(const std::function<void()> &callbackOk,
+         const std::function<void(const std::string &msg)> &callbackError)
+    : _internalDB(std::make_shared<InternalDB>("myDB.sqlite")),
+      ok(callbackOk),
+      ne0k(callbackError) {
   BOOST_LOG_TRIVIAL(debug) << "App: create app";
 //  ClientConfig::Log("release");
 
@@ -15,7 +18,6 @@ App::~App() {
   BOOST_LOG_TRIVIAL(debug) << "App: delete app";
   stopWatcher();
 }
-
 
 void App::Refresh(const std::function<void()> &callbackOk,
                   const std::function<void(const std::string &msg)> &callbackError) {
@@ -54,7 +56,6 @@ void App::DownloadFile(int fileId,
   runWorker();
 }
 
-
 void App::UploadFile(const fs::path &path) {
 
   BOOST_LOG_TRIVIAL(debug) << "App: UploadFile";
@@ -63,7 +64,7 @@ void App::UploadFile(const fs::path &path) {
     throw FileNotExistsException("this file does not exist");
   }
 
-  auto sh = std::make_shared<FileCommand>(nullptr, nullptr, _internalDB, path);
+  auto sh = std::make_shared<FileCommand>(ok, ne0k, _internalDB, path);
   _commands.emplace(sh);
 
   runWorker();
@@ -73,7 +74,7 @@ void App::RenameFile(const fs::path &oldPath, const fs::path &newPath) {
   BOOST_LOG_TRIVIAL(debug) << "App: RenameFile";
 
   if (!_watcher.IsWorking()) {
-    auto sh = std::make_shared<FileCommand>(nullptr, nullptr, _internalDB, oldPath, newPath);
+    auto sh = std::make_shared<FileCommand>(ok, ne0k, _internalDB, oldPath, newPath);
     _commands.emplace(sh);
 
     runWorker();
@@ -84,7 +85,7 @@ void App::DeleteFile(const fs::path &path) {
   BOOST_LOG_TRIVIAL(debug) << "App: DeleteFile";
 
   if (!_watcher.IsWorking()) {
-    auto sh = std::make_shared<FileCommand>(nullptr, nullptr, _internalDB, path, boost::none, true);
+    auto sh = std::make_shared<FileCommand>(ok, ne0k, _internalDB, path, boost::none, true);
     _commands.emplace(sh);
 
     runWorker();
@@ -95,7 +96,7 @@ void App::ModifyFile(const fs::path &path) {
   BOOST_LOG_TRIVIAL(debug) << "App: ModifyFile";
 
   if (!_watcher.IsWorking()) {
-    auto sh = std::make_shared<FileCommand>(nullptr, nullptr, _internalDB, path);
+    auto sh = std::make_shared<FileCommand>(ok, ne0k, _internalDB, path);
     _commands.emplace(sh);
 
     runWorker();
