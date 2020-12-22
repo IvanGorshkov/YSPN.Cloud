@@ -13,10 +13,27 @@ variables:
   NO_ERROR_PATTERN: "ERROR SUMMARY: 0 errors"
 
 stages:
+  - pages
   - test_style
   - build
   - test_bin
   - test_mem
+
+pages:
+  stage: pages
+  script:
+    # Устанавливаем пакеты
+    - apt-get -y install doxygen
+    - apt-get -y install graphviz
+    # Прогоняем Doxygen
+    - doxygen doc/Doxyfile.cfg
+    # Диплоим
+    - mv doc/html/ public/
+  artifacts:
+    paths:
+      - public
+  only:
+    - master
 
 test_style:
   stage: test_style
