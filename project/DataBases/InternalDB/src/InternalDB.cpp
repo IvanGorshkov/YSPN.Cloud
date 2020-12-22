@@ -80,7 +80,7 @@ void InternalDB::InsertOrUpdateFileInfo(FileInfo &fileInfo) {
   close();
 }
 
-void InternalDB::updateOneFile(const FileMeta &file) {
+void InternalDB::updateOneFile(FileMeta &file) {
   auto time = file.updateDate;
   std::string date = getTime(time);
   std::string query = "Update Files SET "
@@ -92,6 +92,7 @@ void InternalDB::updateOneFile(const FileMeta &file) {
       ", version=" + std::to_string(file.version) +
       ", update_date = '" + date +
       "'" " WHERE id=" + std::to_string(file.fileId) + ";";
+  file.updateDate = date;
   update(query);
 }
 
@@ -114,7 +115,7 @@ std::string InternalDB::getTime(std::string &time) {
   return date;
 }
 
-void InternalDB::insertOneFile(const FileMeta &file) {
+void InternalDB::insertOneFile(FileMeta &file) {
   auto time = file.updateDate;
   std::string date = getTime(time);
   std::string query = "INSERT INTO Files (file_name, file_extention, file_size, file_path,"
@@ -125,7 +126,8 @@ void InternalDB::insertOneFile(const FileMeta &file) {
       std::to_string(file.chunksCount) + ", 1, "
       + std::to_string(file.isDownload) + ", '"
       + date + "', '" + date + "');";
-
+  file.updateDate = date;
+  file.createDate = date;
   insert(query);
 }
 

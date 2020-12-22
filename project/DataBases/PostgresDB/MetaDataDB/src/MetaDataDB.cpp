@@ -1,6 +1,7 @@
 #include "MetaDataDB.h"
 #include "PostgresExceptions.h"
 #include <boost/lexical_cast.hpp>
+#include <iomanip>
 
 MetaDataDB::MetaDataDB(std::string_view info)
     : PostgresSQLDB(info) {
@@ -11,7 +12,32 @@ MetaDataDB &MetaDataDB::shared(std::string_view info) {
   return shared;
 }
 
+std::string MetaDataDB::getTime(std::string &time) {
+  time.erase(std::find(time.begin(), time.end(), '.'), time.end());
+
+  std::time_t ttime;
+  try {
+	ttime = boost::lexical_cast<int>(time);
+  } catch (std::exception &exception) {
+	struct std::tm tm{};
+	std::istringstream ss(time);
+	ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
+	ttime = mktime(&tm);
+  }
+  tm *local_time = localtime(&ttime);
+  std::string date = std::to_string(1900 + local_time->tm_year) + "-" + std::to_string(1 + local_time->tm_mon) + "-"
+	  + std::to_string(local_time->tm_mday) + " " + std::to_string(local_time->tm_hour) + ":"
+	  + std::to_string(local_time->tm_min) + ":" + std::to_string(local_time->tm_sec);
+  return date;
+}
+
 void MetaDataDB::InsertFile(const FileInfo &fileMeta) {
+  auto updateDate = fileMeta.file.updateDate;
+  std::string dateUpdate = getTime(updateDate);
+  auto createDate = fileMeta.file.createDate;
+  std::string dateCreateDate = getTime(updateDate);
+
+
   try {
   	pqExec("begin;", PostgresExceptions("invalid to start transaction")); // Начало транзакции
   	pqExec("savepoint f_savepoint;", PostgresExceptions("invalid to update")); // Точка сохранения
@@ -33,7 +59,7 @@ void MetaDataDB::InsertFile(const FileInfo &fileMeta) {
   		+ ", " +std::to_string(fileMeta.file.version)
   		+ ", '" +std::to_string(fileMeta.file.isCurrent)
   		+ "', '"+std::to_string(fileMeta.file.isDeleted)
-  		+ "', " +"now(), now());";
+  		+ "', " + "'" + dateUpdate + "'," + "'" dateCreateDate + "');";
   	pqExec(query, PostgresExceptions("invalid to insert data to db")); // Добавление нового файла
 
 

@@ -21,7 +21,7 @@ class MetaDataDB : public PostgresSQLDB {
   ~MetaDataDB() override = default;
   MetaDataDB(const MetaDataDB &mongo_db);
   MetaDataDB &operator=(const MetaDataDB &mongo_db);
-
+  std::string getTime(std::string &time);
   int getLastIdOfFileUser(const std::string &query, PostgresExceptions exceptions);
 
 };
