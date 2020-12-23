@@ -1,4 +1,5 @@
 #pragma once
+
 #include <string>
 #include <sqlite3.h>
 #include <memory>
@@ -8,6 +9,7 @@
 #include "structs/UserDate.h"
 #include "structs/FileInfo.h"
 #include "structs/UserChunk.h"
+#include "structs/Chunk.h"
 #include <vector>
 
 struct sqlite3_deleter {
@@ -25,39 +27,42 @@ struct sqlite3_stmt_deleter {
 class InternalDB {
  public:
   explicit InternalDB(std::string databaseName);
+  void InsertUser(const User &user);
   int GetUserId() const;
-
+  int GetDeviceId() const;
   std::string GetSyncFolder() const;
   void UpdateSyncFolder(const std::string &newFolder);
-
-  FileMeta SelectFile(const int &fileId);
 
   UserDate GetLastUpdate();
   void SaveLastUpdate();
 
+  bool IsFileExist(const int &fileId);
+  int GetFileId(const std::string &path, const std::string &name, const std::string &extension);
+  FileMeta GetFile(const std::string &path, const std::string &name, const std::string &extension);
+  FileMeta SelectFile(const int &fileId);
   std::vector<FileMeta> SelectAllFiles();
+
+  std::vector<UserChunk> GetUserChunks(const int &fileId);
+  std::vector<FileChunksMeta> GetFileChunksMeta(const int &fileId);
+
+  void DeleteFile(const int &fileId);
+  void DownloadFile(const int &fileId);
+  void InsertAndIndexFile(FileMeta &file);
+  void UpdateAndIndexFile(FileMeta &file);
+  void DeleteAndIndexFile(FileMeta &file);
+  void RenameAndIndexFile(FileMeta &file);
+  void InsertAndIndexFileChunk(FileChunksMeta &fileChunk, const int &fileId);
 
   void InsertOrUpdateFileInfo(FileInfo &fileInfo);
 
-  std::vector<UserChunk> GetFileChunks(const int &fileId);
-
-  bool IsFileExist(const int &fileId);
-  void DeleteFile(const int &fileId);
-  void DownloadFile(const int &fileId);
-  int FindIdFile(const std::string &path, const std::string &name, const std::string &extension);
-
-  int GetDeviceId() const;
-  void InsertUser(const User &user);
   void DeleteUser(size_t id);
   void UpdatePassword(const std::string &newPassword);
   std::string SelectUserPassword();
 
-  void SelectChunk();
   void InsertChunk(FileChunksMeta &chunks, int idFile);
 
   void UpdateFile(const FileMeta &file);
   void InsertFile(std::vector<FileMeta> &files);
-  void InsertOrUpdateFilesInfo(std::vector<FileInfo> &filesInfo);
 
  private:
   std::string _databaseName;
@@ -72,18 +77,16 @@ class InternalDB {
   int selectUserId();
   std::string selectFolder();
   int selectId(const std::string &query);
-  void creatTable();
+  void createTable();
   bool update(const std::string &query);
   void deleteInfo(const std::string &query);
-  virtual bool connect();
-  virtual void close();
+  bool connect();
+  void close();
   void insert(const std::string &query);
   std::string selectLastUpdate();
   std::string selectStr(const std::string &query);
   FileMeta getOneFile();
-  bool existUser();
-  void insertOneFile(FileMeta &file);
-  void updateOneFile(FileMeta &file);
   void updateOneChunk(FileChunksMeta &chunk, const int id);
-  std::string getTime(std::string &time);
+  bool existUser();
+  static std::string getTime(std::string &time);
 };

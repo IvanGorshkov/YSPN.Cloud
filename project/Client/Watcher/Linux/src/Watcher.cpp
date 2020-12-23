@@ -38,7 +38,8 @@ Watcher::~Watcher() {
   }
 }
 
-void Watcher::Run(const boost::filesystem::path &path, const std::function<void(CloudNotification)> &callBack) {
+void Watcher::Run(const boost::filesystem::path &path,
+                  const std::function<void(const CloudNotification &event)> &callBack) {
   try {
     watchDirectory(path);
   } catch (std::exception &e) {
@@ -87,12 +88,10 @@ void Watcher::runOnce() {
   CloudEvent clevent;
 
   switch (currentEvent) {
-    case 1073742080:
-      watchDirectory(newEvent->path);
+    case 1073742080:watchDirectory(newEvent->path);
       currentEvent = Event::_ignored;
       break;
-    case 1073741888:
-      break;
+    case 1073741888:break;
     case 256:
       if (!_eventQueue.empty() /*&& _eventQueue.front().mask == 32*/) {
         while (!_eventQueue.empty())

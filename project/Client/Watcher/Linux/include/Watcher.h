@@ -14,7 +14,6 @@
 #include "structs/CloudEvents.h"
 #include "../../include/WatcherInterface.h"
 
-
 #define EVENT_SIZE  sizeof(inotify_event)
 #define MAX_EVENTS 4096
 
@@ -24,7 +23,7 @@ class Watcher : public WatcherInterface {
   ~Watcher();
 
   void Stop() override;
-  void Run(const boost::filesystem::path &, const std::function<void(CloudNotification)> &) override;
+  void Run(const boost::filesystem::path &, const std::function<void(const CloudNotification &event)> &) override;
   bool IsWorking() override;
   std::exception_ptr GetLastException();
 

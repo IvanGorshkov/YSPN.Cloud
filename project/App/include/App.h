@@ -21,12 +21,14 @@ class App {
       const std::function<void(const std::string &msg)> &callbackError);
   ~App();
 
+  bool IsLogin() const;
+
   void Refresh();
 
   std::vector<FileMeta> GetFiles();
   void DownloadFile(int fileId) noexcept(false);
 
-  void UploadFile(const fs::path &path) noexcept(false);
+  void CreateFile(const fs::path &path) noexcept(false);
   void RenameFile(const fs::path &oldPath, const fs::path &newPath) noexcept(false);
   void DeleteFile(const fs::path &path);
   void ModifyFile(const fs::path &path) noexcept(false);
@@ -36,12 +38,11 @@ class App {
 
  private:
   void runWorker();
-  void callBack(CloudNotification);
 
   void runWatcher();
   void stopWatcher();
   void execEvent();
-  void watcherCallback(CloudNotification event);
+  void watcherCallback(const CloudNotification &event);
 
  private:
   std::function<void(const std::string &msg)> appCallbackOk;

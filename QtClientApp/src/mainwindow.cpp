@@ -462,7 +462,7 @@ void MainWindow::onBtnAddFile() {
       QFileInfo file(filePath);
       QString newPath = QString::fromStdString(_app.GetSyncFolder() + '/' + file.fileName().toStdString());
       QFile::copy(filePath, newPath);
-      _app.UploadFile(newPath.toStdString());
+      _app.CreateFile(newPath.toStdString());
     }
   }
 }

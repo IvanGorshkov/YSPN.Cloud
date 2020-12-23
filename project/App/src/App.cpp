@@ -19,6 +19,11 @@ App::~App() {
   stopWatcher();
 }
 
+bool App::IsLogin() const {
+  BOOST_LOG_TRIVIAL(debug) << "App: IsLogin";
+  return true;
+}
+
 void App::Refresh() {
   BOOST_LOG_TRIVIAL(debug) << "App: Refresh";
 
@@ -55,7 +60,7 @@ void App::DownloadFile(int fileId) {
   runWorker();
 }
 
-void App::UploadFile(const fs::path &path) {
+void App::CreateFile(const fs::path &path) {
   BOOST_LOG_TRIVIAL(debug) << "App: UploadFile";
 
   if (!fs::exists(path)) {
@@ -65,7 +70,7 @@ void App::UploadFile(const fs::path &path) {
   BOOST_LOG_TRIVIAL(info) << "App: upload file " << path.string();
 
   if (!_watcher.IsWorking()) {
-    auto sh = std::make_shared<FileCommand>(appCallbackOk, appCallbackError, _internalDB, path);
+    auto sh = std::make_shared<CreateFileCommand>(appCallbackOk, appCallbackError, _internalDB, path);
     _commands.emplace(sh);
 
     runWorker();
@@ -82,7 +87,7 @@ void App::RenameFile(const fs::path &oldPath, const fs::path &newPath) {
   BOOST_LOG_TRIVIAL(info) << "App: rename file " << oldPath.string() << " to " << newPath.string();
 
   if (!_watcher.IsWorking()) {
-    auto sh = std::make_shared<FileCommand>(appCallbackOk, appCallbackError, _internalDB, oldPath, newPath);
+    auto sh = std::make_shared<RenameFileCommand>(appCallbackOk, appCallbackError, _internalDB, oldPath, newPath);
     _commands.emplace(sh);
 
     runWorker();
@@ -95,7 +100,7 @@ void App::DeleteFile(const fs::path &path) {
   BOOST_LOG_TRIVIAL(info) << "App: delete file " << path.string();
 
   if (!_watcher.IsWorking()) {
-    auto sh = std::make_shared<FileCommand>(appCallbackOk, appCallbackError, _internalDB, path, boost::none, true);
+    auto sh = std::make_shared<DeleteFileCommand>(appCallbackOk, appCallbackError, _internalDB, path);
     _commands.emplace(sh);
 
     runWorker();
@@ -112,7 +117,7 @@ void App::ModifyFile(const fs::path &path) {
   BOOST_LOG_TRIVIAL(info) << "App: modify file " << path.string();
 
   if (!_watcher.IsWorking()) {
-    auto sh = std::make_shared<FileCommand>(appCallbackOk, appCallbackError, _internalDB, path);
+    auto sh = std::make_shared<ModifyFileCommand>(appCallbackOk, appCallbackError, _internalDB, path);
     _commands.emplace(sh);
 
     runWorker();
@@ -174,7 +179,7 @@ void App::execEvent() {
 
   switch (event.event) {
     case CREATE: {
-      UploadFile(event.path);
+      CreateFile(event.path);
       break;
     }
 
@@ -200,7 +205,7 @@ void App::execEvent() {
   }
 }
 
-void App::watcherCallback(CloudNotification event) {
+void App::watcherCallback(const CloudNotification &event) {
   BOOST_LOG_TRIVIAL(debug) << "App: watcherCallback";
 
   BOOST_LOG_TRIVIAL(info) << "App: new event" << event.event;

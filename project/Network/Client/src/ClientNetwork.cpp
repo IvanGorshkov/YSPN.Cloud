@@ -33,7 +33,6 @@ pt::ptree ClientNetwork::ReceiveJSON() {
   }
 
   std::stringstream ss(boost::asio::buffer_cast<const char *>(buf.data()));
-  std::cout << ss.str() << std::endl;
   pt::ptree jsonResponse;
   try {
     pt::read_json(ss, jsonResponse);

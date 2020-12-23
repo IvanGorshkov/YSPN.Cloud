@@ -35,7 +35,7 @@ void MetaDataDB::InsertFile(const FileInfo &fileMeta) {
   auto updateDate = fileMeta.file.updateDate;
   std::string dateUpdate = getTime(updateDate);
   auto createDate = fileMeta.file.createDate;
-  std::string dateCreateDate = getTime(updateDate);
+  std::string dateCreateDate = getTime(createDate);
 
   try {
     pqExec("begin;", PostgresExceptions("invalid to start transaction")); // Начало транзакции

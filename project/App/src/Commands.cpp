@@ -32,6 +32,23 @@ void BaseCommand::sendAndReceive(ClientNetwork &network,
   network.Disconnect();
 }
 
+bool BaseCommand::visitAnswer(const std::variant<StatusOk, StatusError> &response) {
+  bool isError = false;
+  std::visit(overloaded{
+      [&](const StatusOk &val) {
+        BOOST_LOG_TRIVIAL(info) << "Visit Answer: Status Ok sync";
+      },
+      [&](const StatusError &val) {
+        BOOST_LOG_TRIVIAL(error) << "Visit Answer: Status Error sync";
+        auto error = std::get<StatusError>(response);
+        callbackError(error.msg);
+        isError = true;
+      }
+  }, response);
+
+  return isError;
+}
+
 RefreshCommand::RefreshCommand(std::function<void(const std::string &msg)> callbackOk,
                                std::function<void(const std::string &msg)> callbackError,
                                std::shared_ptr<InternalDB> internalDB)
@@ -106,7 +123,7 @@ void DownloadFileCommand::Do() {
   auto storageConfig = ClientConfig::getStorageConfig();
   auto network = ClientNetwork();
 
-  auto userChunkVector = _internalDB->GetFileChunks(_file.fileId);
+  auto userChunkVector = _internalDB->GetUserChunks(_file.fileId);
   auto request = SerializerUserChunk(0, userChunkVector).GetJson();
 
   pt::ptree response;
@@ -141,66 +158,127 @@ void DownloadFileCommand::Do() {
   }
 }
 
-FileCommand::FileCommand(std::function<void(const std::string &msg)> callbackOk,
-                         std::function<void(const std::string &msg)> callbackError,
-                         std::shared_ptr<InternalDB> internalDB,
-                         fs::path path,
-                         boost::optional<fs::path> newPath,
-                         bool isDeleted)
+//FileCommand::FileCommand(std::function<void(const std::string &msg)> callbackOk,
+//                         std::function<void(const std::string &msg)> callbackError,
+//                         std::shared_ptr<InternalDB> internalDB,
+//                         fs::path path,
+//                         boost::optional<fs::path> newPath,
+//                         bool isDeleted)
+//    : BaseCommand(std::move(callbackOk), std::move(callbackError), std::move(internalDB)),
+//      _filePath(std::move(path)),
+//      _newFilePath(std::move(newPath)),
+//      _isDeleted(isDeleted) {
+//  BOOST_LOG_TRIVIAL(debug) << "CreateFileCommand: create command";
+//}
+//
+//void FileCommand::Do() {
+//  BOOST_LOG_TRIVIAL(debug) << "FileCommand: do";
+//
+//  auto storageConfig = ClientConfig::getStorageConfig();
+//  auto syncConfig = ClientConfig::getSyncConfig();
+//  auto network = ClientNetwork();
+//
+//  Indexer indexer(_internalDB);
+//  auto fileMeta = indexer.GetFileMeta(_filePath, _isDeleted, _newFilePath);
+//  if (fileMeta.isDeleted) {
+//    _internalDB->DeleteFile(fileMeta.fileId);
+//  }
+//  std::vector<Chunk> chunkVector;
+//
+//  if (!fileMeta.isDeleted) {
+//    File file(_filePath.string());
+//    Chunker chunker(file);
+//    chunkVector = chunker.ChunkFile();
+//  }
+//  auto fileInfo = indexer.GetFileInfo(fileMeta, chunkVector);
+//
+//  if (!fileMeta.isDeleted) {
+//    auto storageRequest = SerializerChunk(0, chunkVector).GetJson();
+//    pt::ptree responseStorage;
+//    try {
+//      sendAndReceive(network, storageConfig, storageRequest, responseStorage);
+//    } catch (NetworkException &er) {
+//      callbackError(er.what());
+//      return;
+//    }
+//
+//    auto responseStorageStatus = SerializerAnswer(responseStorage).GetStatus();
+//    bool isError = false;
+//    std::visit(overloaded{
+//        [&](const StatusOk &val) {
+//          BOOST_LOG_TRIVIAL(info) << "FileCommand: Status Ok sync";
+//        },
+//        [&](const StatusError &val) {
+//          BOOST_LOG_TRIVIAL(error) << "FileCommand: Status Error sync";
+//          auto error = std::get<StatusError>(responseStorageStatus);
+//          callbackError(error.msg);
+//          isError = true;
+//        }
+//    }, responseStorageStatus);
+//    if (isError) {
+//      return;
+//    }
+//  }
+//
+//  auto syncRequest = SerializerFileInfo(0, fileInfo).GetJson();
+//  pt::ptree responseSync;
+//  try {
+//    sendAndReceive(network, syncConfig, syncRequest, responseSync);
+//  } catch (NetworkException &er) {
+//    callbackError(er.what());
+//    return;
+//  }
+//
+//  auto responseSyncStatus = SerializerAnswer(responseSync).GetStatus();
+//  std::visit(overloaded{
+//      [&](const StatusOk &val) {
+//        BOOST_LOG_TRIVIAL(info) << "FileCommand: Status Ok sync";
+//      },
+//      [&](const StatusError &val) {
+//        BOOST_LOG_TRIVIAL(error) << "FileCommand: Status Error sync";
+//        auto error = std::get<StatusError>(responseSyncStatus);
+//        callbackError(error.msg);
+//      }
+//  }, responseSyncStatus);
+//
+//  callbackOk("Файл обновлен");
+//}
+
+CreateFileCommand::CreateFileCommand(std::function<void(const std::string &)> callbackOk,
+                                     std::function<void(const std::string &)> callbackError,
+                                     std::shared_ptr<InternalDB> internalDB,
+                                     fs::path path)
     : BaseCommand(std::move(callbackOk), std::move(callbackError), std::move(internalDB)),
-      _filePath(std::move(path)),
-      _newFilePath(std::move(newPath)),
-      _isDeleted(isDeleted) {
+      _filePath(std::move(path)) {
   BOOST_LOG_TRIVIAL(debug) << "CreateFileCommand: create command";
 }
 
-void FileCommand::Do() {
-  BOOST_LOG_TRIVIAL(debug) << "FileCommand: do";
+void CreateFileCommand::Do() {
+  BOOST_LOG_TRIVIAL(debug) << "CreateFileCommand: do";
 
   auto storageConfig = ClientConfig::getStorageConfig();
   auto syncConfig = ClientConfig::getSyncConfig();
   auto network = ClientNetwork();
 
-  Indexer indexer(_internalDB);
-  auto fileMeta = indexer.GetFileMeta(_filePath, _isDeleted, _newFilePath);
-  if (fileMeta.isDeleted) {
-    _internalDB->DeleteFile(fileMeta.fileId);
-  }
-  std::vector<Chunk> chunkVector;
+  File file(_filePath.string());
+  Chunker chunker(file);
+  auto chunkVector = chunker.ChunkFile();
 
-  if (!fileMeta.isDeleted) {
-    File file(_filePath.string());
-    Chunker chunker(file);
-    chunkVector = chunker.ChunkFile();
-  }
+  Indexer indexer(_internalDB);
+  auto fileMeta = indexer.CreateFile(_filePath, chunkVector.size());
   auto fileInfo = indexer.GetFileInfo(fileMeta, chunkVector);
 
-  if (!fileMeta.isDeleted) {
-    auto storageRequest = SerializerChunk(0, chunkVector).GetJson();
-    pt::ptree responseStorage;
-    try {
-      sendAndReceive(network, storageConfig, storageRequest, responseStorage);
-    } catch (NetworkException &er) {
-      callbackError(er.what());
-      return;
-    }
+  auto storageRequest = SerializerChunk(0, chunkVector).GetJson();
+  pt::ptree responseStorage;
+  try {
+    sendAndReceive(network, storageConfig, storageRequest, responseStorage);
+  } catch (NetworkException &er) {
+    callbackError(er.what());
+    return;
+  }
 
-    auto responseStorageStatus = SerializerAnswer(responseStorage).GetStatus();
-    bool isError = false;
-    std::visit(overloaded{
-        [&](const StatusOk &val) {
-          BOOST_LOG_TRIVIAL(info) << "FileCommand: Status Ok sync";
-        },
-        [&](const StatusError &val) {
-          BOOST_LOG_TRIVIAL(error) << "FileCommand: Status Error sync";
-          auto error = std::get<StatusError>(responseStorageStatus);
-          callbackError(error.msg);
-          isError = true;
-        }
-    }, responseStorageStatus);
-    if (isError) {
-      return;
-    }
+  if (visitAnswer(SerializerAnswer(responseStorage).GetStatus())) {
+    return;
   }
 
   auto syncRequest = SerializerFileInfo(0, fileInfo).GetJson();
@@ -212,17 +290,135 @@ void FileCommand::Do() {
     return;
   }
 
-  auto responseSyncStatus = SerializerAnswer(responseSync).GetStatus();
-  std::visit(overloaded{
-      [&](const StatusOk &val) {
-        BOOST_LOG_TRIVIAL(info) << "FileCommand: Status Ok sync";
-      },
-      [&](const StatusError &val) {
-        BOOST_LOG_TRIVIAL(error) << "FileCommand: Status Error sync";
-        auto error = std::get<StatusError>(responseSyncStatus);
-        callbackError(error.msg);
-      }
-  }, responseSyncStatus);
+  if (visitAnswer(SerializerAnswer(responseSync).GetStatus())) {
+    return;
+  }
+
+  callbackOk("Файл обновлен");
+}
+
+ModifyFileCommand::ModifyFileCommand(std::function<void(const std::string &)> callbackOk,
+                                     std::function<void(const std::string &)> callbackError,
+                                     std::shared_ptr<InternalDB> internalDB,
+                                     fs::path path)
+    : BaseCommand(std::move(callbackOk), std::move(callbackError), std::move(internalDB)),
+      _filePath(std::move(path)) {
+  BOOST_LOG_TRIVIAL(debug) << "ModifyFileCommand: create command";
+}
+
+void ModifyFileCommand::Do() {
+  BOOST_LOG_TRIVIAL(debug) << "ModifyFileCommand: do";
+
+  auto storageConfig = ClientConfig::getStorageConfig();
+  auto syncConfig = ClientConfig::getSyncConfig();
+  auto network = ClientNetwork();
+
+  File file(_filePath.string());
+  Chunker chunker(file);
+  auto chunkVector = chunker.ChunkFile();
+
+  Indexer indexer(_internalDB);
+  auto fileMeta = indexer.ModifyFile(_filePath, chunkVector.size());
+  auto fileInfo = indexer.GetFileInfo(fileMeta, chunkVector);
+
+  auto storageRequest = SerializerChunk(0, chunkVector).GetJson();
+  pt::ptree responseStorage;
+  try {
+    sendAndReceive(network, storageConfig, storageRequest, responseStorage);
+  } catch (NetworkException &er) {
+    callbackError(er.what());
+    return;
+  }
+
+  if (visitAnswer(SerializerAnswer(responseStorage).GetStatus())) {
+    return;
+  }
+
+  auto syncRequest = SerializerFileInfo(0, fileInfo).GetJson();
+  pt::ptree responseSync;
+  try {
+    sendAndReceive(network, syncConfig, syncRequest, responseSync);
+  } catch (NetworkException &er) {
+    callbackError(er.what());
+    return;
+  }
+
+  if (visitAnswer(SerializerAnswer(responseSync).GetStatus())) {
+    return;
+  }
+
+  callbackOk("Файл обновлен");
+}
+
+RenameFileCommand::RenameFileCommand(std::function<void(const std::string &)> callbackOk,
+                                     std::function<void(const std::string &)> callbackError,
+                                     std::shared_ptr<InternalDB> internalDB,
+                                     fs::path oldPath,
+                                     fs::path newPath)
+    : BaseCommand(std::move(callbackOk), std::move(callbackError), std::move(internalDB)),
+      _fileOldPath(std::move(oldPath)),
+      _fileNewPath(std::move(newPath)) {
+  BOOST_LOG_TRIVIAL(debug) << "RenameFileCommand: create command";
+}
+
+void RenameFileCommand::Do() {
+  BOOST_LOG_TRIVIAL(debug) << "RenameFileCommand: do";
+
+  auto storageConfig = ClientConfig::getStorageConfig();
+  auto syncConfig = ClientConfig::getSyncConfig();
+  auto network = ClientNetwork();
+
+  Indexer indexer(_internalDB);
+  auto fileMeta = indexer.RenameFile(_fileOldPath, _fileNewPath);
+  auto fileInfo = indexer.GetRenameFileInfo(fileMeta);
+
+  auto syncRequest = SerializerFileInfo(0, fileInfo).GetJson();
+  pt::ptree responseSync;
+  try {
+    sendAndReceive(network, syncConfig, syncRequest, responseSync);
+  } catch (NetworkException &er) {
+    callbackError(er.what());
+    return;
+  }
+
+  if (visitAnswer(SerializerAnswer(responseSync).GetStatus())) {
+    return;
+  }
+
+  callbackOk("Файл обновлен");
+}
+
+DeleteFileCommand::DeleteFileCommand(std::function<void(const std::string &)> callbackOk,
+                                     std::function<void(const std::string &)> callbackError,
+                                     std::shared_ptr<InternalDB> internalDB,
+                                     fs::path path)
+    : BaseCommand(std::move(callbackOk), std::move(callbackError), std::move(internalDB)),
+      _filePath(std::move(path)) {
+  BOOST_LOG_TRIVIAL(debug) << "DeleteFileCommand: create command";
+}
+
+void DeleteFileCommand::Do() {
+  BOOST_LOG_TRIVIAL(debug) << "RenameFileCommand: do";
+
+  auto syncConfig = ClientConfig::getSyncConfig();
+  auto network = ClientNetwork();
+
+  Indexer indexer(_internalDB);
+  auto fileMeta = indexer.DeleteFile(_filePath);
+  auto fileInfo = indexer.GetDeleteFileInfo(fileMeta);
+
+  auto syncRequest = SerializerFileInfo(0, fileInfo).GetJson();
+  pt::ptree responseSync;
+  try {
+    sendAndReceive(network, syncConfig, syncRequest, responseSync);
+  } catch (NetworkException &er) {
+    callbackError(er.what());
+    return;
+  }
+
+  if (visitAnswer(SerializerAnswer(responseSync).GetStatus())) {
+    return;
+  }
 
   callbackOk("Файл обновлен");
 }
