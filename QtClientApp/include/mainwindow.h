@@ -22,9 +22,11 @@
 #include <optional>
 #include <iostream>
 #include <vector>
+
 #include "App.h"
 #include "AppExceptions.h"
 #include "structs/FileMeta.h"
+#include <QShortcut>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -49,21 +51,21 @@ class MainWindow : public QMainWindow, public QStandardItem {
   void stopLoadingLabel();
 
  private:
-  void downloadFileCallbackOk();
-  void downloadFileCallbackError(const std::string &msg);
-  void refreshCallbackOk();
-  void refreshCallbackError(const std::string &msg);
-  void uploadFileCallbackOk();
-  void uploadFileCallbackError(const std::string &msg);
+  void callbackOk(const std::string &msg);
+  void callbackError(const std::string &msg);
 
  private:
   void printMsgBox();
   QString _msg;
 
+  void printInfoBox(const QString &title, const QString &text);
+
  signals:
   void printMsgBoxSignal();
 
  private slots:
+  void slotShortcutCMDR();
+
   void slotCustomMenuRequested(QPoint pos);
   void changeDirectory();
   void open_file();
@@ -81,7 +83,8 @@ class MainWindow : public QMainWindow, public QStandardItem {
 
  private:
   Ui::MainWindow *ui;
-  QWidget* _settingsForm;
+  QShortcut *keyCMDR;
+  QWidget *_settingsForm;
   QMovie *_movie;
   QStandardItemModel _cloudModel;
   std::vector<FileMeta> _filesInfo;

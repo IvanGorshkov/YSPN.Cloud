@@ -6,8 +6,8 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
       ui(new Ui::MainWindow),
-      _app(std::bind(&MainWindow::downloadFileCallbackOk, this),
-           std::bind(&MainWindow::downloadFileCallbackError, this, std::placeholders::_1)) {
+      _app(std::bind(&MainWindow::callbackOk, this, std::placeholders::_1),
+           std::bind(&MainWindow::callbackError, this, std::placeholders::_1)) {
   ui->setupUi(this);
 
   ui->centralwidget->setMinimumSize(800, 550);
@@ -17,6 +17,7 @@ MainWindow::MainWindow(QWidget *parent)
   ui->treeView->setEditTriggers(QAbstractItemView::NoEditTriggers);
   ui->treeView->setContextMenuPolicy(Qt::CustomContextMenu);
   ui->lb_loading->setHidden(true);
+
   updateFiles();
 
   connect(ui->treeView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slotCustomMenuRequested(QPoint)));
@@ -25,6 +26,10 @@ MainWindow::MainWindow(QWidget *parent)
   connect(ui->btn_About, SIGNAL(clicked(bool)), this, SLOT(onBtnAbout()));
   connect(ui->btn_Settings, SIGNAL(clicked(bool)), this, SLOT(onBtnSettings()));
   connect(this, &MainWindow::printMsgBoxSignal, this, &MainWindow::printMsgBox);
+
+  keyCMDR = new QShortcut(this);
+  keyCMDR->setKey(Qt::Key_R);
+  connect(keyCMDR, SIGNAL(activated()), this, SLOT(slotShortcutCMDR()));
 }
 
 MainWindow::~MainWindow() {
@@ -37,6 +42,10 @@ void MainWindow::printMsgBox() {
   msgBox.setText(mes);
   if (msgBox.exec())
     stopLoadingLabel();
+}
+
+void MainWindow::printInfoBox(const QString &title, const QString &text) {
+  QMessageBox::information(this, title, text);
 }
 
 FileMeta &MainWindow::getFile() {
@@ -72,36 +81,14 @@ void MainWindow::updateFiles() {
   stopLoadingLabel();
 }
 
-void MainWindow::downloadFileCallbackOk() {
-  _msg = "Download complete";
+void MainWindow::callbackOk(const std::string &msg) {
+  _msg = QString::fromStdString(msg);
   Q_EMIT printMsgBoxSignal();
   updateFiles();
 }
 
-void MainWindow::downloadFileCallbackError(const std::string &msg) {
-  _msg = "Download error: " + QString::fromStdString(msg);
-  Q_EMIT printMsgBoxSignal();
-}
-
-void MainWindow::refreshCallbackOk() {
-  _msg = "refresh complete";
-  Q_EMIT printMsgBoxSignal();
-  updateFiles();
-}
-
-void MainWindow::refreshCallbackError(const std::string &msg) {
-  _msg = "refresh error: " + QString::fromStdString(msg);
-  Q_EMIT printMsgBoxSignal();
-}
-
-void MainWindow::uploadFileCallbackOk() {
-  _msg = "upload complete";
-  Q_EMIT printMsgBoxSignal();
-  updateFiles();
-}
-
-void MainWindow::uploadFileCallbackError(const std::string &msg) {
-  _msg = "upload error: " + QString::fromStdString(msg);
+void MainWindow::callbackError(const std::string &msg) {
+  _msg = QString::fromStdString(msg);
   Q_EMIT printMsgBoxSignal();
 }
 
@@ -292,12 +279,10 @@ void MainWindow::open_file() {
   auto fileMeta = getFile();
 
   if (fileMeta.isDownload) {
-    // TODO проверить количетсво слешей
     QString path = "file://" + QString::fromStdString(getAbsoluteFilePath(fileMeta));
     QDesktopServices::openUrl(QUrl(path));
   } else {
-    _msg = "File not downloaded";
-    Q_EMIT printMsgBoxSignal();
+    printInfoBox("Открытие файлы", "Файл не скачан на устройство");
   }
 }
 
@@ -307,8 +292,7 @@ void MainWindow::save_file() {
   if (fileMeta.isDownload) {
     _app.ModifyFile(getAbsoluteFilePath(fileMeta));
   } else {
-    _msg = "File not downloaded";
-    Q_EMIT printMsgBoxSignal();
+    printInfoBox("Сохранение", "Файл не скачан на устройство");
   }
 }
 
@@ -317,44 +301,40 @@ void MainWindow::rename_file() {
 
   if (fileMeta.isDownload) {
     bool ok;
-    QString text = QInputDialog::getText(this, tr("Rename"),
-                                         tr("File name:"), QLineEdit::Normal,
+    QString text = QInputDialog::getText(this, tr("Переименование"),
+                                         tr("Имя файла:"), QLineEdit::Normal,
                                          QString::fromStdString(fileMeta.fileName), &ok);
 
     QString oldPath = QString::fromStdString(getAbsoluteFilePath(fileMeta));
     if (ok && !text.isEmpty()) {
       fileMeta.fileName = text.toStdString();
+    } else {
+      return;
     }
     QString newPath = QString::fromStdString(getAbsoluteFilePath(fileMeta));
 
     QFile::rename(oldPath, newPath);
     _app.RenameFile(oldPath.toStdString(), newPath.toStdString());
   } else {
-    _msg = "File not downloaded";
-    Q_EMIT printMsgBoxSignal();
+    printInfoBox("Переименование", "Файл не скачан на устройство");
   }
 }
 
 void MainWindow::download_on_device() {
-  int idFile = getFileId();
+  auto fileMeta = getFile();
 
-  try {
+  if (!fileMeta.isDownload) {
     QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, "Rename", "Are you sure you want to download the file?",
+    reply = QMessageBox::question(this, "Скачивание", "Вы действительно хотите скачать файл?",
                                   QMessageBox::Cancel | QMessageBox::Ok);
     if (reply == QMessageBox::Cancel) {
       return;
     }
 
-    qDebug() << "FileId = " << idFile;
+    _app.DownloadFile(fileMeta.fileId);
 
-    _app.DownloadFile(idFile,
-                      std::bind(&MainWindow::downloadFileCallbackOk, this),
-                      std::bind(&MainWindow::downloadFileCallbackError, this, std::placeholders::_1));
-
-  } catch (FileDownloadedException &er) {
-    _msg = "File is already downloaded";
-    Q_EMIT printMsgBoxSignal();
+  } else {
+    printInfoBox("Скачивание", "Файл уже скачан на устройство");
   }
 }
 
@@ -363,7 +343,7 @@ void MainWindow::delete_from_device() {
 
   if (fileMeta.isDownload) {
     QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, "Delete", "Are you sure you want to delete the file from the device?",
+    reply = QMessageBox::question(this, "Удаление", "Вы действительно хотите удалить файл?",
                                   QMessageBox::Cancel | QMessageBox::Ok);
 
     if (reply == QMessageBox::Cancel) {
@@ -375,8 +355,7 @@ void MainWindow::delete_from_device() {
     QFile::remove(path);
     _app.DeleteFile(path.toStdString());
   } else {
-    _msg = "File not downloaded";
-    Q_EMIT printMsgBoxSignal();
+    printInfoBox("Удаление", "Файл не скачан на устройство");
   }
 }
 
@@ -391,37 +370,46 @@ void MainWindow::view_history_file() {
 void MainWindow::view_properties() {
   auto fileMeta = getFile();
 
-  QString actionsWithFile;
-  QString isDownload = (fileMeta.isDownload) ? "да" : "нет";
+  if (fileMeta.isDownload) {
+    QString actionsWithFile;
+    QString isDownload = (fileMeta.isDownload) ? "да" : "нет";
 
-  QString sizeOfFile = QString::number(fileMeta.fileSize) + "Байт";
-  if ((fileMeta.fileSize >= 1024) && (fileMeta.fileSize < 1048576))
-    sizeOfFile = QString::number(fileMeta.fileSize / 1024) + "Кб";
-  else {
-    if ((fileMeta.fileSize >= 1048576) && (fileMeta.fileSize < 1073741824))
-      sizeOfFile = QString::number(fileMeta.fileSize / 1048576) + "Мб";
-    else
-      sizeOfFile = QString::number(fileMeta.fileSize / 1073741824) + "Гб";
+    QString fileSizeName;
+    QStringList sizeName = {"Байт", "Кб", "Мб", "Гб"};
+    auto fileSize = fileMeta.fileSize;
+    int i = 0;
+
+    while (fileSize) {
+      if (fileSize < 1024) {
+        fileSizeName = sizeName[i];
+        break;
+      }
+
+      fileSize /= 1024;
+      i++;
+    }
+
+    QString size = "Размер файла: " + QString::number(fileSize) + ' ' + fileSizeName + "\n";
+    QString version = "Версия файла: " + QString::number(fileMeta.version) + "\n";
+    QString download = "Файл скачан на устройство: " + isDownload + "\n";
+    QString dateUpdate = "Дата изменения: " + QString::fromStdString(fileMeta.updateDate) + "\n";
+    QString dateCreate = "Дата создания: " + QString::fromStdString(fileMeta.createDate) + "\n";
+    actionsWithFile.append(size);
+    actionsWithFile.append(version);
+    actionsWithFile.append(download);
+    actionsWithFile.append(dateUpdate);
+    actionsWithFile.append(dateCreate);
+
+    QMessageBox msg;
+    QFont f;
+    f.setPointSize(16);
+    msg.setWindowTitle("Свойства");
+    msg.setText(actionsWithFile);
+    msg.setFont(f);
+    msg.exec();
+  } else {
+    printInfoBox("Свойства", "Файл не скачан на устройство");
   }
-
-  QString size = "Размер файла: " + sizeOfFile + "\n";
-  QString version = "Версия файла: " + QString::number(fileMeta.version) + "\n";
-  QString download = "Файл скачан на устройство: " + isDownload + "\n";
-  QString dateUpdate = "Дата последнего обновления: " + QString::fromStdString(fileMeta.updateDate) + "\n";
-  QString dateCreate = "Дата создания: " + QString::fromStdString(fileMeta.createDate) + "\n";
-  actionsWithFile.append(size);
-  actionsWithFile.append(version);
-  actionsWithFile.append(download);
-  actionsWithFile.append(dateUpdate);
-  actionsWithFile.append(dateCreate);
-
-  QMessageBox msg;
-  QFont f;
-  f.setPointSize(16);
-  msg.setWindowTitle("Свойства");
-  msg.setText(actionsWithFile);
-  msg.setFont(f);
-  msg.exec();
 }
 
 void MainWindow::onBtnSettings() {
@@ -461,18 +449,20 @@ void MainWindow::onBtnSettings() {
 
 void MainWindow::onBtnRefresh() {
   startLoadingLabel();
-  _app.Refresh(std::bind(&MainWindow::refreshCallbackOk, this),
-               std::bind(&MainWindow::refreshCallbackError, this, std::placeholders::_1));
+  _app.Refresh();
 }
 
 void MainWindow::onBtnAddFile() {
-  startLoadingLabel();
   QFileDialog dialog;
   dialog.setDirectory(QString::fromStdString(_app.GetSyncFolder()));
   dialog.setFileMode(QFileDialog::AnyFile);
   if (dialog.exec()) {
-    for (auto &file : dialog.selectedFiles()) {
-      _app.UploadFile(file.toStdString());
+    startLoadingLabel();
+    for (auto &filePath : dialog.selectedFiles()) {
+      QFileInfo file(filePath);
+      QString newPath = QString::fromStdString(_app.GetSyncFolder() + '/' + file.fileName().toStdString());
+      QFile::copy(filePath, newPath);
+      _app.UploadFile(newPath.toStdString());
     }
   }
 }
@@ -490,6 +480,10 @@ void MainWindow::onBtnAbout() {
   msgBox.setFont(font);
   msgBox.show();
   msgBox.exec();
+}
+
+void MainWindow::slotShortcutCMDR() {
+  updateFiles();
 }
 
 void MainWindow::startLoadingLabel() {

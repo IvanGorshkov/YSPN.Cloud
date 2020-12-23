@@ -38,10 +38,10 @@ InternalDB::InternalDB(std::string databaseName)
 
 //MARK: Работа с Files
 
-bool InternalDB::IsFileExist(const int idFile) {
+bool InternalDB::IsFileExist(const int &fileId) {
 //  if (!connect()) { throw InternalExceptions("Don't connect"); }
-  std::string query = "SELECT count(*) FROM Files Where id=" + std::to_string(idFile) + ";";
-  BOOST_LOG_TRIVIAL(debug) << "InternalDB: Check exist file id=" + std::to_string(idFile);
+  std::string query = "SELECT count(*) FROM Files Where id=" + std::to_string(fileId) + ";";
+  BOOST_LOG_TRIVIAL(debug) << "InternalDB: Check exist file id=" + std::to_string(fileId);
   int count = selectId(query);
 //  close();
   return count != 0;
@@ -131,10 +131,10 @@ void InternalDB::insertOneFile(FileMeta &file) {
   insert(query);
 }
 
-void InternalDB::InsertFile(const std::vector<FileMeta> &files) {
+void InternalDB::InsertFile(std::vector<FileMeta> &files) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Insert Files";
-  for (const auto &file: files) {
+  for (auto &file: files) {
     insertOneFile(file);
   }
   close();
@@ -158,11 +158,11 @@ void InternalDB::UpdateFile(const FileMeta &file) {
   close();
 }
 
-FileMeta InternalDB::SelectFile(size_t idFile) {
+FileMeta InternalDB::SelectFile(const int &fileId) {
   FileMeta file;
   if (!connect()) { throw InternalExceptions("Don't connect"); }
-  std::string query = "SELECT * FROM Files Where id = " + std::to_string(idFile) + ";";
-  BOOST_LOG_TRIVIAL(debug) << "InternalDB: Select File by id = " << std::to_string(idFile);
+  std::string query = "SELECT * FROM Files Where id = " + std::to_string(fileId) + ";";
+  BOOST_LOG_TRIVIAL(debug) << "InternalDB: Select File by id = " << std::to_string(fileId);
   auto pStmt = _stmt.get();
   sqlite3_prepare_v2(_database.get(), query.c_str(), query.size(), &pStmt, nullptr);
   _stmt.reset(pStmt);
@@ -171,8 +171,8 @@ FileMeta InternalDB::SelectFile(size_t idFile) {
     file = getOneFile();
     BOOST_LOG_TRIVIAL(debug) << "InternalDB: Selected";
   } else {
-    BOOST_LOG_TRIVIAL(error) << "File by id = " + std::to_string(idFile) + " don't exist";;
-    throw InternalExceptions("File by id = " + std::to_string(idFile) + " don't exist");
+    BOOST_LOG_TRIVIAL(error) << "File by id = " + std::to_string(fileId) + " don't exist";;
+    throw InternalExceptions("File by id = " + std::to_string(fileId) + " don't exist");
   }
 
   close();
@@ -210,27 +210,27 @@ std::vector<FileMeta> InternalDB::SelectAllFiles() {
   return files;
 }
 
-void InternalDB::DeleteFile(const FileMeta &filesInfo) {
+void InternalDB::DeleteFile(const int &fileId) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
-  std::string query = "DELETE FROM Files WHERE id = " + std::to_string(filesInfo.fileId) + ";";
+  std::string query = "DELETE FROM Files WHERE id = " + std::to_string(fileId) + ";";
   deleteInfo(query);
-  query = "DELETE FROM Chunks WHERE id_file = " + std::to_string(filesInfo.fileId) + ";";
+  query = "DELETE FROM Chunks WHERE id_file = " + std::to_string(fileId) + ";";
   deleteInfo(query);
   close();
 }
 
-void InternalDB::DowloadFile(const FileMeta &filesInfo) {
+void InternalDB::DownloadFile(const int &fileId) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
   std::string query = "UPDATE Files set is_download = true where id = " +
-      std::to_string(filesInfo.fileId) + " ;";
+      std::to_string(fileId) + " ;";
   update(query);
   close();
 }
 
-int InternalDB::FindIdFile(const std::string &path, const std::string &name, const std::string &extention) {
+int InternalDB::FindIdFile(const std::string &path, const std::string &name, const std::string &extension) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
   std::string query = "SELECT id FROM Files Where file_path like '" + path + "' and file_name like '" + name
-      + "' and file_extention like '" + extention + "';";
+      + "' and file_extention like '" + extension + "';";
   auto id = selectId(query);
   close();
   return id;
@@ -253,10 +253,10 @@ void InternalDB::updateOneChunk(FileChunksMeta &chunk, const int id) {
   InsertChunk(chunk, id);
 }
 
-std::vector<UserChunk> InternalDB::GetUsersChunks(const int idFile) {
+std::vector<UserChunk> InternalDB::GetFileChunks(const int &fileId) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
   std::vector<UserChunk> userChunks;
-  std::string query = "SELECT id FROM Chunks Where id_file = " + std::to_string(idFile) + ";";
+  std::string query = "SELECT id FROM Chunks Where id_file = " + std::to_string(fileId) + ";";
   auto pStmt = _stmt.get();
   sqlite3_prepare_v2(_database.get(), query.c_str(), query.size(), &pStmt, nullptr);
   _stmt.reset(pStmt);

@@ -21,20 +21,20 @@ namespace fs = boost::filesystem;
 
 class BaseCommand {
  public:
-  explicit BaseCommand(std::function<void()> callbackOk,
+  explicit BaseCommand(std::function<void(const std::string &msg)> callbackOk,
                        std::function<void(const std::string &msg)> callbackError,
                        std::shared_ptr<InternalDB> internalDB);
   virtual ~BaseCommand() = default;
   virtual void Do() = 0;
 
  protected:
-  static void connect(ClientNetwork &network,
-                      const NetworkConfig &config,
-                      const pt::ptree &request,
-                      pt::ptree &response) noexcept(false);
+  static void sendAndReceive(ClientNetwork &network,
+                             const NetworkConfig &config,
+                             const pt::ptree &request,
+                             pt::ptree &response) noexcept(false);
 
  protected:
-  std::function<void()> callbackOk;
+  std::function<void(const std::string &msg)> callbackOk;
   std::function<void(const std::string &msg)> callbackError;
 
  protected:
@@ -43,7 +43,7 @@ class BaseCommand {
 
 class RefreshCommand : public BaseCommand {
  public:
-  explicit RefreshCommand(std::function<void()> callbackOk,
+  explicit RefreshCommand(std::function<void(const std::string &msg)> callbackOk,
                           std::function<void(const std::string &msg)> callbackError,
                           std::shared_ptr<InternalDB> internalDB);
   void Do() override;
@@ -51,7 +51,7 @@ class RefreshCommand : public BaseCommand {
 
 class DownloadFileCommand : public BaseCommand {
  public:
-  explicit DownloadFileCommand(std::function<void()> callbackOk,
+  explicit DownloadFileCommand(std::function<void(const std::string &msg)> callbackOk,
                                std::function<void(const std::string &msg)> callbackError,
                                std::shared_ptr<InternalDB> internalDB,
                                FileMeta &file);
@@ -63,7 +63,7 @@ class DownloadFileCommand : public BaseCommand {
 
 class FileCommand : public BaseCommand {
  public:
-  explicit FileCommand(std::function<void()> callbackOk,
+  explicit FileCommand(std::function<void(const std::string &msg)> callbackOk,
                        std::function<void(const std::string &msg)> callbackError,
                        std::shared_ptr<InternalDB> internalDB,
                        fs::path path,

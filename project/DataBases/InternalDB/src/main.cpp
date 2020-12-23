@@ -33,7 +33,7 @@ int main() {
   std::vector<FileInfo> f;
   f.push_back(fileInfo);
   myDB.InsertOrUpdateFileInfo(fileInfo);
-  myDB.GetUsersChunks(3);
+  myDB.GetFileChunks(3);
   int a = myDB.FindIdFile("static/", "test", "txt");
   std::cout << a << std::endl;
   myDB.GetLastUpdate();

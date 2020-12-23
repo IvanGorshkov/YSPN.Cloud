@@ -17,23 +17,21 @@ namespace fs = boost::filesystem;
 
 class App {
  public:
-  App(const std::function<void()> &callbackOk,
+  App(const std::function<void(const std::string &msg)> &callbackOk,
       const std::function<void(const std::string &msg)> &callbackError);
   ~App();
-  void Refresh(const std::function<void()> &callbackOk,
-               const std::function<void(const std::string &msg)> &callbackError);
+
+  void Refresh();
 
   std::vector<FileMeta> GetFiles();
-  void DownloadFile(int fileId,
-                    const std::function<void()> &callbackOk,
-                    const std::function<void(const std::string &msg)> &callbackError) noexcept(false);
+  void DownloadFile(int fileId) noexcept(false);
 
-  void UploadFile(const fs::path &path);
-  void RenameFile(const fs::path &oldPath, const fs::path &newPath);
+  void UploadFile(const fs::path &path) noexcept(false);
+  void RenameFile(const fs::path &oldPath, const fs::path &newPath) noexcept(false);
   void DeleteFile(const fs::path &path);
-  void ModifyFile(const fs::path &path);
+  void ModifyFile(const fs::path &path) noexcept(false);
 
-  void UpdateSyncFolder(const fs::path &path);
+  void UpdateSyncFolder(const fs::path &path) noexcept(false);
   std::string GetSyncFolder();
 
  private:
@@ -46,8 +44,8 @@ class App {
   void watcherCallback(CloudNotification event);
 
  private:
-  std::function<void()> ok;
-  std::function<void(const std::string &msg)> ne0k;
+  std::function<void(const std::string &msg)> appCallbackOk;
+  std::function<void(const std::string &msg)> appCallbackError;
 
  private:
   std::queue<std::shared_ptr<BaseCommand>> _commands;

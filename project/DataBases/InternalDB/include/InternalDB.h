@@ -26,28 +26,38 @@ class InternalDB {
  public:
   explicit InternalDB(std::string databaseName);
   int GetUserId() const;
-  int GetDeviceId() const;
+
   std::string GetSyncFolder() const;
-  void InsertUser(const User &user);
-  void DeleteUser(size_t id);
   void UpdateSyncFolder(const std::string &newFolder);
-  void UpdatePassword(const std::string &newPassword);
-  std::string SelectUserPassword();
-  void InsertFile(const std::vector<FileMeta> &files);
-  FileMeta SelectFile(size_t idFile);
-  void InsertChunk(FileChunksMeta& chunks, const int idFile) ;
-  void SelectChunk();
-  void UpdateFile(const FileMeta &file);
+
+  FileMeta SelectFile(const int &fileId);
+
   UserDate GetLastUpdate();
   void SaveLastUpdate();
-  void InsertOrUpdateFileInfo(FileInfo& fileInfo);
+
   std::vector<FileMeta> SelectAllFiles();
-  void InsertOrUpdateFilesInfo(std::vector<FileInfo>& filesInfo);
-  std::vector<UserChunk> GetUsersChunks(const int idFile);
-  bool IsFileExist(const int idFile);
-  void DeleteFile(const FileMeta& filesInfo);
-  void DowloadFile(const FileMeta& filesInfo);
-  int FindIdFile(const std::string& path, const std::string& name, const std::string& extention);
+
+  void InsertOrUpdateFileInfo(FileInfo &fileInfo);
+
+  std::vector<UserChunk> GetFileChunks(const int &fileId);
+
+  bool IsFileExist(const int &fileId);
+  void DeleteFile(const int &fileId);
+  void DownloadFile(const int &fileId);
+  int FindIdFile(const std::string &path, const std::string &name, const std::string &extension);
+
+  int GetDeviceId() const;
+  void InsertUser(const User &user);
+  void DeleteUser(size_t id);
+  void UpdatePassword(const std::string &newPassword);
+  std::string SelectUserPassword();
+
+  void SelectChunk();
+  void InsertChunk(FileChunksMeta &chunks, int idFile);
+
+  void UpdateFile(const FileMeta &file);
+  void InsertFile(std::vector<FileMeta> &files);
+  void InsertOrUpdateFilesInfo(std::vector<FileInfo> &filesInfo);
 
  private:
   std::string _databaseName;
@@ -55,7 +65,7 @@ class InternalDB {
   int _deviceId;
   std::string _syncFolder;
   std::string _lastUpdate;
-  std::string  _lastTMPUpdate;
+  std::string _lastTMPUpdate;
   std::unique_ptr<sqlite3, sqlite3_deleter> _database;
   std::unique_ptr<sqlite3_stmt, sqlite3_stmt_deleter> _stmt;
   int selectDeviceId();
@@ -75,5 +85,5 @@ class InternalDB {
   void insertOneFile(FileMeta &file);
   void updateOneFile(FileMeta &file);
   void updateOneChunk(FileChunksMeta &chunk, const int id);
-  std::string getTime(std::string& time);
+  std::string getTime(std::string &time);
 };

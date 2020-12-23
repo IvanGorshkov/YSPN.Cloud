@@ -6,7 +6,7 @@
 
 namespace pt = boost::property_tree;
 
-BaseCommand::BaseCommand(std::function<void()> callbackOk,
+BaseCommand::BaseCommand(std::function<void(const std::string &msg)> callbackOk,
                          std::function<void(const std::string &msg)> callbackError,
                          std::shared_ptr<InternalDB> internalDB)
     : callbackOk(std::move(callbackOk)),
@@ -15,10 +15,10 @@ BaseCommand::BaseCommand(std::function<void()> callbackOk,
   BOOST_LOG_TRIVIAL(debug) << "BaseCommand: create command";
 }
 
-void BaseCommand::connect(ClientNetwork &network,
-                          const NetworkConfig &config,
-                          const pt::ptree &request,
-                          pt::ptree &response) noexcept(false) {
+void BaseCommand::sendAndReceive(ClientNetwork &network,
+                                 const NetworkConfig &config,
+                                 const pt::ptree &request,
+                                 pt::ptree &response) noexcept(false) {
   try {
     network.Connect(config.host, config.port);
     network.SendJSON(request);
@@ -32,7 +32,7 @@ void BaseCommand::connect(ClientNetwork &network,
   network.Disconnect();
 }
 
-RefreshCommand::RefreshCommand(std::function<void()> callbackOk,
+RefreshCommand::RefreshCommand(std::function<void(const std::string &msg)> callbackOk,
                                std::function<void(const std::string &msg)> callbackError,
                                std::shared_ptr<InternalDB> internalDB)
     : BaseCommand(std::move(callbackOk), std::move(callbackError), std::move(internalDB)) {
@@ -50,7 +50,7 @@ void RefreshCommand::Do() {
 
   pt::ptree response;
   try {
-    connect(network, syncConfig, request, response);
+    sendAndReceive(network, syncConfig, request, response);
   } catch (NetworkException &er) {
     callbackError(er.what());
     return;
@@ -60,13 +60,26 @@ void RefreshCommand::Do() {
     auto fileInfo = SerializerFileInfo(response).GetFileInfo();
     BOOST_LOG_TRIVIAL(info) << "RefreshCommand: get fileInfo";
 
-    std::for_each(fileInfo.begin(), fileInfo.end(), [](FileInfo &file_info) {
-      file_info.file.isDownload = false;
+    std::for_each(fileInfo.begin(), fileInfo.end(), [&](FileInfo &oneFileInfo) {
+      oneFileInfo.file.isDownload = false;
+
+      if (oneFileInfo.file.isDeleted) {
+        File::Delete(_internalDB->GetSyncFolder() + oneFileInfo.file.GetFilePath());
+        _internalDB->DeleteFile(oneFileInfo.file.fileId);
+        return;
+      }
+
+      if (_internalDB->IsFileExist(oneFileInfo.file.fileId)) {
+        auto fileDB = _internalDB->SelectFile(oneFileInfo.file.fileId);
+        if (fileDB.isDownload) {
+          File::Delete(_internalDB->GetSyncFolder() + fileDB.GetFilePath());
+        }
+      }
+      _internalDB->InsertOrUpdateFileInfo(oneFileInfo);
     });
 
-    _internalDB->InsertOrUpdateFilesInfo(fileInfo);
     _internalDB->SaveLastUpdate();
-    callbackOk();
+    callbackOk("Обновление завершено");
     return;
 
   } catch (ParseException &er) {
@@ -78,7 +91,7 @@ void RefreshCommand::Do() {
   }
 }
 
-DownloadFileCommand::DownloadFileCommand(std::function<void()> callbackOk,
+DownloadFileCommand::DownloadFileCommand(std::function<void(const std::string &msg)> callbackOk,
                                          std::function<void(const std::string &msg)> callbackError,
                                          std::shared_ptr<InternalDB> internalDB,
                                          FileMeta &file)
@@ -93,12 +106,12 @@ void DownloadFileCommand::Do() {
   auto storageConfig = ClientConfig::getStorageConfig();
   auto network = ClientNetwork();
 
-  auto userChunkVector = _internalDB->GetUsersChunks(_file.fileId);
+  auto userChunkVector = _internalDB->GetFileChunks(_file.fileId);
   auto request = SerializerUserChunk(0, userChunkVector).GetJson();
 
   pt::ptree response;
   try {
-    connect(network, storageConfig, request, response);
+    sendAndReceive(network, storageConfig, request, response);
   } catch (NetworkException &er) {
     callbackError(er.what());
     return;
@@ -108,16 +121,15 @@ void DownloadFileCommand::Do() {
     auto chunks = SerializerChunk(response).GetChunk();
     BOOST_LOG_TRIVIAL(info) << "DownloadFileCommand: get chunks";
 
-    std::string filePath = _internalDB->GetSyncFolder() + _file.filePath + "/" + _file.fileName + _file.fileExtension;
-    std::cout << filePath << std::endl;
+    auto filePath = _internalDB->GetSyncFolder() + _file.GetFilePath();
+    BOOST_LOG_TRIVIAL(info) << "DownloadFileCommand: download file " << filePath;
 
     File file(filePath);
     Chunker chunker(file);
     chunker.MergeFile(chunks);
 
-    _internalDB->DowloadFile(_file);
-
-    callbackOk();
+    _internalDB->DownloadFile(_file.fileId);
+    callbackOk("Загрузка завершена");
     return;
 
   } catch (ParseException &er) {
@@ -129,7 +141,7 @@ void DownloadFileCommand::Do() {
   }
 }
 
-FileCommand::FileCommand(std::function<void()> callbackOk,
+FileCommand::FileCommand(std::function<void(const std::string &msg)> callbackOk,
                          std::function<void(const std::string &msg)> callbackError,
                          std::shared_ptr<InternalDB> internalDB,
                          fs::path path,
@@ -149,45 +161,52 @@ void FileCommand::Do() {
   auto syncConfig = ClientConfig::getSyncConfig();
   auto network = ClientNetwork();
 
-  File file(_filePath.string());
-  Chunker chunker(file);
-  auto chunkVector = chunker.ChunkFile();
-
   Indexer indexer(_internalDB);
   auto fileMeta = indexer.GetFileMeta(_filePath, _isDeleted, _newFilePath);
-  auto fileInfo = indexer.GetFileInfo(fileMeta, chunkVector);
-  auto storageRequest = SerializerChunk(0, chunkVector).GetJson();
-
-  pt::ptree responseStorage;
-  try {
-    connect(network, storageConfig, storageRequest, responseStorage);
-  } catch (NetworkException &er) {
-    callbackError(er.what());
-    return;
+  if (fileMeta.isDeleted) {
+    _internalDB->DeleteFile(fileMeta.fileId);
   }
+  std::vector<Chunk> chunkVector;
 
-  auto responseStorageStatus = SerializerAnswer(responseStorage).GetStatus();
-  bool isError = false;
-  std::visit(overloaded{
-      [&](const StatusOk &val) {
-        BOOST_LOG_TRIVIAL(info) << "FileCommand: Status Ok sync";
-      },
-      [&](const StatusError &val) {
-        BOOST_LOG_TRIVIAL(error) << "FileCommand: Status Error sync";
-        auto error = std::get<StatusError>(responseStorageStatus);
-        callbackError(error.msg);
-        isError = true;
-      }
-  }, responseStorageStatus);
-  if (isError) {
-    return;
+  if (!fileMeta.isDeleted) {
+    File file(_filePath.string());
+    Chunker chunker(file);
+    chunkVector = chunker.ChunkFile();
+  }
+  auto fileInfo = indexer.GetFileInfo(fileMeta, chunkVector);
+
+  if (!fileMeta.isDeleted) {
+    auto storageRequest = SerializerChunk(0, chunkVector).GetJson();
+    pt::ptree responseStorage;
+    try {
+      sendAndReceive(network, storageConfig, storageRequest, responseStorage);
+    } catch (NetworkException &er) {
+      callbackError(er.what());
+      return;
+    }
+
+    auto responseStorageStatus = SerializerAnswer(responseStorage).GetStatus();
+    bool isError = false;
+    std::visit(overloaded{
+        [&](const StatusOk &val) {
+          BOOST_LOG_TRIVIAL(info) << "FileCommand: Status Ok sync";
+        },
+        [&](const StatusError &val) {
+          BOOST_LOG_TRIVIAL(error) << "FileCommand: Status Error sync";
+          auto error = std::get<StatusError>(responseStorageStatus);
+          callbackError(error.msg);
+          isError = true;
+        }
+    }, responseStorageStatus);
+    if (isError) {
+      return;
+    }
   }
 
   auto syncRequest = SerializerFileInfo(0, fileInfo).GetJson();
-
   pt::ptree responseSync;
   try {
-    connect(network, syncConfig, syncRequest, responseSync);
+    sendAndReceive(network, syncConfig, syncRequest, responseSync);
   } catch (NetworkException &er) {
     callbackError(er.what());
     return;
@@ -205,5 +224,5 @@ void FileCommand::Do() {
       }
   }, responseSyncStatus);
 
-  callbackOk();
+  callbackOk("Файл обновлен");
 }
