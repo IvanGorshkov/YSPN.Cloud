@@ -108,7 +108,8 @@ std::vector<FileInfo> MetaDataDB::GetUserFilesByTime(const UserDate &userDate) {
     fileInfo.file.updateDate = boost::lexical_cast<std::string>(PQgetvalue(res, i, 11));
     fileInfo.file.createDate = boost::lexical_cast<std::string>(PQgetvalue(res, i, 12));
 
-    query = "Select * from version where id_file = " + std::to_string(fileInfo.file.fileId) + ";";
+    auto id = boost::lexical_cast<int>(PQgetvalue(res, i, 0));
+    query = "Select * from version where id_file = " + std::to_string(id) + ";";
     PGresult *resChunks = PQexec(_conn, query.c_str());
     if (PQresultStatus(resChunks) != PGRES_TUPLES_OK) {
       printf("No data retrieved\n");

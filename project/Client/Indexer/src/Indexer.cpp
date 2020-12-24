@@ -67,7 +67,7 @@ FileMeta Indexer::RenameFile(const bfs::path &oldPath, const bfs::path &newPath)
   fileMeta.filePath = newFilePath;
   fileMeta.isCurrent = true;
   fileMeta.isDeleted = false;
-  fileMeta.updateDate = boost::lexical_cast<std::string>(boost::filesystem::last_write_time(newPath));
+  fileMeta.updateDate = boost::lexical_cast<std::string>(std::time(nullptr));
 
   _internalDB->RenameAndIndexFile(fileMeta);
   return fileMeta;
