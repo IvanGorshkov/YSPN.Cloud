@@ -4,7 +4,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 
-
 InternalDB::InternalDB(std::string databaseName)
     : _databaseName(std::move(databaseName)),
       _userId(-1),
@@ -98,12 +97,12 @@ void InternalDB::SaveLastUpdate() {
 bool InternalDB::IsFileExist(const int &fileId) {
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: IsFileExist";
 
-  if (!connect()) { throw InternalExceptions("Don't connect"); }
+//  if (!connect()) { throw InternalExceptions("Don't connect"); }
 
   auto query = "SELECT count(*) FROM Files Where id=" + std::to_string(fileId) + ";";
   BOOST_LOG_TRIVIAL(info) << "InternalDB: Check exist file id=" + std::to_string(fileId);
   int count = selectId(query);
-  close();
+//  close();
 
   return count != 0;
 }
@@ -314,29 +313,69 @@ void InternalDB::InsertAndIndexFileChunk(FileChunksMeta &fileChunk, const int &f
   close();
 }
 
-void InternalDB::InsertOrUpdateFileInfo(FileInfo &fileInfo) {
+void InternalDB::InsertOrUpdateFilesInfo(std::vector<FileInfo> &filesInfo) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
+  for (auto &fileInfo: filesInfo) {
+    InsertOrUpdateFileInfo(fileInfo);
+  }
+  close();
+}
+
+void InternalDB::insertOneFile(FileMeta &file) {
+  auto time = file.updateDate;
+  std::string date = getTime(time);
+  std::string query = "INSERT INTO Files (file_name, file_extention, file_size, file_path,"
+                      " count_chunks, version, is_download, update_date, create_date) VALUES ('"
+      + file.fileName + "', '" + file.fileExtension
+      + "', " + std::to_string(file.fileSize)
+      + ", '" + file.filePath + "', " +
+      std::to_string(file.chunksCount) + ", 1, "
+      + std::to_string(file.isDownload) + ", '"
+      + date + "', '" + date + "');";
+  file.updateDate = date;
+  file.createDate = date;
+  insert(query);
+}
+
+void InternalDB::updateOneFile(FileMeta &file) {
+  auto time = file.updateDate;
+  std::string date = getTime(time);
+  std::string query = "Update Files SET "
+                      "file_name = '" + file.fileName +
+      "', file_extention = '" + file.fileExtension +
+      "', file_size = " + std::to_string(file.fileSize) +
+      ",file_path = '" + file.filePath +
+      "', count_chunks = " + std::to_string(file.chunksCount) +
+      ", version=" + std::to_string(file.version) +
+      ", update_date = '" + date +
+      "'" " WHERE id=" + std::to_string(file.fileId) + ";";
+  file.updateDate = date;
+  update(query);
+}
+
+void InternalDB::InsertOrUpdateFileInfo(FileInfo &fileInfo) {
+//    if (!connect()) { throw InternalExceptions("Don't connect"); }
   if (!IsFileExist(fileInfo.file.fileId)) {
-    InsertAndIndexFile(fileInfo.file);
+    insertOneFile(fileInfo.file);
     int id = selectId("SELECT id FROM Files ORDER  BY  id  DESC Limit 1");
     fileInfo.file.fileId = id;
     fileInfo.file.version = 1;
-    for (auto &fileChunksMeta : fileInfo.fileChunksMeta) {
+    for (auto &fileChunksMeta: fileInfo.fileChunksMeta) {
       InsertChunk(fileChunksMeta, id);
     }
   } else {
     int version = selectId("SELECT version FROM Files WHERE id = " + std::to_string(fileInfo.file.fileId) + ";");
     ++version;
     fileInfo.file.version = version;
-    UpdateAndIndexFile(fileInfo.file);
+    updateOneFile(fileInfo.file);
     int id = selectId("SELECT id FROM Files WHERE id = " + std::to_string(fileInfo.file.fileId) + ";");
     std::string query = "DELETE FROM Chunks WHERE id_file = " + std::to_string(id) + ";";
     deleteInfo(query);
-    for (auto &fileChunksMeta : fileInfo.fileChunksMeta) {
+    for (auto &fileChunksMeta: fileInfo.fileChunksMeta) {
       updateOneChunk(fileChunksMeta, id);
     }
   }
-  close();
+//    close();
 }
 
 std::string InternalDB::getTime(std::string &time) {

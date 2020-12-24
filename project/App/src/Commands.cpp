@@ -74,7 +74,7 @@ void RefreshCommand::Do() {
     auto fileInfo = SerializerFileInfo(response).GetFileInfo();
     BOOST_LOG_TRIVIAL(info) << "RefreshCommand: get fileInfo";
 
-    std::for_each(fileInfo.begin(), fileInfo.end(), [&](FileInfo &oneFileInfo) {
+    /*std::for_each(fileInfo.begin(), fileInfo.end(), [&](FileInfo &oneFileInfo) {
       oneFileInfo.file.isDownload = false;
 
       if (oneFileInfo.file.isDeleted) {
@@ -90,7 +90,13 @@ void RefreshCommand::Do() {
         }
       }
       _internalDB->InsertOrUpdateFileInfo(oneFileInfo);
+    });*/
+
+    std::for_each(fileInfo.begin(), fileInfo.end(), [&](FileInfo &oneFileInfo) {
+      oneFileInfo.file.isDownload = false;
     });
+
+    _internalDB->InsertOrUpdateFilesInfo(fileInfo);
 
     _internalDB->SaveLastUpdate();
     callbackOk("Обновление завершено");

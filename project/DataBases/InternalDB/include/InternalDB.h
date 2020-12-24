@@ -55,6 +55,10 @@ class InternalDB {
   void RenameAndIndexFile(FileMeta &file);
   void InsertAndIndexFileChunk(FileChunksMeta &fileChunk, const int &fileId);
 
+  void InsertOrUpdateFilesInfo(std::vector<FileInfo> &filesInfo);
+  void insertOneFile(FileMeta &file);
+  void updateOneFile(FileMeta &file);
+
   void InsertOrUpdateFileInfo(FileInfo &fileInfo);
 
   void DeleteUser(size_t id);
