@@ -120,9 +120,12 @@ void MainWindow::parseVectorFiles() {
       if (listPath[j].contains(".")) {
         FileMeta fileInfoFromVector = _filesInfo[i];
         if (getFilePath(_filesInfo[i]) != filePath) {
-          fileInfoFromVector = *std::find_if(_filesInfo.begin(), _filesInfo.end(), [&filePath](auto file) {
-            return getFilePath(file) == filePath;
-          });
+          for (auto &p : _filesInfo) {
+            if (getFilePath(p) == filePath) {
+              fileInfoFromVector = p;
+              break;
+            }
+          }
         }
         auto *insertFile = new QStandardItem;
         insertFile->setText(listPath[j]);
