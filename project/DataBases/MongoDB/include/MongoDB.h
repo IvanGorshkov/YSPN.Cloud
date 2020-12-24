@@ -2,10 +2,6 @@
 
 #include <string>
 #include <vector>
-#include "SerializerChunk.h"
-#include "SerializerUserChunk.h"
-#include <chrono>
-#include <iostream>
 #include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/types.hpp>
 #include <bsoncxx/json.hpp>
@@ -13,6 +9,9 @@
 #include <mongocxx/client.hpp>
 #include <mongocxx/instance.hpp>
 #include <mongocxx/uri.hpp>
+#include "SerializerChunk.h"
+#include "SerializerUserChunk.h"
+#include "MongoExceptions.h"
 
 using bsoncxx::builder::stream::document;
 using bsoncxx::builder::stream::open_document;

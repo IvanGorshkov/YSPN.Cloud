@@ -1,5 +1,6 @@
 #include "UserSession.h"
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/log/trivial.hpp>
 
 UserSession::UserSession(boost::asio::io_service &io)
     : _socket(io) {

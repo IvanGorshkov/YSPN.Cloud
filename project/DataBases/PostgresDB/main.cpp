@@ -36,7 +36,7 @@ int main() {
     postgres_sqldb.InsertFile(fileInfo);
     auto tt = UserDate{3, "2020-12-19 0:47:25"};
 	postgres_sqldb.GetUserFilesByTime(tt);
-  } catch (PostgresExceptions exceptions) {
+  } catch (PostgresExceptions &exceptions) {
     std::cout << exceptions.what() << std::endl;
   }
   return 0;

@@ -1,4 +1,6 @@
 #include "ClientNetwork.h"
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/log/trivial.hpp>
 
 ClientNetwork::ClientNetwork()
     : _socket(_service) {
@@ -33,7 +35,6 @@ pt::ptree ClientNetwork::ReceiveJSON() {
   }
 
   std::stringstream ss(boost::asio::buffer_cast<const char *>(buf.data()));
-  std::cout << ss.str() << std::endl;
   pt::ptree jsonResponse;
   try {
     pt::read_json(ss, jsonResponse);

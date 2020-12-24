@@ -1,7 +1,7 @@
 #include "SerializerChunk.h"
 #include <boost/log/trivial.hpp>
 
-size_t calcDecodeLength(std::string  &b64input) {
+size_t calcDecodeLength(const std::string &b64input) {
   size_t len = b64input.size(),
       padding = 0;
 
@@ -13,7 +13,7 @@ size_t calcDecodeLength(std::string  &b64input) {
   return (len * 3) / 4 - padding;
 }
 
-int Base64Decode(std::string &b64message, char **buffer, size_t *length) {
+int Base64Decode(const std::string &b64message, char **buffer, size_t *length) {
   BIO *bio, *b64;
 
   int decodeLen = calcDecodeLength(b64message);
@@ -27,7 +27,7 @@ int Base64Decode(std::string &b64message, char **buffer, size_t *length) {
   *length = BIO_read(bio, *buffer, b64message.size());
   BIO_free_all(bio);
 
-  return (0); //success
+  return (0);
 }
 
 std::string Base64Encode(char *buffer, size_t length) {

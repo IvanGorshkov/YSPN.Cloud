@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <boost/property_tree/ptree.hpp>
 
 namespace pt = boost::property_tree;

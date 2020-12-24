@@ -1,7 +1,8 @@
 #include "Chunker.h"
 
 Chunker::Chunker(const File &file)
-    : _file(file) {}
+    : _file(file) {
+}
 
 std::vector<Chunk> Chunker::UpdateChunkFile(const std::vector<Chunk> &old_chunks) {
   std::ifstream fileStream(std::move(_file.Read()));
@@ -48,7 +49,7 @@ std::vector<Chunk> Chunker::UpdateChunkFile(const std::vector<Chunk> &old_chunks
         if (size == -1)
           break;
         new_chunk.chunkSize +=
-            data.size() < CHUNK_MOVE_SIZE ? static_cast<int>(fileStream.gcount()) : CHUNK_MOVE_SIZE;// check size
+            data.size() < CHUNK_MOVE_SIZE ? static_cast<int>(fileStream.gcount()) : CHUNK_MOVE_SIZE;  // check size
         std::copy(data.begin(), data.begin() + CHUNK_MOVE_SIZE, std::back_inserter(new_chunk.data));
         if (new_chunk.chunkSize == CHUNK_SIZE) {
           new_chunk.rHash = getRHash(new_chunk.data.data(), new_chunk.chunkSize);
@@ -110,9 +111,9 @@ std::string Chunker::getRHash(char *data, int chunkSize) {
 }
 
 std::vector<Chunk> Chunker::ChunkFile() {
-  int a = 0;
+//  int a = 0;
   std::ifstream fileStream(std::move(_file.Read()));
-  size_t size = fileStream.seekg(0, std::ios::end).tellg();
+//  size_t size = fileStream.seekg(0, std::ios::end).tellg();
   fileStream.seekg(0, std::ios::beg);
   std::vector<Chunk> chunks;
   if (fileStream.is_open()) {
@@ -138,7 +139,7 @@ Chunk Chunker::createChunk(std::vector<char> data, int chunkSize) {
 }
 
 void Chunker::MergeFile(const std::vector<Chunk> &chunks) {
-  // TODO: для беспорядка принимать мапу, где первое поле order
+  // TODO(Maxim): для беспорядка принимать мапу, где первое поле order
   std::ofstream outputFile(std::move(_file.Write()));
 
   if (outputFile.is_open()) {

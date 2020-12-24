@@ -1,7 +1,7 @@
 #include "StorageCommands.h"
 #include <boost/log/trivial.hpp>
 
-UploadChunkCommand::UploadChunkCommand(std::shared_ptr<pt::ptree> &request)
+UploadChunkCommand::UploadChunkCommand(const std::shared_ptr<pt::ptree> &request)
     : _request(request),
       _db(MongoDB::shared()),
       _chunk(*request) {
@@ -15,7 +15,6 @@ std::shared_ptr<pt::ptree> UploadChunkCommand::Do() {
   try {
     requestVector = _chunk.GetChunk();
     BOOST_LOG_TRIVIAL(info) << "UploadChunkCommand: parse json";
-
   } catch (ParseException &er) {
     BOOST_LOG_TRIVIAL(error) << "UploadChunkCommand: " << er.what();
     auto answer = SerializerAnswer(_chunk.GetRequestId(), "Error in json");
@@ -31,7 +30,6 @@ std::shared_ptr<pt::ptree> UploadChunkCommand::Do() {
   try {
     _db.InsertChunk(requestVector);
     BOOST_LOG_TRIVIAL(info) << "UploadChunkCommand: insert chunks to database";
-
   } catch (MongoExceptions &er) {
     BOOST_LOG_TRIVIAL(error) << "UploadChunkCommand: " << er.what();
     auto answer = SerializerAnswer(_chunk.GetRequestId(), "Fail to insert Chunk");
@@ -43,7 +41,7 @@ std::shared_ptr<pt::ptree> UploadChunkCommand::Do() {
   return std::make_shared<pt::ptree>(answer.GetJson());
 }
 
-DownloadChunkCommand::DownloadChunkCommand(std::shared_ptr<pt::ptree> &request)
+DownloadChunkCommand::DownloadChunkCommand(const std::shared_ptr<pt::ptree> &request)
     : _request(request),
       _db(MongoDB::shared()),
       _userChunk(*request) {
@@ -57,7 +55,6 @@ std::shared_ptr<pt::ptree> DownloadChunkCommand::Do() {
   try {
     requestVector = _userChunk.GetChunk();
     BOOST_LOG_TRIVIAL(info) << "DownloadChunkCommand: parse json";
-
   } catch (ParseException &er) {
     BOOST_LOG_TRIVIAL(error) << "DownloadChunkCommand: " << er.what();
     auto answer = SerializerAnswer(_userChunk.GetRequestId(), "Error in json");
@@ -74,7 +71,6 @@ std::shared_ptr<pt::ptree> DownloadChunkCommand::Do() {
   try {
     responseVector = _db.GetChunk(requestVector);
     BOOST_LOG_TRIVIAL(info) << "DownloadChunkCommand: get chunks from database";
-
   } catch (MongoExceptions &er) {
     BOOST_LOG_TRIVIAL(error) << "DownloadChunkCommand: " << er.what();
     auto answer = SerializerAnswer(_userChunk.GetRequestId(), "Fail to get Chunk");

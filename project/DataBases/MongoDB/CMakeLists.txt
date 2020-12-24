@@ -101,11 +101,6 @@ endif()
 message(STATUS "Configuring inner-build")
 
 find_package(libmongocxx REQUIRED)
-add_executable(test_mongocxx src/main.cpp src/MongoDB.cpp)
-target_link_libraries(test_mongocxx PUBLIC ${LIBMONGOCXX_LIBRARIES} ${Boost_LIBRARIES})
-#TARGET_LINK_LIBRARIES(test_mongocxx ${Boost_LIBRARIES})
-target_include_directories(test_mongocxx PUBLIC ${LIBMONGOCXX_INCLUDE_DIRS})
-target_compile_definitions(test_mongocxx PUBLIC ${LIBMONGOCXX_DEFINITIONS})
 
 add_library(MongoDB-dev src/MongoDB.cpp)
 target_link_libraries(MongoDB-dev PUBLIC ${LIBMONGOCXX_LIBRARIES} ${Boost_LIBRARIES})

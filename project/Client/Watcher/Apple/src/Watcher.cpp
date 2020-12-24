@@ -5,7 +5,7 @@ Watcher::Watcher() {
   BOOST_LOG_TRIVIAL(debug) << "Watcher Apple: create watcher";
 }
 
-void Watcher::Run(const fs::path &path, const std::function<void(CloudNotification)> &callback) {
+void Watcher::Run(const fs::path &path, const std::function<void(const CloudNotification &event)> &callback) {
   BOOST_LOG_TRIVIAL(debug) << "Watcher Apple: Run";
 }
 

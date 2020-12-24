@@ -1,6 +1,5 @@
 #include "SerializerFileInfo.h"
 #include <boost/log/trivial.hpp>
-#include <utility>
 
 SerializerFileInfo::SerializerFileInfo(int requestId, std::vector<FileInfo> fileInfoVector)
     : _requestId(requestId),
@@ -50,9 +49,9 @@ void SerializerFileInfo::serialize() {
   _json.put("requestId", _requestId);
 
   pt::ptree data;
-  for (auto &fileMeta: _fileInfoVector) {
-    pt::ptree child;
-    child.put("userId", fileMeta.userId);
+  for (auto &fileMeta : _fileInfoVector) {
+    pt::ptree fileChild;
+    fileChild.put("userId", fileMeta.userId);
 
     pt::ptree file;
     file.put("fileId", fileMeta.file.fileId);
@@ -66,7 +65,7 @@ void SerializerFileInfo::serialize() {
     file.put("isDeleted", fileMeta.file.isDeleted);
     file.put("updateDate", fileMeta.file.updateDate);
     file.put("createDate", fileMeta.file.createDate);
-    child.add_child("file", file);
+    fileChild.add_child("file", file);
 
     pt::ptree chunks;
     for (auto &el : fileMeta.chunkMeta) {
@@ -75,7 +74,7 @@ void SerializerFileInfo::serialize() {
 
       chunks.push_back(std::make_pair("", child));
     }
-    child.add_child("chunks", chunks);
+    fileChild.add_child("chunks", chunks);
 
     pt::ptree fileChunks;
     for (auto &el : fileMeta.fileChunksMeta) {
@@ -85,9 +84,9 @@ void SerializerFileInfo::serialize() {
 
       fileChunks.push_back(std::make_pair("", child));
     }
-    child.add_child("fileChunks", fileChunks);
+    fileChild.add_child("fileChunks", fileChunks);
 
-    data.push_back(std::make_pair("", child));
+    data.push_back(std::make_pair("", fileChild));
   }
 
   _json.add_child("files", data);
@@ -130,7 +129,6 @@ void SerializerFileInfo::deserialize() {
 
       _fileInfoVector.push_back(oneFileInfo);
     }
-
   } catch (pt::ptree_error &er) {
     throw ParseException(er.what());
   }

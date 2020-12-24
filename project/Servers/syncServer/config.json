@@ -12,6 +12,6 @@
   },
   "clientWorkerConfig": {
     "requestWorkersCount": 1,
-    "responceWorkersCount": 1
+    "responseWorkersCount": 1
   }
 }

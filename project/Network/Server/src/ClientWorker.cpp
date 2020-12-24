@@ -1,4 +1,5 @@
 #include "ClientWorker.h"
+#include <boost/log/trivial.hpp>
 
 void ClientWorker::PutConnection(const std::shared_ptr<UserSession> &user) {
   BOOST_LOG_TRIVIAL(debug) << "ClientWorker: PutConnection";
@@ -39,11 +40,11 @@ void ClientWorker::getRequest(const std::shared_ptr<UserSession> &user) {
 void ClientWorker::sendResponse() {
   BOOST_LOG_TRIVIAL(debug) << "ClientWorker: sendResponse";
   auto pairResponse = _response.Pop();
-    if (pairResponse->first->Sock().is_open())
-        pairResponse->first->SendResponse(pairResponse->second);
-    else{
-        BOOST_LOG_TRIVIAL(error) << "ClientWorker: lost connection to user while sending response";
-    }
+  if (pairResponse->first->Sock().is_open()) {
+    pairResponse->first->SendResponse(pairResponse->second);
+  } else {
+    BOOST_LOG_TRIVIAL(error) << "ClientWorker: lost connection to user while sending response";
+  }
 }
 
 // воркер получения запросов пользователя
@@ -52,7 +53,6 @@ void ClientWorker::sendResponse() {
   while (true) {
     if (_usersConnections.Empty()) {
       BOOST_LOG_TRIVIAL(debug) << "ClientWorker: sleep request";
-      std::this_thread::sleep_for(std::chrono::seconds(2));
     } else {
       BOOST_LOG_TRIVIAL(debug) << "ClientWorker: get request";
       if (!_usersConnections.Empty()) {
@@ -79,35 +79,36 @@ void ClientWorker::sendResponse() {
 }
 
 void ClientWorker::RunClientWorker() {
-    BOOST_LOG_TRIVIAL(debug) << "ClientWorker: run client network";
+  BOOST_LOG_TRIVIAL(debug) << "ClientWorker: run client network";
 
 //  auto &config = Config::GetInstance();
 
-    size_t requestWorkersCount = 1;
-    std::vector<std::thread> _workerGetRequests;
-    _workerGetRequests.reserve(requestWorkersCount);
-    for (int i = 0; i < requestWorkersCount; ++i) {
-        _workerGetRequests.emplace_back([this] { workerGetRequests(); });
-        BOOST_LOG_TRIVIAL(info) << "ClientWorker: add new worker Get Requests with id = " << _workerGetRequests[i].get_id();
-    }
+  size_t requestWorkersCount = 1;
+  std::vector<std::thread> _workerGetRequests;
+  _workerGetRequests.reserve(requestWorkersCount);
+  for (int i = 0; i < requestWorkersCount; ++i) {
+    _workerGetRequests.emplace_back([this] { workerGetRequests(); });
+    BOOST_LOG_TRIVIAL(info) << "ClientWorker: add new worker Get Requests with id = " << _workerGetRequests[i].get_id();
+  }
 
-    size_t responseWorkersCount = 1;
-    std::vector<std::thread> _workerPutResponses;
-    _workerPutResponses.reserve(responseWorkersCount);
-    for (int i = 0; i < responseWorkersCount; ++i) {
-        _workerPutResponses.emplace_back([this] { workerSendResponses(); });
-        BOOST_LOG_TRIVIAL(info) << "ClientWorker: add new worker Put Responses with id = " << _workerPutResponses[i].get_id();
-    }
+  size_t responseWorkersCount = 1;
+  std::vector<std::thread> _workerPutResponses;
+  _workerPutResponses.reserve(responseWorkersCount);
+  for (int i = 0; i < responseWorkersCount; ++i) {
+    _workerPutResponses.emplace_back([this] { workerSendResponses(); });
+    BOOST_LOG_TRIVIAL(info) << "ClientWorker: add new worker Put Responses with id = "
+                            << _workerPutResponses[i].get_id();
+  }
 
-    for (auto &thread : _workerGetRequests) {
-        thread.join();
-        BOOST_LOG_TRIVIAL(info) << "ClientWorker: join worker Get Requests with id = " << thread.get_id();
-    }
-    _workerGetRequests.clear();
+  for (auto &thread : _workerGetRequests) {
+    thread.join();
+    BOOST_LOG_TRIVIAL(info) << "ClientWorker: join worker Get Requests with id = " << thread.get_id();
+  }
+  _workerGetRequests.clear();
 
-    for (auto &thread : _workerPutResponses) {
-        thread.join();
-        BOOST_LOG_TRIVIAL(info) << "ClientWorker: join worker Put Responses with id = " << thread.get_id();
-    }
-    _workerPutResponses.clear();
+  for (auto &thread : _workerPutResponses) {
+    thread.join();
+    BOOST_LOG_TRIVIAL(info) << "ClientWorker: join worker Put Responses with id = " << thread.get_id();
+  }
+  _workerPutResponses.clear();
 }

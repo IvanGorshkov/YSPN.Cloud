@@ -1,5 +1,6 @@
 #include "PostgreSQLDB.h"
 #include "PostgresExceptions.h"
+
 void PostgresSQLDB::close() {
   PQfinish(_conn);
 }
@@ -26,5 +27,3 @@ void PostgresSQLDB::pqExec(const std::string &query, PostgresExceptions exceptio
   }
   PQclear(res);
 }
-
-

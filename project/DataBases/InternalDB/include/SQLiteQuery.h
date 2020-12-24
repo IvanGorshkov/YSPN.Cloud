@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 const std::string createQueryFiles = "CREATE TABLE IF NOT EXISTS  \"Files\" (\n"
                                      "\t\"id\"\tINTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,\n"
                                      "\t\"file_name\"\tTEXT NOT NULL,\n"

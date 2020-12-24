@@ -3,8 +3,11 @@
 #include <string>
 #include <boost/log/trivial.hpp>
 
-App::App()
-    : _internalDB(std::make_shared<InternalDB>("myDB.sqlite")) {
+App::App(const std::function<void(const std::string &msg)> &callbackOk,
+         const std::function<void(const std::string &msg)> &callbackError)
+    : _internalDB(std::make_shared<InternalDB>("myDB.sqlite")),
+      appCallbackOk(callbackOk),
+      appCallbackError(callbackError) {
   BOOST_LOG_TRIVIAL(debug) << "App: create app";
 //  ClientConfig::Log("release");
 
@@ -16,12 +19,15 @@ App::~App() {
   stopWatcher();
 }
 
+bool App::IsLogin() const {
+  BOOST_LOG_TRIVIAL(debug) << "App: IsLogin";
+  return true;
+}
 
-void App::Refresh(const std::function<void()> &callbackOk,
-                  const std::function<void(const std::string &msg)> &callbackError) {
+void App::Refresh() {
   BOOST_LOG_TRIVIAL(debug) << "App: Refresh";
 
-  auto sh = std::make_shared<RefreshCommand>(callbackOk, callbackError, _internalDB);
+  auto sh = std::make_shared<RefreshCommand>(appCallbackOk, appCallbackError, _internalDB);
   _commands.emplace(sh);
 
   runWorker();
@@ -32,9 +38,7 @@ std::vector<FileMeta> App::GetFiles() {
   return _internalDB->SelectAllFiles();
 }
 
-void App::DownloadFile(int fileId,
-                       const std::function<void()> &callbackOk,
-                       const std::function<void(const std::string &msg)> &callbackError) {
+void App::DownloadFile(int fileId) {
   BOOST_LOG_TRIVIAL(debug) << "App: DownloadFile";
 
   FileMeta file;
@@ -48,32 +52,42 @@ void App::DownloadFile(int fileId,
     throw FileDownloadedException("file is already downloaded");
   }
 
-  auto sh = std::make_shared<DownloadFileCommand>(callbackOk, callbackError, _internalDB, file);
+  BOOST_LOG_TRIVIAL(info) << "App: download file " << file.filePath + file.fileName + file.fileExtension;
+
+  auto sh = std::make_shared<DownloadFileCommand>(appCallbackOk, appCallbackError, _internalDB, file);
   _commands.emplace(sh);
 
   runWorker();
 }
 
-
-void App::UploadFile(const fs::path &path) {
-
+void App::CreateFile(const fs::path &path) {
   BOOST_LOG_TRIVIAL(debug) << "App: UploadFile";
 
   if (!fs::exists(path)) {
     throw FileNotExistsException("this file does not exist");
   }
 
-  auto sh = std::make_shared<FileCommand>(nullptr, nullptr, _internalDB, path);
-  _commands.emplace(sh);
+  BOOST_LOG_TRIVIAL(info) << "App: upload file " << path.string();
 
-  runWorker();
+  if (!_watcher.IsWorking()) {
+    auto sh = std::make_shared<CreateFileCommand>(appCallbackOk, appCallbackError, _internalDB, path);
+    _commands.emplace(sh);
+
+    runWorker();
+  }
 }
 
 void App::RenameFile(const fs::path &oldPath, const fs::path &newPath) {
   BOOST_LOG_TRIVIAL(debug) << "App: RenameFile";
 
+  if (!fs::exists(newPath)) {
+    throw FileNotExistsException("this file does not exist");
+  }
+
+  BOOST_LOG_TRIVIAL(info) << "App: rename file " << oldPath.string() << " to " << newPath.string();
+
   if (!_watcher.IsWorking()) {
-    auto sh = std::make_shared<FileCommand>(nullptr, nullptr, _internalDB, oldPath, newPath);
+    auto sh = std::make_shared<RenameFileCommand>(appCallbackOk, appCallbackError, _internalDB, oldPath, newPath);
     _commands.emplace(sh);
 
     runWorker();
@@ -83,8 +97,10 @@ void App::RenameFile(const fs::path &oldPath, const fs::path &newPath) {
 void App::DeleteFile(const fs::path &path) {
   BOOST_LOG_TRIVIAL(debug) << "App: DeleteFile";
 
+  BOOST_LOG_TRIVIAL(info) << "App: delete file " << path.string();
+
   if (!_watcher.IsWorking()) {
-    auto sh = std::make_shared<FileCommand>(nullptr, nullptr, _internalDB, path, boost::none, true);
+    auto sh = std::make_shared<DeleteFileCommand>(appCallbackOk, appCallbackError, _internalDB, path);
     _commands.emplace(sh);
 
     runWorker();
@@ -94,8 +110,14 @@ void App::DeleteFile(const fs::path &path) {
 void App::ModifyFile(const fs::path &path) {
   BOOST_LOG_TRIVIAL(debug) << "App: ModifyFile";
 
+  if (!fs::exists(path)) {
+    throw FileNotExistsException("this file does not exist");
+  }
+
+  BOOST_LOG_TRIVIAL(info) << "App: modify file " << path.string();
+
   if (!_watcher.IsWorking()) {
-    auto sh = std::make_shared<FileCommand>(nullptr, nullptr, _internalDB, path);
+    auto sh = std::make_shared<ModifyFileCommand>(appCallbackOk, appCallbackError, _internalDB, path);
     _commands.emplace(sh);
 
     runWorker();
@@ -106,14 +128,18 @@ void App::UpdateSyncFolder(const fs::path &path) {
   BOOST_LOG_TRIVIAL(debug) << "App: UpdateSyncFolder";
   _watcher.Stop();
   _watcherThread.join();
+
   if (!fs::exists(path)) {
     throw FolderNotExistsException("this folder does not exist");
   }
+
+  BOOST_LOG_TRIVIAL(info) << "App: old sync folder " << _internalDB->GetSyncFolder();
+
   stopWatcher();
-
   _internalDB->UpdateSyncFolder(path.string());
-
   runWatcher();
+
+  BOOST_LOG_TRIVIAL(info) << "App: new sync folder " << _internalDB->GetSyncFolder();
 }
 
 std::string App::GetSyncFolder() {
@@ -153,7 +179,7 @@ void App::execEvent() {
 
   switch (event.event) {
     case CREATE: {
-      UploadFile(event.path);
+      CreateFile(event.path);
       break;
     }
 
@@ -179,12 +205,11 @@ void App::execEvent() {
   }
 }
 
-void App::watcherCallback(CloudNotification event) {
+void App::watcherCallback(const CloudNotification &event) {
   BOOST_LOG_TRIVIAL(debug) << "App: watcherCallback";
 
-  std::cout << event.event << std::endl;
-
+  BOOST_LOG_TRIVIAL(info) << "App: new event" << event.event;
   _events.push(event);
+
+  execEvent();
 }
-
-
