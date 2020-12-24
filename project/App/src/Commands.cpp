@@ -62,6 +62,10 @@ void RefreshCommand::Do() {
   auto userDate = _internalDB->GetLastUpdate();
   auto request = SerializerUserDate(0, userDate).GetJson();
 
+  std::stringstream ssRequest;
+  pt::write_json(ssRequest, request);
+  BOOST_LOG_TRIVIAL(info) << "RefreshCommand: request " << ssRequest.str();
+
   pt::ptree response;
   try {
     sendAndReceive(network, syncConfig, request, response);
@@ -69,6 +73,10 @@ void RefreshCommand::Do() {
     callbackError(er.what());
     return;
   }
+
+  std::stringstream ssResponse;
+  pt::write_json(ssResponse, response);
+  BOOST_LOG_TRIVIAL(info) << "RefreshCommand: response " << ssResponse.str();
 
   try {
     auto fileInfo = SerializerFileInfo(response).GetFileInfo();
@@ -88,8 +96,12 @@ void RefreshCommand::Do() {
         if (fileDB.isDownload) {
           File::Delete(_internalDB->GetSyncFolder() + fileDB.GetFilePath());
         }
+
+        _internalDB->UpdateFileInfo(oneFileInfo);
+        return;
       }
-      _internalDB->InsertOrUpdateFileInfo(oneFileInfo);
+
+      _internalDB->InsertFileInfo(oneFileInfo);
     });
 
     _internalDB->SaveLastUpdate();
@@ -122,6 +134,10 @@ void DownloadFileCommand::Do() {
   auto userChunkVector = _internalDB->GetUserChunks(_file.fileId);
   auto request = SerializerUserChunk(0, userChunkVector).GetJson();
 
+  std::stringstream ssRequest;
+  pt::write_json(ssRequest, request);
+  BOOST_LOG_TRIVIAL(info) << "DownloadFileCommand: request " << ssRequest.str();
+
   pt::ptree response;
   try {
     sendAndReceive(network, storageConfig, request, response);
@@ -129,6 +145,10 @@ void DownloadFileCommand::Do() {
     callbackError(er.what());
     return;
   }
+
+  std::stringstream ssResponse;
+  pt::write_json(ssResponse, response);
+  BOOST_LOG_TRIVIAL(info) << "DownloadFileCommand: response " << ssResponse.str();
 
   try {
     auto chunks = SerializerChunk(response).GetChunk();
@@ -178,6 +198,11 @@ void CreateFileCommand::Do() {
   auto fileInfo = indexer.GetFileInfo(fileMeta, chunkVector);
 
   auto storageRequest = SerializerChunk(0, chunkVector).GetJson();
+
+  std::stringstream ssRequestStorage;
+  pt::write_json(ssRequestStorage, storageRequest);
+  BOOST_LOG_TRIVIAL(info) << "CreateFileCommand: request storage " << ssRequestStorage.str();
+
   pt::ptree responseStorage;
   try {
     sendAndReceive(network, storageConfig, storageRequest, responseStorage);
@@ -186,11 +211,20 @@ void CreateFileCommand::Do() {
     return;
   }
 
+  std::stringstream ssResponseStorage;
+  pt::write_json(ssResponseStorage, responseStorage);
+  BOOST_LOG_TRIVIAL(info) << "CreateFileCommand: response storage " << ssResponseStorage.str();
+
   if (visitAnswer(SerializerAnswer(responseStorage).GetStatus())) {
     return;
   }
 
   auto syncRequest = SerializerFileInfo(0, fileInfo).GetJson();
+
+  std::stringstream ssRequestSync;
+  pt::write_json(ssRequestSync, syncRequest);
+  BOOST_LOG_TRIVIAL(info) << "RenameFileCommand: request sync " << ssRequestSync.str();
+
   pt::ptree responseSync;
   try {
     sendAndReceive(network, syncConfig, syncRequest, responseSync);
@@ -198,6 +232,10 @@ void CreateFileCommand::Do() {
     callbackError(er.what());
     return;
   }
+
+  std::stringstream ssResponseSync;
+  pt::write_json(ssResponseSync, responseSync);
+  BOOST_LOG_TRIVIAL(info) << "CreateFileCommand: response sync " << ssResponseSync.str();
 
   if (visitAnswer(SerializerAnswer(responseSync).GetStatus())) {
     return;
@@ -231,6 +269,11 @@ void ModifyFileCommand::Do() {
   auto fileInfo = indexer.GetFileInfo(fileMeta, chunkVector);
 
   auto storageRequest = SerializerChunk(0, chunkVector).GetJson();
+
+  std::stringstream ssRequestStorage;
+  pt::write_json(ssRequestStorage, storageRequest);
+  BOOST_LOG_TRIVIAL(info) << "ModifyFileCommand: request storage " << ssRequestStorage.str();
+
   pt::ptree responseStorage;
   try {
     sendAndReceive(network, storageConfig, storageRequest, responseStorage);
@@ -239,11 +282,20 @@ void ModifyFileCommand::Do() {
     return;
   }
 
+  std::stringstream ssResponseStorage;
+  pt::write_json(ssResponseStorage, responseStorage);
+  BOOST_LOG_TRIVIAL(info) << "ModifyFileCommand: response storage " << ssResponseStorage.str();
+
   if (visitAnswer(SerializerAnswer(responseStorage).GetStatus())) {
     return;
   }
 
   auto syncRequest = SerializerFileInfo(0, fileInfo).GetJson();
+
+  std::stringstream ssRequestSync;
+  pt::write_json(ssRequestSync, syncRequest);
+  BOOST_LOG_TRIVIAL(info) << "RenameFileCommand: request sync " << ssRequestSync.str();
+
   pt::ptree responseSync;
   try {
     sendAndReceive(network, syncConfig, syncRequest, responseSync);
@@ -251,6 +303,10 @@ void ModifyFileCommand::Do() {
     callbackError(er.what());
     return;
   }
+
+  std::stringstream ssResponseSync;
+  pt::write_json(ssResponseSync, responseSync);
+  BOOST_LOG_TRIVIAL(info) << "ModifyFileCommand: response sync " << ssResponseSync.str();
 
   if (visitAnswer(SerializerAnswer(responseSync).GetStatus())) {
     return;
@@ -282,6 +338,11 @@ void RenameFileCommand::Do() {
   auto fileInfo = indexer.GetRenameFileInfo(fileMeta);
 
   auto syncRequest = SerializerFileInfo(0, fileInfo).GetJson();
+
+  std::stringstream ssRequest;
+  pt::write_json(ssRequest, syncRequest);
+  BOOST_LOG_TRIVIAL(info) << "RenameFileCommand: request " << ssRequest.str();
+
   pt::ptree responseSync;
   try {
     sendAndReceive(network, syncConfig, syncRequest, responseSync);
@@ -289,6 +350,10 @@ void RenameFileCommand::Do() {
     callbackError(er.what());
     return;
   }
+
+  std::stringstream ssResponse;
+  pt::write_json(ssResponse, responseSync);
+  BOOST_LOG_TRIVIAL(info) << "RenameFileCommand: response " << ssResponse.str();
 
   if (visitAnswer(SerializerAnswer(responseSync).GetStatus())) {
     return;
@@ -317,6 +382,11 @@ void DeleteFileCommand::Do() {
   auto fileInfo = indexer.GetDeleteFileInfo(fileMeta);
 
   auto syncRequest = SerializerFileInfo(0, fileInfo).GetJson();
+
+  std::stringstream ssRequest;
+  pt::write_json(ssRequest, syncRequest);
+  BOOST_LOG_TRIVIAL(info) << "DeleteFileCommand: request " << ssRequest.str();
+
   pt::ptree responseSync;
   try {
     sendAndReceive(network, syncConfig, syncRequest, responseSync);
@@ -324,6 +394,10 @@ void DeleteFileCommand::Do() {
     callbackError(er.what());
     return;
   }
+
+  std::stringstream ssResponse;
+  pt::write_json(ssResponse, responseSync);
+  BOOST_LOG_TRIVIAL(info) << "DeleteFileCommand: response " << ssResponse.str();
 
   if (visitAnswer(SerializerAnswer(responseSync).GetStatus())) {
     return;

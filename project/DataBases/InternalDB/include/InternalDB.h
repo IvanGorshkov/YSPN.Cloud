@@ -29,9 +29,9 @@ struct sqlite3_stmt_deleter {
 class InternalDB {
  public:
   explicit InternalDB(std::string databaseName);
-  void InsertUser(const User &user);
   int GetUserId() const;
   int GetDeviceId() const;
+  void InsertUser(const User &user);
   std::string GetSyncFolder() const;
   void UpdateSyncFolder(const std::string &newFolder);
 
@@ -55,16 +55,37 @@ class InternalDB {
   void RenameAndIndexFile(FileMeta &file);
   void InsertAndIndexFileChunk(FileChunksMeta &fileChunk, const int &fileId);
 
-  void InsertOrUpdateFileInfo(FileInfo &fileInfo);
+  void InsertFileInfo(const FileInfo &fileInfo);
+  void UpdateFileInfo(const FileInfo &fileInfo);
 
-  void DeleteUser(size_t id);
-  void UpdatePassword(const std::string &newPassword);
+  void DeleteUser(const int &userId);
   std::string SelectUserPassword();
+  void UpdatePassword(const std::string &newPassword);
 
-  void InsertChunk(FileChunksMeta &chunks, int idFile);
+ private:
+  bool existUser();
+  int selectUserId();
+  int selectDeviceId();
+  std::string selectFolder();
+  std::string selectLastUpdate();
 
-  void UpdateFile(const FileMeta &file);
-  void InsertFile(std::vector<FileMeta> &files);
+  FileMeta getOneFile();
+  void insertFileMeta(const FileMeta &fileMeta);
+  void updateFileMeta(const FileMeta &fileMeta);
+  void insertFileChunksMeta(const std::vector<FileChunksMeta> &fileChunksMeta, const int &fileId);
+  void insertOneFileChunkMeta(const FileChunksMeta &fileChunk, const int &fileId);
+
+  static std::string getTime(std::string &time);
+
+  void insert(const std::string &query);
+  bool update(const std::string &query);
+  void deleteInfo(const std::string &query);
+  int selectId(const std::string &query);
+  std::string selectStr(const std::string &query);
+
+  bool connect();
+  void close();
+  void createTable();
 
  private:
   std::string _databaseName;
@@ -75,20 +96,4 @@ class InternalDB {
   std::string _lastTMPUpdate;
   std::unique_ptr<sqlite3, sqlite3_deleter> _database;
   std::unique_ptr<sqlite3_stmt, sqlite3_stmt_deleter> _stmt;
-  int selectDeviceId();
-  int selectUserId();
-  std::string selectFolder();
-  int selectId(const std::string &query);
-  void createTable();
-  bool update(const std::string &query);
-  void deleteInfo(const std::string &query);
-  bool connect();
-  void close();
-  void insert(const std::string &query);
-  std::string selectLastUpdate();
-  std::string selectStr(const std::string &query);
-  FileMeta getOneFile();
-  void updateOneChunk(FileChunksMeta &chunk, const int id);
-  bool existUser();
-  static std::string getTime(std::string &time);
 };
