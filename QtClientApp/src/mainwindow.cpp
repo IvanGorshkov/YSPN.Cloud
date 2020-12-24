@@ -1,7 +1,5 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
-#include "QDebug"
-#include <functional>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
@@ -122,12 +120,9 @@ void MainWindow::parseVectorFiles() {
       if (listPath[j].contains(".")) {
         FileMeta fileInfoFromVector = _filesInfo[i];
         if (getFilePath(_filesInfo[i]) != filePath) {
-          for (auto &p : _filesInfo) {
-            if (getFilePath(p) == filePath) {
-              fileInfoFromVector = p;
-              break;
-            }
-          }
+          fileInfoFromVector = *std::find_if(_filesInfo.begin(), _filesInfo.end(), [&filePath](auto file) {
+            return getFilePath(file) == filePath;
+          });
         }
         auto *insertFile = new QStandardItem;
         insertFile->setText(listPath[j]);
@@ -249,8 +244,6 @@ void MainWindow::slotCustomMenuRequested(QPoint pos) {
   auto *renameFile = new QAction(trUtf8("Переименовать"), this);
   auto *downloadToDevice = new QAction(trUtf8("Скачать на устройство"), this);
   auto *deleteFromDevice = new QAction(trUtf8("Удалить с устройства"), this);
-//  auto *deleteFromCloud = new QAction(trUtf8("Удалить из облака"), this);
-//  auto *history = new QAction(trUtf8("История редактирования"), this);
   auto *properties = new QAction(trUtf8("Свойства"), this);
 
   connect(openFile, SIGNAL(triggered()), this, SLOT(open_file()));
@@ -258,8 +251,6 @@ void MainWindow::slotCustomMenuRequested(QPoint pos) {
   connect(renameFile, SIGNAL(triggered()), this, SLOT(rename_file()));
   connect(downloadToDevice, SIGNAL(triggered()), this, SLOT(download_on_device()));
   connect(deleteFromDevice, SIGNAL(triggered()), this, SLOT(delete_from_device()));
-//  connect(deleteFromCloud, SIGNAL(triggered()), this, SLOT(delete_from_cloud()));
-//  connect(history, SIGNAL(triggered()), this, SLOT(view_history_file()));
   connect(properties, SIGNAL(triggered()), this, SLOT(view_properties()));
 
   menu->addAction(openFile);
@@ -267,8 +258,6 @@ void MainWindow::slotCustomMenuRequested(QPoint pos) {
   menu->addAction(renameFile);
   menu->addAction(downloadToDevice);
   menu->addAction(deleteFromDevice);
-//  menu->addAction(deleteFromCloud);
-//  menu->addAction(history);
   menu->addAction(properties);
 
   if (ui->treeView->indexAt(pos).flags() == 32)
@@ -290,6 +279,7 @@ void MainWindow::save_file() {
   auto fileMeta = getFile();
 
   if (fileMeta.isDownload) {
+    startLoadingLabel();
     _app.ModifyFile(getAbsoluteFilePath(fileMeta));
   } else {
     printInfoBox("Сохранение", "Файл не скачан на устройство");
@@ -314,6 +304,7 @@ void MainWindow::rename_file() {
     QString newPath = QString::fromStdString(getAbsoluteFilePath(fileMeta));
 
     QFile::rename(oldPath, newPath);
+    startLoadingLabel();
     _app.RenameFile(oldPath.toStdString(), newPath.toStdString());
   } else {
     printInfoBox("Переименование", "Файл не скачан на устройство");
@@ -353,18 +344,11 @@ void MainWindow::delete_from_device() {
     QString path = QString::fromStdString(getAbsoluteFilePath(fileMeta));
 
     QFile::remove(path);
+    startLoadingLabel();
     _app.DeleteFile(path.toStdString());
   } else {
     printInfoBox("Удаление", "Файл не скачан на устройство");
   }
-}
-
-void MainWindow::delete_from_cloud() {
-
-}
-
-void MainWindow::view_history_file() {
-
 }
 
 void MainWindow::view_properties() {
@@ -462,6 +446,7 @@ void MainWindow::onBtnAddFile() {
       QFileInfo file(filePath);
       QString newPath = QString::fromStdString(_app.GetSyncFolder() + '/' + file.fileName().toStdString());
       QFile::copy(filePath, newPath);
+      startLoadingLabel();
       _app.CreateFile(newPath.toStdString());
     }
   }

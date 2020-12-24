@@ -1,8 +1,7 @@
 #include "SyncCommands.h"
 #include <boost/log/trivial.hpp>
-#include "TestPostgra.h"
 
-DataUpdateCommand::DataUpdateCommand(std::shared_ptr<pt::ptree> &request)
+DataUpdateCommand::DataUpdateCommand(const std::shared_ptr<pt::ptree> &request)
     : _request(request),
       _db(MetaDataDB::shared("user=ysnp dbname=ysnpcloud")),
       _userDate(*request) {
@@ -15,7 +14,6 @@ std::shared_ptr<pt::ptree> DataUpdateCommand::Do() {
   try {
     _db.Connect();
     BOOST_LOG_TRIVIAL(info) << "DataUpdateCommand: connect to database";
-
   } catch (PostgresExceptions &er) {
     BOOST_LOG_TRIVIAL(error) << "DataUpdateCommand: " << er.what();
     auto answer = SerializerAnswer(_userDate.GetRequestId(), "Database error");
@@ -26,7 +24,6 @@ std::shared_ptr<pt::ptree> DataUpdateCommand::Do() {
   try {
     requestUserDate = _userDate.GetUserDate();
     BOOST_LOG_TRIVIAL(info) << "DataUpdateCommand: parse json, user = " << requestUserDate.userId;
-
   } catch (ParseException &er) {
     BOOST_LOG_TRIVIAL(error) << "DataUpdateCommand: " << er.what();
     auto answer = SerializerAnswer(_userDate.GetRequestId(), "Error in json");
@@ -34,25 +31,21 @@ std::shared_ptr<pt::ptree> DataUpdateCommand::Do() {
   }
 
   std::vector<FileInfo> responseFileInfo;
-  // TODO DataUpdateCommand get FileInfo vector
-
   try {
-	responseFileInfo = _db.GetUserFilesByTime(requestUserDate);
+    responseFileInfo = _db.GetUserFilesByTime(requestUserDate);
     BOOST_LOG_TRIVIAL(info) << "DataUpdateCommand: get files from database";
-
   } catch (PostgresExceptions &er) {
     BOOST_LOG_TRIVIAL(error) << "DataUpdateCommand: " << er.what();
     auto answer = SerializerAnswer(_userDate.GetRequestId(), "Fail to get file");
     return std::make_shared<pt::ptree>(answer.GetJson());
   }
 
-
   BOOST_LOG_TRIVIAL(info) << "DataUpdateCommand: Status Ok";
   auto answer = SerializerFileInfo(_userDate.GetRequestId(), responseFileInfo);
   return std::make_shared<pt::ptree>(answer.GetJson());
 }
 
-UploadFileCommand::UploadFileCommand(std::shared_ptr<pt::ptree> &request)
+UploadFileCommand::UploadFileCommand(const std::shared_ptr<pt::ptree> &request)
     : _request(request),
       _db(MetaDataDB::shared("user=ysnp dbname=ysnpcloud")),
       _fileInfo(*request) {
@@ -65,7 +58,6 @@ std::shared_ptr<pt::ptree> UploadFileCommand::Do() {
   try {
     _db.Connect();
     BOOST_LOG_TRIVIAL(info) << "UploadFileCommand: connect to database";
-
   } catch (PostgresExceptions &er) {
     BOOST_LOG_TRIVIAL(error) << "UploadFileCommand: " << er.what();
     auto answer = SerializerAnswer(_fileInfo.GetRequestId(), "Database error");
@@ -76,7 +68,6 @@ std::shared_ptr<pt::ptree> UploadFileCommand::Do() {
   try {
     requestFileInfo = _fileInfo.GetFileInfo();
     BOOST_LOG_TRIVIAL(info) << "UploadFileCommand: parse json, user = " << requestFileInfo[0].userId;
-
   } catch (ParseException &er) {
     BOOST_LOG_TRIVIAL(error) << "UploadFileCommand: " << er.what();
     auto answer = SerializerAnswer(_fileInfo.GetRequestId(), "Error in json");
@@ -92,7 +83,6 @@ std::shared_ptr<pt::ptree> UploadFileCommand::Do() {
   try {
     _db.InsertFile(requestFileInfo[0]);
     BOOST_LOG_TRIVIAL(info) << "UploadFileCommand: insert file to database";
-
   } catch (PostgresExceptions &er) {
     BOOST_LOG_TRIVIAL(error) << "UploadFileCommand: " << er.what();
     auto answer = SerializerAnswer(_fileInfo.GetRequestId(), "Fail to insert file");

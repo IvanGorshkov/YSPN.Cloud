@@ -2,16 +2,17 @@
 
 #include <QAbstractItemModel>
 #include <QAbstractItemView>
-#include <QHBoxLayout>
 #include <QDesktopServices>
 #include <QFile>
 #include <QFileDialog>
+#include <QHBoxLayout>
 #include <QInputDialog>
 #include <QMainWindow>
 #include <QMessageBox>
 #include <QModelIndex>
 #include <QMovie>
 #include <QSettings>
+#include <QShortcut>
 #include <QSizePolicy>
 #include <QStandardItem>
 #include <QStandardItemModel>
@@ -19,14 +20,14 @@
 #include <QStringListModel>
 #include <QTreeView>
 #include <algorithm>
-#include <optional>
+#include <functional>
 #include <iostream>
+#include <optional>
+#include <string>
 #include <vector>
-
 #include "App.h"
 #include "AppExceptions.h"
 #include "structs/FileMeta.h"
-#include <QShortcut>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -73,8 +74,6 @@ class MainWindow : public QMainWindow, public QStandardItem {
   void rename_file();
   void download_on_device();
   void delete_from_device();
-  void delete_from_cloud();
-  void view_history_file();
   void view_properties();
   void onBtnAddFile();
   void onBtnSettings();

@@ -1,10 +1,10 @@
 #pragma once
 
-#include <boost/property_tree/ptree.hpp>
 #include <string>
 #include <vector>
 #include <variant>
 #include <map>
+#include <boost/property_tree/ptree.hpp>
 #include "structs/Answer.h"
 #include "SerializerInterface.h"
 #include "SerializerExceptions.h"

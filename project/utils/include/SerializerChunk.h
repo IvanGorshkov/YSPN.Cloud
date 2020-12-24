@@ -1,19 +1,19 @@
 #pragma once
 
-#include <boost/property_tree/ptree.hpp>
-#include <string>
-#include <vector>
 #include <openssl/bio.h>
 #include <openssl/evp.h>
 #include <openssl/buffer.h>
+#include <string>
+#include <vector>
+#include <boost/property_tree/ptree.hpp>
 #include "structs/Chunk.h"
 #include "SerializerInterface.h"
 #include "SerializerExceptions.h"
 
 namespace pt = boost::property_tree;
 
-size_t calcDecodeLength(std::string  &b64input);
-int Base64Decode(std::string  &b64message, char **buffer, size_t *length);
+size_t calcDecodeLength(const std::string &b64input);
+int Base64Decode(const std::string &b64message, char **buffer, size_t *length);
 std::string Base64Encode(char *buffer, size_t length);
 
 class SerializerChunk : public SerializerInterface {

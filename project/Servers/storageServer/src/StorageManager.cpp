@@ -1,7 +1,7 @@
 #include "StorageManager.h"
 #include <boost/log/trivial.hpp>
 
-std::shared_ptr<pt::ptree> StorageManager::GetRequest(pt::ptree &val) {
+std::shared_ptr<pt::ptree> StorageManager::GetRequest(const pt::ptree &val) {
   std::unique_ptr<Command> command;
   int userId = 0;
 
@@ -13,12 +13,10 @@ std::shared_ptr<pt::ptree> StorageManager::GetRequest(pt::ptree &val) {
 
   try {
     command = getCommand(val);
-
   } catch (NoCommand &er) {
     BOOST_LOG_TRIVIAL(error) << "StorageManager: " << er.what();
     auto answer = SerializerAnswer(userId, er.what());
     return std::make_shared<pt::ptree>(answer.GetJson());
-
   } catch (WrongCommand &er) {
     BOOST_LOG_TRIVIAL(error) << "StorageManager: " << er.what();
     auto answer = SerializerAnswer(userId, er.what());

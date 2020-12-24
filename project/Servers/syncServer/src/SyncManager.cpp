@@ -1,7 +1,7 @@
 #include "SyncManager.h"
 #include <boost/log/trivial.hpp>
 
-std::shared_ptr<pt::ptree> SyncManager::GetRequest(pt::ptree &val) {
+std::shared_ptr<pt::ptree> SyncManager::GetRequest(const pt::ptree &val) {
   std::unique_ptr<Command> command;
   int requestId = 0;
 
@@ -13,12 +13,10 @@ std::shared_ptr<pt::ptree> SyncManager::GetRequest(pt::ptree &val) {
 
   try {
     command = getCommand(val);
-
   } catch (NoCommand &er) {
     BOOST_LOG_TRIVIAL(error) << "SyncManager: " << er.what();
     auto answer = SerializerAnswer(requestId, er.what());
     return std::make_shared<pt::ptree>(answer.GetJson());
-
   } catch (WrongCommand &er) {
     BOOST_LOG_TRIVIAL(error) << "SyncManager: " << er.what();
     auto answer = SerializerAnswer(requestId, er.what());

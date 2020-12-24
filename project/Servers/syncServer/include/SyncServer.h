@@ -1,9 +1,10 @@
 #pragma once
 
-#include <boost/property_tree/ptree.hpp>
 #include <queue>
 #include <utility>
-#include <thread>
+#include <vector>
+#include <memory>
+#include <boost/property_tree/ptree.hpp>
 #include "Server.h"
 #include "Worker.h"
 #include "SyncManager.h"
@@ -15,7 +16,7 @@ namespace pt = boost::property_tree;
 
 class SyncServer : public Server {
  public:
-  explicit SyncServer();
+  SyncServer();
   ~SyncServer() override;
 
   void Run() override;

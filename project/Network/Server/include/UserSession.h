@@ -1,12 +1,11 @@
 #pragma once
 
+#include <functional>
+#include <iostream>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include <functional>
-#include <iostream>
-#include <boost/log/trivial.hpp>
 
 namespace pt = boost::property_tree;
 

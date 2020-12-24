@@ -1,18 +1,19 @@
 #pragma once
 
-#include <boost/filesystem.hpp>
-#include <boost/bimap.hpp>
-#include <boost/optional.hpp>
-#include <string>
-#include <map>
 #include <sys/inotify.h>
 #include <sys/epoll.h>
 #include <queue>
+#include <string>
+#include <map>
+#include <vector>
+#include <boost/filesystem.hpp>
+#include <boost/bimap.hpp>
+#include <boost/optional.hpp>
+#include "../../include/WatcherInterface.h"
 #include "Notification.h"
 #include "FileSystemEvent.h"
 #include "WatcherExceptions.h"
 #include "structs/CloudEvents.h"
-#include "../../include/WatcherInterface.h"
 
 #define EVENT_SIZE  sizeof(inotify_event)
 #define MAX_EVENTS 4096

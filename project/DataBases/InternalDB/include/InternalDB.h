@@ -1,16 +1,18 @@
 #pragma once
 
-#include <string>
 #include <sqlite3.h>
+#include <string>
 #include <memory>
-#include "structs/FileChunksMeta.h"
+#include <vector>
 #include "User.h"
+#include "InternalExceptions.h"
+#include "structs/FileChunksMeta.h"
 #include "structs/FileMeta.h"
 #include "structs/UserDate.h"
 #include "structs/FileInfo.h"
 #include "structs/UserChunk.h"
 #include "structs/Chunk.h"
-#include <vector>
+#include "SQLiteQuery.h"
 
 struct sqlite3_deleter {
   void operator()(sqlite3 *sql) {

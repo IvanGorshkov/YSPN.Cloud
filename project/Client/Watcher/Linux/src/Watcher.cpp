@@ -26,7 +26,6 @@ Watcher::Watcher() :
   if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, _inotifyFd, &_inotifyEpollEvent) == -1) {
     throw EpollFDError();
   }
-
 }
 
 Watcher::~Watcher() {
@@ -130,7 +129,7 @@ void Watcher::runOnce() {
       break;
   }
 
-  //Notification notification{currentEvent, newEvent->path, newEvent->eventTime};
+  // Notification notification{currentEvent, newEvent->path, newEvent->eventTime};
 
 //  for (auto &eventAndCallback : _eventCallbacks) {
 //    auto &event = eventAndCallback.first;
@@ -142,11 +141,8 @@ void Watcher::runOnce() {
     CloudNotification notification{.event = clevent, .path = newEvent->path, .time = newEvent->eventTime};
     _eventCallback(notification);
   }
-  //callbackFunc(notification);
+  // callbackFunc(notification);
   return;
-  // }
-  // }
-
 }
 
 bool Watcher::hasStopped() const {
@@ -171,7 +167,6 @@ void Watcher::watchFile(bfs::path file) {
 }
 
 boost::optional<FileSystemEvent> Watcher::getNextEvent() {
-
   std::vector<FileSystemEvent> newEvents;
 
   while (_eventQueue.empty() && !_stopped) {
@@ -202,7 +197,6 @@ ssize_t Watcher::readEventsIntoBuffer(std::vector<uint8_t> &eventBuffer) {
     return length;
   }
   for (auto n = 0; n < nFdsReady; ++n) {
-
     length = read(_epollEvents[n].data.fd, eventBuffer.data(), eventBuffer.size());
     if (length == -1) {
       break;
@@ -221,7 +215,7 @@ void Watcher::readEventsFromBuffer(
 
     if (event->name[0] == '.') {
       i += EVENT_SIZE + event->len;
-      //_directorieMap.left.erase(event->wd);
+      // _directorieMap.left.erase(event->wd);
       continue;
     }
 
@@ -233,7 +227,7 @@ void Watcher::readEventsFromBuffer(
       i += EVENT_SIZE + event->len;
       continue;
     }
-    //printf(path.extension().string().c_str());
+    // printf(path.extension().string().c_str());
     if (bfs::is_directory(path)) {
       event->mask |= IN_ISDIR;
     }
@@ -247,7 +241,6 @@ void Watcher::readEventsFromBuffer(
 }
 
 void Watcher::watchDirectory(bfs::path path) {
-
   std::vector<bfs::path> paths;
 
   if (bfs::exists(path)) {

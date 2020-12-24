@@ -210,6 +210,6 @@ void App::watcherCallback(const CloudNotification &event) {
 
   BOOST_LOG_TRIVIAL(info) << "App: new event" << event.event;
   _events.push(event);
+
+  execEvent();
 }
-
-

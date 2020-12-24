@@ -1,6 +1,9 @@
 #pragma once
 
 #include <string>
+#include <utility>
+#include <variant>
+#include <memory>
 #include <boost/filesystem.hpp>
 #include "InternalDB.h"
 #include "ClientNetwork.h"
@@ -56,7 +59,7 @@ class DownloadFileCommand : public BaseCommand {
   explicit DownloadFileCommand(std::function<void(const std::string &msg)> callbackOk,
                                std::function<void(const std::string &msg)> callbackError,
                                std::shared_ptr<InternalDB> internalDB,
-                               FileMeta &file);
+                               FileMeta file);
   void Do() override;
 
  private:
@@ -116,20 +119,3 @@ class DeleteFileCommand : public BaseCommand {
  private:
   fs::path _filePath;
 };
-
-//class FileCommand : public BaseCommand {
-// public:
-//  explicit FileCommand(std::function<void(const std::string &msg)> callbackOk,
-//                       std::function<void(const std::string &msg)> callbackError,
-//                       std::shared_ptr<InternalDB> internalDB,
-//                       fs::path path,
-//                       boost::optional<fs::path> newPath = boost::none,
-//                       bool isDeleted = false);
-//
-//  void Do() override;
-//
-// private:
-//  fs::path _filePath;
-//  boost::optional<fs::path> _newFilePath;
-//  bool _isDeleted;
-//};

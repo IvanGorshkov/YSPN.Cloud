@@ -1,7 +1,6 @@
 #include "MetaDataDB.h"
-#include "PostgresExceptions.h"
-#include <boost/lexical_cast.hpp>
 #include <iomanip>
+#include <boost/lexical_cast.hpp>
 
 MetaDataDB::MetaDataDB(std::string_view info)
     : PostgresSQLDB(info) {
@@ -12,25 +11,6 @@ MetaDataDB &MetaDataDB::shared(std::string_view info) {
   return shared;
 }
 
-std::string MetaDataDB::getTime(std::string &time) {
-  time.erase(std::find(time.begin(), time.end(), '.'), time.end());
-
-  std::time_t ttime;
-  try {
-    ttime = boost::lexical_cast<int>(time);
-  } catch (std::exception &exception) {
-    struct std::tm tm{};
-    std::istringstream ss(time);
-    ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
-    ttime = mktime(&tm);
-  }
-  tm *local_time = localtime(&ttime);
-  std::string date = std::to_string(1900 + local_time->tm_year) + "-" + std::to_string(1 + local_time->tm_mon) + "-"
-      + std::to_string(local_time->tm_mday) + " " + std::to_string(local_time->tm_hour) + ":"
-      + std::to_string(local_time->tm_min) + ":" + std::to_string(local_time->tm_sec);
-  return date;
-}
-
 void MetaDataDB::InsertFile(const FileInfo &fileMeta) {
   auto updateDate = fileMeta.file.updateDate;
   std::string dateUpdate = getTime(updateDate);
@@ -38,14 +18,14 @@ void MetaDataDB::InsertFile(const FileInfo &fileMeta) {
   std::string dateCreateDate = getTime(createDate);
 
   try {
-    pqExec("begin;", PostgresExceptions("invalid to start transaction")); // Начало транзакции
-    pqExec("savepoint f_savepoint;", PostgresExceptions("invalid to update")); // Точка сохранения
+    pqExec("begin;", PostgresExceptions("invalid to start transaction"));  // Начало транзакции
+    pqExec("savepoint f_savepoint;", PostgresExceptions("invalid to update"));  // Точка сохранения
 
     std::string query = "Update Files set is_current = 0 where id_file_for_user = "
         + std::to_string(fileMeta.file.fileId)
         + "and id_user = "
         + std::to_string(fileMeta.userId) + ";";
-    pqExec(query, PostgresExceptions("invalid to update")); // Снятие старой версии
+    pqExec(query, PostgresExceptions("invalid to update"));  // Снятие старой версии
 
     query =
         "INSERT INTO Files (id_file_for_user, id_user, file_name, file_extention, file_path ,file_size, count_chunks, version, is_current, is_deleted, update_date, create_date) VALUES ("
@@ -60,15 +40,15 @@ void MetaDataDB::InsertFile(const FileInfo &fileMeta) {
             + ", '" + std::to_string(fileMeta.file.isCurrent)
             + "', '" + std::to_string(fileMeta.file.isDeleted)
             + "', " + "'" + dateUpdate + "'," + "'" + dateCreateDate + "');";
-    pqExec(query, PostgresExceptions("invalid to insert data to db")); // Добавление нового файла
+    pqExec(query, PostgresExceptions("invalid to insert data to db"));  // Добавление нового файла
 
 
     //МБ УДАЛИТЬ
-    for (const auto &chunk: fileMeta.chunkMeta) {
+    for (const auto &chunk : fileMeta.chunkMeta) {
       query = "INSERT INTO Chunks (id_chunk_for_user, id_user) VALUES ("
           + std::to_string(chunk.chunkId) + ","
           + std::to_string(fileMeta.userId) + ");";
-      pqExec(query, PostgresExceptions("invalid to insert data to db")); // Добавление нового чанка
+      pqExec(query, PostgresExceptions("invalid to insert data to db"));  // Добавление нового чанка
     }
 
     query = "SELECT id FROM Files Where id_file_for_user = "
@@ -78,37 +58,19 @@ void MetaDataDB::InsertFile(const FileInfo &fileMeta) {
         + " ORDER  BY  id  DESC Limit 1;";
 
     int id = getLastIdOfFileUser(query, PostgresExceptions("invalid to select id"));
-    for (const auto &version: fileMeta.fileChunksMeta) {
+    for (const auto &version : fileMeta.fileChunksMeta) {
       query = "INSERT INTO Version (id_file , id_chunk, id_order) VALUES ("
           + std::to_string(id) + ", "
           + std::to_string(version.chunkId) + ", "
           + std::to_string(version.chunkOrder) + ");";
-      pqExec(query, PostgresExceptions("invalid to insert data to db")); // Добавление новой версии
+      pqExec(query, PostgresExceptions("invalid to insert data to db"));  // Добавление новой версии
     }
 
-    pqExec("commit;", PostgresExceptions("invalid to end transation")); // Завершение транзакции
+    pqExec("commit;", PostgresExceptions("invalid to end transation"));  // Завершение транзакции
   }
   catch (PostgresExceptions &exceptions) {
-    throw exceptions;
+    throw PostgresExceptions(exceptions.what());
   }
-}
-
-void MetaDataDB::InsertChunk() {
-}
-
-void MetaDataDB::InsertFileChunk() {
-}
-
-void MetaDataDB::SelectFile() {
-}
-
-void MetaDataDB::SelectChunk() {
-}
-
-void MetaDataDB::SelectFileChunkVersion() {
-}
-
-void MetaDataDB::SelectFilesByUser() {
 }
 
 int MetaDataDB::getLastIdOfFileUser(const std::string &query, PostgresExceptions exceptions) {
@@ -151,12 +113,12 @@ std::vector<FileInfo> MetaDataDB::GetUserFilesByTime(const UserDate &userDate) {
     if (PQresultStatus(resChunks) != PGRES_TUPLES_OK) {
       printf("No data retrieved\n");
     }
-    int rowsChanks = PQntuples(resChunks);
+    int rowsChunks = PQntuples(resChunks);
 
-    for (int j = 0; j < rowsChanks; j++) {
-      FileChunksMeta chunkMeta;
-      chunkMeta.chunkId = boost::lexical_cast<int>(PQgetvalue(resChunks, j, 2));
-      chunkMeta.chunkOrder = boost::lexical_cast<int>(PQgetvalue(resChunks, j, 3));
+    for (int j = 0; j < rowsChunks; j++) {
+      FileChunksMeta chunkMeta{
+          .chunkId = boost::lexical_cast<int>(PQgetvalue(resChunks, j, 2)),
+          .chunkOrder = boost::lexical_cast<int>(PQgetvalue(resChunks, j, 3))};
       fileInfo.fileChunksMeta.push_back(chunkMeta);
     }
 
@@ -164,4 +126,25 @@ std::vector<FileInfo> MetaDataDB::GetUserFilesByTime(const UserDate &userDate) {
   }
 
   return filesInfo;
+}
+
+std::string MetaDataDB::getTime(std::string &time) {
+  time.erase(std::find(time.begin(), time.end(), '.'), time.end());
+
+  std::time_t ttime;
+  try {
+    ttime = boost::lexical_cast<int>(time);
+  } catch (std::exception &exception) {
+    struct std::tm tm{};
+    std::istringstream ss(time);
+    ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
+    ttime = mktime(&tm);
+  }
+
+  auto *local_time = localtime(&ttime);
+  std::string date = std::to_string(1900 + local_time->tm_year) + "-" + std::to_string(1 + local_time->tm_mon) + "-"
+      + std::to_string(local_time->tm_mday) + " " + std::to_string(local_time->tm_hour) + ":"
+      + std::to_string(local_time->tm_min) + ":" + std::to_string(local_time->tm_sec);
+
+  return date;
 }

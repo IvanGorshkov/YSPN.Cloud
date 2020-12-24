@@ -1,15 +1,17 @@
 #pragma once
 
+#include <vector>
+#include <memory>
+#include <boost/filesystem.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
 #include "structs/FileMeta.h"
 #include "structs/Chunk.h"
 #include "structs/ChunkMeta.h"
 #include "structs/FileChunksMeta.h"
 #include "structs/FileInfo.h"
 #include "InternalDB.h"
-#include <boost/filesystem.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
 
 namespace bfs = boost::filesystem;
 

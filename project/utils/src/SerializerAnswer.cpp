@@ -1,6 +1,5 @@
 #include "SerializerAnswer.h"
 #include <boost/log/trivial.hpp>
-#include <utility>
 
 SerializerAnswer::SerializerAnswer(int id)
     : _status(StatusOk{.requestId = id}) {

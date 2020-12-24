@@ -1,12 +1,9 @@
-#include <boost/log/trivial.hpp>
 #include "InternalDB.h"
-#include "SQLiteQuery.h"
+#include <iomanip>
+#include <boost/log/trivial.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/filesystem.hpp>
-#include <utility>
-#include <iomanip>
-#include "InternalExceptions.h"
+
 
 InternalDB::InternalDB(std::string databaseName)
     : _databaseName(std::move(databaseName)),
@@ -324,7 +321,7 @@ void InternalDB::InsertOrUpdateFileInfo(FileInfo &fileInfo) {
     int id = selectId("SELECT id FROM Files ORDER  BY  id  DESC Limit 1");
     fileInfo.file.fileId = id;
     fileInfo.file.version = 1;
-    for (auto &fileChunksMeta: fileInfo.fileChunksMeta) {
+    for (auto &fileChunksMeta : fileInfo.fileChunksMeta) {
       InsertChunk(fileChunksMeta, id);
     }
   } else {
@@ -335,7 +332,7 @@ void InternalDB::InsertOrUpdateFileInfo(FileInfo &fileInfo) {
     int id = selectId("SELECT id FROM Files WHERE id = " + std::to_string(fileInfo.file.fileId) + ";");
     std::string query = "DELETE FROM Chunks WHERE id_file = " + std::to_string(id) + ";";
     deleteInfo(query);
-    for (auto &fileChunksMeta: fileInfo.fileChunksMeta) {
+    for (auto &fileChunksMeta : fileInfo.fileChunksMeta) {
       updateOneChunk(fileChunksMeta, id);
     }
   }
@@ -354,7 +351,8 @@ std::string InternalDB::getTime(std::string &time) {
     ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
     ttime = mktime(&tm);
   }
-  tm *local_time = localtime(&ttime);
+
+  auto *local_time = localtime(&ttime);
   std::string date = std::to_string(1900 + local_time->tm_year) + "-" + std::to_string(1 + local_time->tm_mon) + "-"
       + std::to_string(local_time->tm_mday) + " " + std::to_string(local_time->tm_hour) + ":"
       + std::to_string(local_time->tm_min) + ":" + std::to_string(local_time->tm_sec);
@@ -364,7 +362,7 @@ std::string InternalDB::getTime(std::string &time) {
 void InternalDB::InsertFile(std::vector<FileMeta> &files) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Insert Files";
-  for (auto &file: files) {
+  for (auto &file : files) {
     InsertAndIndexFile(file);
   }
   close();
@@ -373,7 +371,7 @@ void InternalDB::InsertFile(std::vector<FileMeta> &files) {
 void InternalDB::UpdateFile(const FileMeta &file) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
   auto time = file.updateDate;
-  std::string date = getTime(time);
+  auto date = getTime(time);
   std::string query = "Update Files SET "
                       "file_name = '" + file.fileName +
       "', file_extention = '" + file.fileExtension +
@@ -424,7 +422,7 @@ FileMeta InternalDB::getOneFile() {
   return file;
 }
 
-//MARK: Работа с Chunks
+// MARK: Работа с Chunks
 
 void InternalDB::InsertChunk(FileChunksMeta &chunks, const int idFile) {
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Insert Chunks";
@@ -440,7 +438,7 @@ void InternalDB::updateOneChunk(FileChunksMeta &chunk, const int id) {
   InsertChunk(chunk, id);
 }
 
-//MARK: Работа с User
+// MARK: Работа с User
 
 void InternalDB::DeleteUser(size_t id) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
@@ -510,7 +508,7 @@ std::string InternalDB::SelectUserPassword() {
 }
 
 
-//MARK: Базовые функции
+// MARK: Базовые функции
 
 void InternalDB::deleteInfo(const std::string &query) {
   auto pStmt = _stmt.get();
@@ -570,7 +568,7 @@ void InternalDB::insert(const std::string &query) {
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Inserted";
 }
 
-//MARK: Подключение к Базе Данных
+// MARK: Подключение к Базе Данных
 
 bool InternalDB::connect() {
   auto pDB = _database.get();
@@ -583,14 +581,14 @@ bool InternalDB::connect() {
   return true;
 }
 
-//MARK: Отключение  Базы Данных
+// MARK: Отключение  Базы Данных
 
 void InternalDB::close() {
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Close";
   sqlite3_shutdown();
 }
 
-//MARK: Создание табицы
+// MARK: Создание табицы
 
 void InternalDB::createTable() {
   auto pStmt = _stmt.get();

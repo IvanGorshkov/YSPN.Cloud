@@ -3,7 +3,7 @@
 
 SerializerUserDate::SerializerUserDate(int requestId, UserDate userDate)
     : _requestId(requestId),
-      _userDate(userDate) {
+      _userDate(std::move(userDate)) {
   BOOST_LOG_TRIVIAL(debug) << "SerializerUserDate: create serializer user date from struct";
 }
 
@@ -50,7 +50,6 @@ void SerializerUserDate::deserialize() {
     _requestId = _json.get<int>("requestId");
     _userDate.userId = _json.get<int>("userId");
     _userDate.date = _json.get<std::string>("date");
-
   } catch (pt::ptree_error &er) {
     throw ParseException(er.what());
   }

@@ -3,7 +3,8 @@
 #include <vector>
 #include <queue>
 #include <functional>
-#include <thread>
+#include <string>
+#include <memory>
 #include <boost/filesystem.hpp>
 #include "Commands.h"
 #include "InternalDB.h"

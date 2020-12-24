@@ -1,7 +1,7 @@
 #pragma once
 
-#include <boost/filesystem.hpp>
 #include <functional>
+#include <boost/filesystem.hpp>
 #include "structs/CloudEvents.h"
 
 namespace fs = boost::filesystem;

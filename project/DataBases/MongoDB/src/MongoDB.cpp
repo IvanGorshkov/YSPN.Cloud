@@ -1,7 +1,5 @@
 #include "MongoDB.h"
-#include <memory>
 #include <boost/log/trivial.hpp>
-#include "MongoExceptions.h"
 
 MongoDB::MongoDB() : _client(_uri) {
   _database = _client["cloud"];
@@ -23,8 +21,7 @@ void MongoDB::InsertChunk(const std::vector<Chunk> &chunks) const {
     bsoncxx::stdx::optional<bsoncxx::document::value> cursor =
         _database["chunks"].find_one(
             document{} << "id_user" << chunk.userId
-                       << "id_chunk" << chunk.chunkId << finalize
-        );
+                       << "id_chunk" << chunk.chunkId << finalize);
     if (cursor) {
       throw MongoExceptions(
           "This user = " + std::to_string(chunk.userId) + " and this chunk id = " + std::to_string(chunk.chunkId)
@@ -38,8 +35,7 @@ void MongoDB::InsertChunk(const std::vector<Chunk> &chunks) const {
                    << "size_chunk" << chunk.chunkSize
                    << "rapid_hash" << chunk.rHash
                    << "static_hash" << chunk.sHash
-                   << "data" << b_binary << finalize
-    );
+                   << "data" << b_binary << finalize);
   }
   _database["chunks"].insert_many(inChunks);
 }
@@ -52,8 +48,7 @@ std::vector<Chunk> MongoDB::GetChunk(const std::vector<UserChunk> &userChunks) c
     bsoncxx::stdx::optional<bsoncxx::document::value> cursor =
         _database["chunks"].find_one(
             document{} << "id_user" << userChunk.userId
-                       << "id_chunk" << userChunk.chunkId << finalize
-        );
+                       << "id_chunk" << userChunk.chunkId << finalize);
     if (cursor) {
       bsoncxx::document::value value = (*cursor);
       bsoncxx::document::view view = value.view();

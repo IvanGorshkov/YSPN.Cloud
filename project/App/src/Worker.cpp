@@ -1,5 +1,4 @@
 #include "Worker.h"
-#include <thread>
 #include <boost/log/trivial.hpp>
 
 void Worker::Run(std::queue<std::shared_ptr<BaseCommand>> &queue) {

@@ -1,12 +1,11 @@
 #include "SyncServer.h"
 #include "Config.h"
-#include <boost/program_options.hpp>
 #include <iostream>
+#include <boost/program_options.hpp>
 
 namespace po = boost::program_options;
 
 int main(int argc, char **argv) {
-
   po::options_description desc("Allowed options");
   desc.add_options()
       ("help,h", "produce help message");

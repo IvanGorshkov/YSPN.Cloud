@@ -1,9 +1,5 @@
 #include "Worker.h"
-
-#include <chrono>
-#include <thread>
 #include <boost/log/trivial.hpp>
-#include <utility>
 
 Worker::Worker(std::shared_ptr<CommandManager> manager,
                std::shared_ptr<NetworkServer> server)

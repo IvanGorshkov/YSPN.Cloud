@@ -1,10 +1,8 @@
 #pragma once
 
+#include <string>
 #include <boost/asio.hpp>
-#include <iostream>
 #include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/log/trivial.hpp>
 #include "ClientNetworkExceptions.h"
 
 namespace pt = boost::property_tree;

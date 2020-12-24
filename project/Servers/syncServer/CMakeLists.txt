@@ -27,6 +27,5 @@ ADD_EXECUTABLE(${PROJECT_NAME}
         src/SyncCommands.cpp
         src/SyncManager.cpp
         src/SyncServer.cpp
-        src/TestPostgra.cpp
         )
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${Boost_LIBRARIES} Utils-dev Server-dev MetDataDB-dev)

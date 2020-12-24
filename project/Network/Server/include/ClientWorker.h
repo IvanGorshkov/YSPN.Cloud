@@ -1,13 +1,13 @@
 #pragma once
 
+#include <functional>
+#include <utility>
+#include <memory>
+#include <string>
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 #include <boost/asio.hpp>
-#include <functional>
-#include <iostream>
-#include <thread>
 #include <boost/property_tree/ptree.hpp>
-#include <boost/log/trivial.hpp>
 #include "SafeQueue.h"
 #include "UserSession.h"
 

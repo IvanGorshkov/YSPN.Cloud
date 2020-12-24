@@ -31,8 +31,7 @@ void ClientConfig::Log(const std::string &state, const std::string &file) {
   if (state == "release") {
     logging::core::get()->set_filter
         (
-            logging::trivial::severity >= logging::trivial::fatal
-        );
+            logging::trivial::severity >= logging::trivial::fatal);
   }
 
   if (!file.empty()) {
@@ -51,9 +50,7 @@ void ClientConfig::Log(const std::string &state, const std::string &file) {
                         << "\t:"
                         << " <" << logging::trivial::severity << "> "
                         << "\t"
-                        << expr::smessage
-                )
-        );
+                        << expr::smessage));
   }
 }
 NetworkConfig ClientConfig::getStorageConfig() {

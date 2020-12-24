@@ -1,4 +1,6 @@
 #include "ClientNetwork.h"
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/log/trivial.hpp>
 
 ClientNetwork::ClientNetwork()
     : _socket(_service) {

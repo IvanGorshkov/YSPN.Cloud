@@ -1,8 +1,8 @@
 #pragma once
 
-#include <boost/property_tree/ptree.hpp>
 #include <string>
 #include <vector>
+#include <boost/property_tree/ptree.hpp>
 #include "structs/FileInfo.h"
 #include "SerializerInterface.h"
 #include "SerializerExceptions.h"

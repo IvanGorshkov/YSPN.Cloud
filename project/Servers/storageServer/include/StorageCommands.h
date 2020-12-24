@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <boost/property_tree/ptree.hpp>
 #include "Command.h"
 #include "MongoDB.h"
@@ -12,7 +13,7 @@ namespace pt = boost::property_tree;
 
 class UploadChunkCommand : public Command {
  public:
-  explicit UploadChunkCommand(std::shared_ptr<pt::ptree> &request);
+  explicit UploadChunkCommand(const std::shared_ptr<pt::ptree> &request);
   std::shared_ptr<pt::ptree> Do() override;
 
  private:
@@ -23,7 +24,7 @@ class UploadChunkCommand : public Command {
 
 class DownloadChunkCommand : public Command {
  public:
-  explicit DownloadChunkCommand(std::shared_ptr<pt::ptree> &request);
+  explicit DownloadChunkCommand(const std::shared_ptr<pt::ptree> &request);
   std::shared_ptr<pt::ptree> Do() override;
 
  private:

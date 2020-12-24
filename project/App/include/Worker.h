@@ -1,6 +1,7 @@
 #pragma once
 
 #include <queue>
+#include <memory>
 #include "Commands.h"
 
 class Worker {
