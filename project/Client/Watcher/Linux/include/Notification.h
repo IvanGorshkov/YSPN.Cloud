@@ -1,9 +1,8 @@
 #pragma once
 
-#include "stdlib.h"
-#include <boost/filesystem.hpp>
 #include <sys/inotify.h>
-#include <chrono>
+#include <cstdlib>
+#include <boost/filesystem.hpp>
 
 enum Event : std::uint32_t {
   _access = IN_ACCESS,
@@ -34,8 +33,7 @@ constexpr Event operator|(Event lhs, Event rhs) {
           | static_cast<std::underlying_type<Event>::type>(rhs));
 }
 
-constexpr Event operator&(Event lhs, Event rhs)
-{
+constexpr Event operator&(Event lhs, Event rhs) {
   return static_cast<Event>(
       static_cast<std::underlying_type<Event>::type>(lhs)
           & static_cast<std::underlying_type<Event>::type>(rhs));

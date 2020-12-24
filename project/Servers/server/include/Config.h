@@ -10,8 +10,8 @@ struct ServerConfig {
 };
 
 struct NetworkConfig {
-  short port;
-  short backlog;
+  size_t port;
+  size_t backlog;
 };
 
 struct ClientWorkerConfig {
@@ -33,10 +33,10 @@ class Config {
   Config(const Config &) = delete;
   Config &operator=(const Config &) = delete;
 
-  static void parseLogConfig(pt::ptree &log);
-  void parseStorageConfig(pt::ptree &storage);
-  void parseNetworkConfig(pt::ptree &network);
-  void parseClientWorkerConfig(pt::ptree &clientWorker);
+  static void parseLogConfig(const pt::ptree &log);
+  void parseStorageConfig(const pt::ptree &storage);
+  void parseNetworkConfig(const pt::ptree &network);
+  void parseClientWorkerConfig(const pt::ptree &clientWorker);
 
  private:
   ServerConfig _serverConfig{};

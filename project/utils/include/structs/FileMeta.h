@@ -15,4 +15,8 @@ struct FileMeta {
   bool isCurrent;
   std::string updateDate;
   std::string createDate;
+
+  std::string GetFilePath() const {
+    return filePath + '/' + fileName + fileExtension;
+  }
 };

@@ -83,13 +83,12 @@ int Config::Run(const std::string &path) {
   return EXIT_SUCCESS;
 }
 
-void Config::parseLogConfig(pt::ptree &log) {
+void Config::parseLogConfig(const pt::ptree &log) {
   BOOST_LOG_TRIVIAL(debug) << "Config: parseLogConfig";
   if (log.get<std::string>("state") == "release") {
     logging::core::get()->set_filter
         (
-            logging::trivial::severity >= logging::trivial::info
-        );
+            logging::trivial::severity >= logging::trivial::info);
   }
 
   auto file = log.get<std::string>("file");
@@ -109,25 +108,23 @@ void Config::parseLogConfig(pt::ptree &log) {
                         << "\t:"
                         << " <" << logging::trivial::severity << "> "
                         << "\t"
-                        << expr::smessage
-                )
-        );
+                        << expr::smessage));
   }
 }
 
-void Config::parseStorageConfig(pt::ptree &storage) {
+void Config::parseStorageConfig(const pt::ptree &storage) {
   BOOST_LOG_TRIVIAL(debug) << "Config: parseStorageConfig";
   _serverConfig.workersCount = storage.get<size_t>("workersCount");
 }
 
-void Config::parseNetworkConfig(pt::ptree &network) {
+void Config::parseNetworkConfig(const pt::ptree &network) {
   BOOST_LOG_TRIVIAL(debug) << "Config: parseNetworkConfig";
-  _networkConfig.port = network.get<short>("port");
-  _networkConfig.backlog = network.get<short>("backlog");
+  _networkConfig.port = network.get<size_t>("port");
+  _networkConfig.backlog = network.get<size_t>("backlog");
 }
 
-void Config::parseClientWorkerConfig(pt::ptree &clientWorker) {
+void Config::parseClientWorkerConfig(const pt::ptree &clientWorker) {
   BOOST_LOG_TRIVIAL(debug) << "Config: parseClientWorkerConfig";
   _clientWorkerConfig.requestWorkersCount = clientWorker.get<size_t>("requestWorkersCount");
-  _clientWorkerConfig.responseWorkersCount = clientWorker.get<size_t>("responceWorkersCount");
+  _clientWorkerConfig.responseWorkersCount = clientWorker.get<size_t>("responseWorkersCount");
 }

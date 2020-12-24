@@ -1,6 +1,9 @@
 #pragma once
 
 #include <string>
+#include <utility>
+#include <variant>
+#include <memory>
 #include <boost/filesystem.hpp>
 #include "InternalDB.h"
 #include "ClientNetwork.h"
@@ -21,20 +24,22 @@ namespace fs = boost::filesystem;
 
 class BaseCommand {
  public:
-  explicit BaseCommand(std::function<void()> callbackOk,
+  explicit BaseCommand(std::function<void(const std::string &msg)> callbackOk,
                        std::function<void(const std::string &msg)> callbackError,
                        std::shared_ptr<InternalDB> internalDB);
   virtual ~BaseCommand() = default;
   virtual void Do() = 0;
 
  protected:
-  static void connect(ClientNetwork &network,
-                      const NetworkConfig &config,
-                      const pt::ptree &request,
-                      pt::ptree &response) noexcept(false);
+  static void sendAndReceive(ClientNetwork &network,
+                             const NetworkConfig &config,
+                             const pt::ptree &request,
+                             pt::ptree &response) noexcept(false);
+
+  bool visitAnswer(const std::variant<StatusOk, StatusError> &response);
 
  protected:
-  std::function<void()> callbackOk;
+  std::function<void(const std::string &msg)> callbackOk;
   std::function<void(const std::string &msg)> callbackError;
 
  protected:
@@ -43,7 +48,7 @@ class BaseCommand {
 
 class RefreshCommand : public BaseCommand {
  public:
-  explicit RefreshCommand(std::function<void()> callbackOk,
+  explicit RefreshCommand(std::function<void(const std::string &msg)> callbackOk,
                           std::function<void(const std::string &msg)> callbackError,
                           std::shared_ptr<InternalDB> internalDB);
   void Do() override;
@@ -51,29 +56,66 @@ class RefreshCommand : public BaseCommand {
 
 class DownloadFileCommand : public BaseCommand {
  public:
-  explicit DownloadFileCommand(std::function<void()> callbackOk,
+  explicit DownloadFileCommand(std::function<void(const std::string &msg)> callbackOk,
                                std::function<void(const std::string &msg)> callbackError,
                                std::shared_ptr<InternalDB> internalDB,
-                               FileMeta &file);
+                               FileMeta file);
   void Do() override;
 
  private:
   FileMeta _file;
 };
 
-class FileCommand : public BaseCommand {
+class CreateFileCommand : public BaseCommand {
  public:
-  explicit FileCommand(std::function<void()> callbackOk,
-                       std::function<void(const std::string &msg)> callbackError,
-                       std::shared_ptr<InternalDB> internalDB,
-                       fs::path path,
-                       boost::optional<fs::path> newPath = boost::none,
-                       bool isDeleted = false);
+  explicit CreateFileCommand(std::function<void(const std::string &msg)> callbackOk,
+                             std::function<void(const std::string &msg)> callbackError,
+                             std::shared_ptr<InternalDB> internalDB,
+                             fs::path path);
 
   void Do() override;
 
  private:
   fs::path _filePath;
-  boost::optional<fs::path> _newFilePath;
-  bool _isDeleted;
+};
+
+class ModifyFileCommand : public BaseCommand {
+ public:
+  explicit ModifyFileCommand(std::function<void(const std::string &msg)> callbackOk,
+                             std::function<void(const std::string &msg)> callbackError,
+                             std::shared_ptr<InternalDB> internalDB,
+                             fs::path path);
+
+  void Do() override;
+
+ private:
+  fs::path _filePath;
+};
+
+class RenameFileCommand : public BaseCommand {
+ public:
+  explicit RenameFileCommand(std::function<void(const std::string &msg)> callbackOk,
+                             std::function<void(const std::string &msg)> callbackError,
+                             std::shared_ptr<InternalDB> internalDB,
+                             fs::path oldPath,
+                             fs::path newPath);
+
+  void Do() override;
+
+ private:
+  fs::path _fileOldPath;
+  fs::path _fileNewPath;
+};
+
+class DeleteFileCommand : public BaseCommand {
+ public:
+  explicit DeleteFileCommand(std::function<void(const std::string &msg)> callbackOk,
+                             std::function<void(const std::string &msg)> callbackError,
+                             std::shared_ptr<InternalDB> internalDB,
+                             fs::path path);
+
+  void Do() override;
+
+ private:
+  fs::path _filePath;
 };

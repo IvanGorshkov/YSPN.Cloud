@@ -31,8 +31,7 @@ void ClientConfig::Log(const std::string &state, const std::string &file) {
   if (state == "release") {
     logging::core::get()->set_filter
         (
-            logging::trivial::severity >= logging::trivial::fatal
-        );
+            logging::trivial::severity >= logging::trivial::fatal);
   }
 
   if (!file.empty()) {
@@ -51,17 +50,15 @@ void ClientConfig::Log(const std::string &state, const std::string &file) {
                         << "\t:"
                         << " <" << logging::trivial::severity << "> "
                         << "\t"
-                        << expr::smessage
-                )
-        );
+                        << expr::smessage));
   }
 }
 NetworkConfig ClientConfig::getStorageConfig() {
   BOOST_LOG_TRIVIAL(debug) << "ClientConfig: getStorageConfig";
-  return NetworkConfig{.host = "31.135.76.69", .port = 5555};
+  return NetworkConfig{.host = "localhost", .port = 5555};
 }
 
 NetworkConfig ClientConfig::getSyncConfig() {
   BOOST_LOG_TRIVIAL(debug) << "ClientConfig: getSyncConfig";
-  return NetworkConfig{.host = "31.135.76.69", .port = 6666};
+  return NetworkConfig{.host = "localhost", .port = 6666};
 }

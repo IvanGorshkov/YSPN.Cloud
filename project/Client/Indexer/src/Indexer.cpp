@@ -4,66 +4,117 @@ Indexer::Indexer(std::shared_ptr<InternalDB> internalDB)
     : _internalDB(std::move(internalDB)) {
 }
 
-FileMeta Indexer::GetFileMeta(const bfs::path &file,
-                              bool IsDeleted = false,
-                              boost::optional<bfs::path> old_path) {
+FileMeta Indexer::CreateFile(const bfs::path &path, int chunksCount) {
+  auto filePath = path.parent_path().string();
+  filePath.erase(filePath.find(_internalDB->GetSyncFolder()), _internalDB->GetSyncFolder().length());
 
-  std::string filePath = file.parent_path().string();
-  size_t pos = filePath.find(_internalDB->GetSyncFolder());
-  if (pos != std::string::npos) {
-	filePath.erase(pos, _internalDB->GetSyncFolder().length());
-  }
-
-  FileMeta new_file_meta{
-      .version = -1,
-      .fileName = file.stem().string(),
-      .fileExtension = file.extension().string(),
+  FileMeta fileMeta{
+      .fileName = path.stem().string(),
+      .fileExtension = path.extension().string(),
       .filePath = filePath,
-      .fileSize = static_cast<int>(boost::filesystem::file_size(file)),
-	  .isDownload = true,
-      .isDeleted = IsDeleted,
+      .fileSize = static_cast<int>(boost::filesystem::file_size(path)),
+      .chunksCount = chunksCount,
+      .isDownload = true,
+      .isDeleted = false,
       .isCurrent = true,
-      .updateDate = boost::lexical_cast<std::string>(boost::filesystem::last_write_time(file))
-  };
+      .updateDate = boost::lexical_cast<std::string>(boost::filesystem::last_write_time(path)),
+      .createDate = boost::lexical_cast<std::string>(boost::filesystem::last_write_time(path))};
 
-
-  if (old_path) {
-	std::string oldfilePath = old_path->parent_path().string();
-	pos = oldfilePath.find(_internalDB->GetSyncFolder());
-  	if (pos != std::string::npos) {
-	  oldfilePath.erase(pos, _internalDB->GetSyncFolder().length());
- 	 }
-  	new_file_meta.fileId = _internalDB->FindIdFile(oldfilePath,
-                                                   old_path->stem().string(),
-                                                   old_path->extension().string());
-  }
-  else
-    new_file_meta.fileId =
-        _internalDB->FindIdFile(new_file_meta.filePath, new_file_meta.fileName, new_file_meta.fileExtension);
-  return new_file_meta;
+  _internalDB->InsertAndIndexFile(fileMeta);
+  return fileMeta;
 }
 
-FileInfo Indexer::GetFileInfo(FileMeta &file, std::vector<Chunk> &chunks) {
-  std::vector<ChunkMeta> chunk_meta;
-  std::vector<FileChunksMeta> file_chunks_meta;
-  int i = 0;
-  file.chunksCount = chunks.size();
-  std::for_each(chunks.begin(), chunks.end(), [&chunk_meta, &file_chunks_meta, &i](const Chunk &chunk) {
-    chunk_meta.push_back(ChunkMeta{chunk.chunkId});
-    file_chunks_meta.push_back(FileChunksMeta{chunk.chunkId, ++i});
-  });
-  FileInfo info{
-      .userId = _internalDB->GetUserId(),
-      .file = file,
-      .chunkMeta = chunk_meta,
-      .fileChunksMeta = file_chunks_meta
-  };
-  _internalDB->InsertOrUpdateFileInfo(info);
+FileMeta Indexer::ModifyFile(const bfs::path &path, int chunksCount) {
+  auto filePath = path.parent_path().string();
+  filePath.erase(filePath.find(_internalDB->GetSyncFolder()), _internalDB->GetSyncFolder().length());
 
-  for (int j = 0; j < chunks.size(); j++) {
-    chunks[j].userId = info.userId;
-    chunks[j].chunkId = info.fileChunksMeta[j].chunkId;
+  auto fileMeta = _internalDB->GetFile(filePath, path.stem().string(), path.extension().string());
+  fileMeta.fileSize = static_cast<int>(boost::filesystem::file_size(path));
+  fileMeta.chunksCount = chunksCount;
+  fileMeta.isCurrent = true;
+  fileMeta.isDeleted = false;
+  fileMeta.updateDate = boost::lexical_cast<std::string>(boost::filesystem::last_write_time(path));
+
+  _internalDB->UpdateAndIndexFile(fileMeta);
+  return fileMeta;
+}
+
+FileMeta Indexer::DeleteFile(const bfs::path &path) {
+  auto filePath = path.parent_path().string();
+  filePath.erase(filePath.find(_internalDB->GetSyncFolder()), _internalDB->GetSyncFolder().length());
+
+  auto fileMeta = _internalDB->GetFile(filePath, path.stem().string(), path.extension().string());
+  fileMeta.fileSize = 0;
+  fileMeta.chunksCount = 0;
+  fileMeta.isCurrent = true;
+  fileMeta.isDeleted = true;
+  fileMeta.updateDate = boost::lexical_cast<std::string>(std::time(nullptr));
+
+  _internalDB->DeleteAndIndexFile(fileMeta);
+  return fileMeta;
+}
+
+FileMeta Indexer::RenameFile(const bfs::path &oldPath, const bfs::path &newPath) {
+  auto oldFilePath = oldPath.parent_path().string();
+  oldFilePath.erase(oldFilePath.find(_internalDB->GetSyncFolder()), _internalDB->GetSyncFolder().length());
+
+  auto newFilePath = newPath.parent_path().string();
+  newFilePath.erase(newFilePath.find(_internalDB->GetSyncFolder()), _internalDB->GetSyncFolder().length());
+
+  auto fileMeta = _internalDB->GetFile(oldFilePath, oldPath.stem().string(), oldPath.extension().string());
+  fileMeta.fileName = newPath.stem().string();
+  fileMeta.fileExtension = newPath.extension().string();
+  fileMeta.filePath = newFilePath;
+  fileMeta.isCurrent = true;
+  fileMeta.isDeleted = false;
+  fileMeta.updateDate = boost::lexical_cast<std::string>(boost::filesystem::last_write_time(newPath));
+
+  _internalDB->RenameAndIndexFile(fileMeta);
+  return fileMeta;
+}
+
+FileInfo Indexer::GetFileInfo(const FileMeta &fileMeta, std::vector<Chunk> &chunksVector) {
+  FileInfo fileInfo{
+      .userId = _internalDB->GetUserId(),
+      .file = fileMeta,
+      .fileChunksMeta = createFileChunks(fileMeta.fileId, fileMeta.chunksCount)
+  };
+
+  for (int i = 0; i < chunksVector.size(); i++) {
+    chunksVector[i].userId = fileInfo.userId;
+    chunksVector[i].chunkId = fileInfo.fileChunksMeta[i].chunkId;
   }
 
-  return info;
+  return fileInfo;
+}
+
+FileInfo Indexer::GetRenameFileInfo(const FileMeta &fileMeta) {
+  FileInfo fileInfo{
+      .userId = _internalDB->GetUserId(),
+      .file = fileMeta,
+      .fileChunksMeta = _internalDB->GetFileChunksMeta(fileMeta.fileId)
+  };
+
+  return fileInfo;
+}
+
+FileInfo Indexer::GetDeleteFileInfo(const FileMeta &fileMeta) {
+  FileInfo fileInfo{
+      .userId = _internalDB->GetUserId(),
+      .file = fileMeta
+  };
+
+  return fileInfo;
+}
+
+std::vector<FileChunksMeta> Indexer::createFileChunks(const int &fileId, const int &chunksCount) {
+  std::vector<FileChunksMeta> fileChunksMeta;
+  fileChunksMeta.reserve(chunksCount);
+
+  for (int i = 0; i < chunksCount; ++i) {
+    fileChunksMeta.push_back(FileChunksMeta{.chunkOrder = i});
+    _internalDB->InsertAndIndexFileChunk(fileChunksMeta[i], fileId);
+  }
+
+  return fileChunksMeta;
 }

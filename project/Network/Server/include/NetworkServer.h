@@ -1,5 +1,7 @@
 #pragma once
 
+#include <utility>
+#include <memory>
 #include <string>
 #include <boost/property_tree/ptree.hpp>
 #include "UserSession.h"
@@ -10,7 +12,7 @@ namespace pt = boost::property_tree;
 
 class NetworkServer {
  public:
-  explicit NetworkServer(short port = 5555, short backlog = 1024);
+  explicit NetworkServer(size_t port = 5555, size_t backlog = 1024);
   void StartServer();
   void PutResponse(const std::shared_ptr<std::pair<std::shared_ptr<UserSession>,
                                                    pt::ptree> > &response);

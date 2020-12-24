@@ -2,16 +2,17 @@
 
 #include <QAbstractItemModel>
 #include <QAbstractItemView>
-#include <QHBoxLayout>
 #include <QDesktopServices>
 #include <QFile>
 #include <QFileDialog>
+#include <QHBoxLayout>
 #include <QInputDialog>
 #include <QMainWindow>
 #include <QMessageBox>
 #include <QModelIndex>
 #include <QMovie>
 #include <QSettings>
+#include <QShortcut>
 #include <QSizePolicy>
 #include <QStandardItem>
 #include <QStandardItemModel>
@@ -19,8 +20,10 @@
 #include <QStringListModel>
 #include <QTreeView>
 #include <algorithm>
-#include <optional>
+#include <functional>
 #include <iostream>
+#include <optional>
+#include <string>
 #include <vector>
 #include "App.h"
 #include "AppExceptions.h"
@@ -49,29 +52,28 @@ class MainWindow : public QMainWindow, public QStandardItem {
   void stopLoadingLabel();
 
  private:
-  void downloadFileCallbackOk();
-  void downloadFileCallbackError(const std::string &msg);
-  void refreshCallbackOk();
-  void refreshCallbackError(const std::string &msg);
-  void uploadFileCallbackOk();
-  void uploadFileCallbackError(const std::string &msg);
+  void callbackOk(const std::string &msg);
+  void callbackError(const std::string &msg);
 
  private:
   void printMsgBox();
   QString _msg;
 
+  void printInfoBox(const QString &title, const QString &text);
+
  signals:
   void printMsgBoxSignal();
 
  private slots:
+  void slotShortcutCMDR();
+
   void slotCustomMenuRequested(QPoint pos);
   void changeDirectory();
   void open_file();
+  void save_file();
   void rename_file();
   void download_on_device();
   void delete_from_device();
-  void delete_from_cloud();
-  void view_history_file();
   void view_properties();
   void onBtnAddFile();
   void onBtnSettings();
@@ -80,7 +82,8 @@ class MainWindow : public QMainWindow, public QStandardItem {
 
  private:
   Ui::MainWindow *ui;
-  QWidget* _settingsForm;
+  QShortcut *keyCMDR;
+  QWidget *_settingsForm;
   QMovie *_movie;
   QStandardItemModel _cloudModel;
   std::vector<FileMeta> _filesInfo;

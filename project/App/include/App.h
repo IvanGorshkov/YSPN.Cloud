@@ -3,7 +3,8 @@
 #include <vector>
 #include <queue>
 #include <functional>
-#include <thread>
+#include <string>
+#include <memory>
 #include <boost/filesystem.hpp>
 #include "Commands.h"
 #include "InternalDB.h"
@@ -13,37 +14,40 @@
 #include "structs/CloudEvents.h"
 #include "Watcher.h"
 
-
 namespace fs = boost::filesystem;
 
 class App {
  public:
-  App();
+  App(const std::function<void(const std::string &msg)> &callbackOk,
+      const std::function<void(const std::string &msg)> &callbackError);
   ~App();
-  void Refresh(const std::function<void()> &callbackOk,
-               const std::function<void(const std::string &msg)> &callbackError);
+
+  bool IsLogin() const;
+
+  void Refresh();
 
   std::vector<FileMeta> GetFiles();
-  void DownloadFile(int fileId,
-                    const std::function<void()> &callbackOk,
-                    const std::function<void(const std::string &msg)> &callbackError) noexcept(false);
+  void DownloadFile(int fileId) noexcept(false);
 
-  void UploadFile(const fs::path &path);
-  void RenameFile(const fs::path &oldPath, const fs::path &newPath);
+  void CreateFile(const fs::path &path) noexcept(false);
+  void RenameFile(const fs::path &oldPath, const fs::path &newPath) noexcept(false);
   void DeleteFile(const fs::path &path);
-  void ModifyFile(const fs::path &path);
+  void ModifyFile(const fs::path &path) noexcept(false);
 
-  void UpdateSyncFolder(const fs::path &path);
+  void UpdateSyncFolder(const fs::path &path) noexcept(false);
   std::string GetSyncFolder();
 
  private:
   void runWorker();
-  void callBack(CloudNotification);
 
   void runWatcher();
   void stopWatcher();
   void execEvent();
-  void watcherCallback(CloudNotification event);
+  void watcherCallback(const CloudNotification &event);
+
+ private:
+  std::function<void(const std::string &msg)> appCallbackOk;
+  std::function<void(const std::string &msg)> appCallbackError;
 
  private:
   std::queue<std::shared_ptr<BaseCommand>> _commands;

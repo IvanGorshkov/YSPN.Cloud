@@ -30,6 +30,7 @@ ADD_LIBRARY(${PROJECT_NAME}-dev STATIC
         src/SerializerAnswer.cpp
         src/SerializerUserDate.cpp
         src/SerializerFileInfo.cpp
+        include/structs/FileMeta.h
         )
 TARGET_LINK_LIBRARIES(${PROJECT_NAME}-dev OpenSSL::Crypto ${Boost_LIBRARIES})
 

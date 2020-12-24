@@ -1,4 +1,6 @@
 #pragma once
+
+#include <utility>
 #include <exception>
 #include <string>
 
@@ -25,21 +27,21 @@ class WrongPath : public WatcherExceptions {
 
 class InotifyInitError : public WatcherExceptions {
  public:
-  explicit InotifyInitError()
+  InotifyInitError()
       : WatcherExceptions("Can't initialize inotify !") {
   }
 };
 
 class EpollInitError : public WatcherExceptions {
  public:
-  explicit EpollInitError()
+  EpollInitError()
       : WatcherExceptions("Can't initialize epoll !") {
   }
 };
 
 class EpollFDError : public WatcherExceptions {
  public:
-  explicit EpollFDError()
+  EpollFDError()
       : WatcherExceptions("Can't add inotify filedescriptor to epoll !") {
   }
 };
@@ -53,7 +55,7 @@ class InotifyAddWatchError : public WatcherExceptions {
 
 class InotifyRemoveWatchError : public WatcherExceptions {
  public:
-  explicit InotifyRemoveWatchError()
+  InotifyRemoveWatchError()
       : WatcherExceptions("Failed to remove watch!") {
   }
 };

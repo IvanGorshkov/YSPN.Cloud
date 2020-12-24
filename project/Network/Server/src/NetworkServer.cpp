@@ -1,11 +1,11 @@
 #include "NetworkServer.h"
+#include <boost/log/trivial.hpp>
 
-NetworkServer::NetworkServer(short port, short backlog)
+NetworkServer::NetworkServer(size_t port, size_t backlog)
     : _acceptor(_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)) {
   BOOST_LOG_TRIVIAL(info) << "NetworkSever: listen on port " << port << ", backlog: " << backlog;
 
   _acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
-//  _acceptor.set_option(boost::asio::detail::socket_option::integer<SOL_SOCKET, SO_RCVTIMEO>{ 500 });
   _acceptor.listen(backlog);
 }
 

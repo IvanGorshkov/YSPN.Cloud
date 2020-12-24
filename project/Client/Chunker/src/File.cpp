@@ -1,8 +1,9 @@
 #include "File.h"
 
-File::File(boost::filesystem::path path) : _path(path) {
-  if(!boost::filesystem::exists(path.parent_path())){
-    boost::filesystem::create_directories(path.parent_path());
+File::File(const bfs::path &path)
+    : _path(path) {
+  if (!bfs::exists(path.parent_path())) {
+    bfs::create_directories(path.parent_path());
   }
 }
 
@@ -18,4 +19,10 @@ std::ofstream File::Write() {
   return fileStream;
 }
 
-File::~File() {}
+void File::Rename(const bfs::path &oldPath, const bfs::path &newPath) {
+  bfs::rename(oldPath, newPath);
+}
+
+void File::Delete(const bfs::path &path) {
+  bfs::remove(path);
+}

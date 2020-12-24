@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <boost/property_tree/ptree.hpp>
 #include "Command.h"
 #include "MetaDataDB.h"
@@ -12,7 +13,7 @@ namespace pt = boost::property_tree;
 
 class DataUpdateCommand : public Command {
  public:
-  explicit DataUpdateCommand(std::shared_ptr<pt::ptree> &request);
+  explicit DataUpdateCommand(const std::shared_ptr<pt::ptree> &request);
   std::shared_ptr<pt::ptree> Do() override;
 
  private:
@@ -23,7 +24,7 @@ class DataUpdateCommand : public Command {
 
 class UploadFileCommand : public Command {
  public:
-  explicit UploadFileCommand(std::shared_ptr<pt::ptree> &request);
+  explicit UploadFileCommand(const std::shared_ptr<pt::ptree> &request);
   std::shared_ptr<pt::ptree> Do() override;
 
  private:
