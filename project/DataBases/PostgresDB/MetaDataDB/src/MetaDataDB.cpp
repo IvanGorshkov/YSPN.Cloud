@@ -19,13 +19,13 @@ void MetaDataDB::InsertFile(const FileInfo &fileMeta) {
 
   try {
     pqExec("begin;", PostgresExceptions("invalid to start transaction"));  // Начало транзакции
-    pqExec("savepoint f_savepoint;", PostgresExceptions("invalid to update"));  // Точка сохранения
+    pqExec("savepoint f_savepoint;", PostgresExceptions("invalid to insert"));  // Точка сохранения
 
     std::string query = "Update Files set is_current = 0 where id_file_for_user = "
         + std::to_string(fileMeta.file.fileId)
         + "and id_user = "
         + std::to_string(fileMeta.userId) + ";";
-    pqExec(query, PostgresExceptions("invalid to update"));  // Снятие старой версии
+    pqExec(query, PostgresExceptions("invalid to insert"));  // Снятие старой версии
 
     query =
         "INSERT INTO Files (id_file_for_user, id_user, file_name, file_extention, file_path ,file_size, count_chunks, version, is_current, is_deleted, update_date, create_date) VALUES ("
