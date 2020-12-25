@@ -60,5 +60,5 @@ NetworkConfig ClientConfig::getStorageConfig() {
 
 NetworkConfig ClientConfig::getSyncConfig() {
   BOOST_LOG_TRIVIAL(debug) << "ClientConfig: getSyncConfig";
-  return NetworkConfig{.host = "localhost", .port = 6666};
+  return NetworkConfig{.host = "35.224.63.74", .port = 6666};
 }

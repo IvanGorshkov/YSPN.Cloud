@@ -7,6 +7,7 @@ SET(CMAKE_CXX_STANDARD 17)
 FIND_PACKAGE(PostgreSQL REQUIRED)
 
 FIND_PACKAGE(Boost REQUIRED)
+FIND_PACKAGE(Boost COMPONENTS log REQUIRED)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 
 INCLUDE_DIRECTORIES(Base/include
@@ -23,7 +24,7 @@ ADD_LIBRARY(MetDataDB-dev SHARED
 target_include_directories(MetDataDB-dev PRIVATE ${PostgreSQL_INCLUDE_DIRS})
 
 # Add libraries to link your target againts. Again, PRIVATE is important for multi-target projects
-target_link_libraries(MetDataDB-dev PRIVATE ${PostgreSQL_LIBRARIES})
+target_link_libraries(MetDataDB-dev PRIVATE ${PostgreSQL_LIBRARIES} ${Boost_LIBRARIES})
 
 ADD_LIBRARY(UserDB SHARED
         Base/src/PostgreSQLDB.cpp
