@@ -1,7 +1,7 @@
 #include "MetaDataDB.h"
 #include <iomanip>
 #include <boost/lexical_cast.hpp>
-
+#include <boost/log/trivial.hpp>
 MetaDataDB::MetaDataDB(std::string_view info)
     : PostgresSQLDB(info) {
 }
@@ -12,6 +12,7 @@ MetaDataDB &MetaDataDB::shared(std::string_view info) {
 }
 
 void MetaDataDB::InsertFile(const FileInfo &fileMeta) {
+  BOOST_LOG_TRIVIAL(debug) << "PostgresSQLDB: InsertFile";
   auto updateDate = fileMeta.file.updateDate;
   std::string dateUpdate = getTime(updateDate);
   auto createDate = fileMeta.file.createDate;
@@ -19,8 +20,10 @@ void MetaDataDB::InsertFile(const FileInfo &fileMeta) {
 
   try {
     pqExec("begin;", PostgresExceptions("invalid to start transaction"));  // Начало транзакции
+	BOOST_LOG_TRIVIAL(debug) << "PostgresSQLDB: Begin transaction";
     pqExec("savepoint f_savepoint;", PostgresExceptions("invalid to insert"));  // Точка сохранения
 
+	BOOST_LOG_TRIVIAL(debug) << "PostgresSQLDB: Update file";
     std::string query = "Update Files set is_current = 0 where id_file_for_user = "
         + std::to_string(fileMeta.file.fileId)
         + "and id_user = "
@@ -40,6 +43,7 @@ void MetaDataDB::InsertFile(const FileInfo &fileMeta) {
             + ", '" + std::to_string(fileMeta.file.isCurrent)
             + "', '" + std::to_string(fileMeta.file.isDeleted)
             + "', " + "'" + dateUpdate + "'," + "'" + dateCreateDate + "');";
+	BOOST_LOG_TRIVIAL(debug) << "PostgresSQLDB: Insert file";
     pqExec(query, PostgresExceptions("invalid to insert data to db"));  // Добавление нового файла
 
 
@@ -63,9 +67,11 @@ void MetaDataDB::InsertFile(const FileInfo &fileMeta) {
           + std::to_string(id) + ", "
           + std::to_string(version.chunkId) + ", "
           + std::to_string(version.chunkOrder) + ");";
+	  BOOST_LOG_TRIVIAL(debug) << "PostgresSQLDB: Insert chunks";
       pqExec(query, PostgresExceptions("invalid to insert data to db"));  // Добавление новой версии
     }
 
+	BOOST_LOG_TRIVIAL(debug) << "PostgresSQLDB: End transaction";
     pqExec("commit;", PostgresExceptions("invalid to end transation"));  // Завершение транзакции
   }
   catch (PostgresExceptions &exceptions) {
@@ -74,6 +80,7 @@ void MetaDataDB::InsertFile(const FileInfo &fileMeta) {
 }
 
 int MetaDataDB::getLastIdOfFileUser(const std::string &query, PostgresExceptions exceptions) {
+  BOOST_LOG_TRIVIAL(debug) << "PostgresSQLDB: getLastIdOfFileUser";
   PGresult *res = PQexec(_conn, query.c_str());
   if (PQresultStatus(res) != PGRES_TUPLES_OK) {
     PQexec(_conn, "rollback to savepoint f_savepoint;");
@@ -84,8 +91,10 @@ int MetaDataDB::getLastIdOfFileUser(const std::string &query, PostgresExceptions
   PQclear(res);
   return id;
 }
+
 std::vector<FileInfo> MetaDataDB::GetUserFilesByTime(const UserDate &userDate) {
   std::vector<FileInfo> filesInfo;
+  BOOST_LOG_TRIVIAL(debug) << "PostgresSQLDB: GetUserFilesByTime";
   std::string query = "Select * from Files Where is_current = 1 and id_user = " + std::to_string(userDate.userId)
       + " and update_date > '" + userDate.date + "';";
   PGresult *res = PQexec(_conn, query.c_str());
@@ -112,7 +121,8 @@ std::vector<FileInfo> MetaDataDB::GetUserFilesByTime(const UserDate &userDate) {
     query = "Select * from version where id_file = " + std::to_string(id) + ";";
     PGresult *resChunks = PQexec(_conn, query.c_str());
     if (PQresultStatus(resChunks) != PGRES_TUPLES_OK) {
-      printf("No data retrieved\n");
+	  BOOST_LOG_TRIVIAL(debug) << "PostgresSQLDB: Faild to get data";
+	  throw PostgresExceptions("PostgresSQLDB: PGRES_TUPLES_OK");
     }
     int rowsChunks = PQntuples(resChunks);
 

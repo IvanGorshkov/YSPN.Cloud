@@ -1,9 +1,16 @@
 #include "MongoDB.h"
 #include <boost/log/trivial.hpp>
 
-MongoDB::MongoDB() : _client(_uri) {
-  _database = _client["cloud"];
-  BOOST_LOG_TRIVIAL(debug) << "MongoDB: Init DB";
+MongoDB::MongoDB(){
+  try {
+	_client = mongocxx::client(_uri);
+	_database = _client["cloud"];
+	BOOST_LOG_TRIVIAL(debug) << "MongoDB: Init DB";
+  } catch (std::exception & exceptions) {
+	BOOST_LOG_TRIVIAL(debug) << "MongoDB: " + std::string(exceptions.what());
+	throw MongoExceptions("MongoDB: Faild to connect");
+  }
+
 }
 
 MongoDB &MongoDB::shared() {

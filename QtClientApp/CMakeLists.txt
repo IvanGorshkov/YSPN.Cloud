@@ -11,7 +11,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-SET(CMAKE_PREFIX_PATH "/Users/s.alekhin/Qt/5.15.2/clang_64/lib/cmake")
+SET(CMAKE_PREFIX_PATH "/Users/ivangorshkov/Qt5.12.3/5.12.3/clang_64/lib/cmake")
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
 FIND_LIBRARY(App-dev REQUIRED)

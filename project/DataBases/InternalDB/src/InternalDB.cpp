@@ -455,7 +455,7 @@ void InternalDB::insertFileMeta(const FileMeta &fileMeta) {
       + fileMeta.fileName + "', '" + fileMeta.fileExtension
       + "', " + std::to_string(fileMeta.fileSize)
       + ", '" + fileMeta.filePath + "', " +
-      std::to_string(fileMeta.chunksCount) + ", 1, "
+      std::to_string(fileMeta.chunksCount) + ", " + std::to_string(fileMeta.version) ", "
       + std::to_string(fileMeta.isDownload) + ", '"
       + fileMeta.updateDate + "', '" + fileMeta.createDate + "');";
 
