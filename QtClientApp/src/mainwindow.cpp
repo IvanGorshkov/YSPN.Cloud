@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
+#include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
@@ -447,10 +448,16 @@ void MainWindow::onBtnAddFile() {
     startLoadingLabel();
     for (auto &filePath : dialog.selectedFiles()) {
       QFileInfo file(filePath);
-      QString newPath = QString::fromStdString(_app.GetSyncFolder() + '/' + file.fileName().toStdString());
-      QFile::copy(filePath, newPath);
+      std::string newFilePath = filePath.toStdString();
+
+      if (!file.path().contains(QString::fromStdString(_app.GetSyncFolder()))) {
+        QString newPath = QString::fromStdString(_app.GetSyncFolder() + '/' + file.fileName().toStdString());
+        QFile::copy(filePath, newPath);
+        newFilePath = newPath.toStdString();
+      }
+
       startLoadingLabel();
-      _app.CreateFile(newPath.toStdString());
+      _app.CreateFile(newFilePath);
     }
   }
 }
