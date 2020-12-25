@@ -2,14 +2,6 @@
 #include <boost/log/trivial.hpp>
 #include <mongocxx/exception/exception.hpp>
 MongoDB::MongoDB(){
-  try {
-	_client = mongocxx::client(_uri);
-	_database = _client["cloud"];
-	BOOST_LOG_TRIVIAL(debug) << "MongoDB: Init DB";
-  } catch (std::exception & exceptions) {
-	BOOST_LOG_TRIVIAL(debug) << "MongoDB: " + std::string(exceptions.what());
-	throw MongoExceptions("MongoDB: Faild to connect");
-  }
 
 }
 
@@ -31,7 +23,7 @@ void MongoDB::InsertChunk(const std::vector<Chunk> &chunks) const {
 			  document{} << "id_user" << chunk.userId
 						 << "id_chunk" << chunk.chunkId << finalize);
 	} catch (mongocxx::exception & exception) {
-	BOOST_LOG_TRIVIAL(debug) << "MongoDB: " + std::string(exception.what());
+	BOOST_LOG_TRIVIAL(error) << "MongoDB: " + std::string(exception.what());
 	throw MongoExceptions("MongoDB: " + std::string(exception.what()));
   }
 
@@ -54,7 +46,7 @@ void MongoDB::InsertChunk(const std::vector<Chunk> &chunks) const {
   try {
  	 _database["chunks"].insert_many(inChunks);
   } catch (mongocxx::exception & exception) {
-	BOOST_LOG_TRIVIAL(debug) << "MongoDB: " + std::string(exception.what());
+	BOOST_LOG_TRIVIAL(error) << "MongoDB: " + std::string(exception.what());
 	throw MongoExceptions("MongoDB: " + std::string(exception.what()));
   }
 }
@@ -71,7 +63,7 @@ std::vector<Chunk> MongoDB::GetChunk(const std::vector<UserChunk> &userChunks) c
             document{} << "id_user" << userChunk.userId
                        << "id_chunk" << userChunk.chunkId << finalize);
 	} catch (mongocxx::exception & exception) {
-	  BOOST_LOG_TRIVIAL(debug) << "MongoDB: " + std::string(exception.what());
+	  BOOST_LOG_TRIVIAL(error) << "MongoDB: " + std::string(exception.what());
 	  throw MongoExceptions("MongoDB: " + std::string(exception.what()));
 	}
     if (cursor) {
@@ -95,4 +87,16 @@ std::vector<Chunk> MongoDB::GetChunk(const std::vector<UserChunk> &userChunks) c
     }
   }
   return users;
+}
+void MongoDB::Connect() {
+  try {
+	mongocxx::instance _instance;
+	mongocxx::uri _uri{};
+	_client = mongocxx::client(_uri);
+	_database = _client["cloud"];
+	BOOST_LOG_TRIVIAL(debug) << "MongoDB: Init DB";
+  } catch (std::exception & exceptions) {
+	BOOST_LOG_TRIVIAL(error) << "MongoDB: " + std::string(exceptions.what());
+	throw MongoExceptions("MongoDB: Faild to connect");
+  }
 }
