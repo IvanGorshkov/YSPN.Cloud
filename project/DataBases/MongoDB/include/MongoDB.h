@@ -31,7 +31,7 @@ class MongoDB {
   MongoDB(const MongoDB &mongo_db) = delete;
   MongoDB &operator=(const MongoDB &mongo_db) = delete;
 
-  mongocxx::instance _instance{};
+  mongocxx::instance _instance;
   mongocxx::database _database;
   mongocxx::uri _uri{};
   mongocxx::client _client;
