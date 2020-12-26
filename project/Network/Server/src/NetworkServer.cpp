@@ -37,7 +37,7 @@ void NetworkServer::startAccept() {
 }
 
 void NetworkServer::onAccept(const std::shared_ptr<UserSession> &user, const boost::system::error_code &ec) {
-  BOOST_LOG_TRIVIAL(debug) << "NetworkSever: onAccept";
+  BOOST_LOG_TRIVIAL(info) << "NetworkSever: accept user";
 
   if (ec) {
     BOOST_LOG_TRIVIAL(error) << "NetworkSever: error accept user" << ec.message().c_str();

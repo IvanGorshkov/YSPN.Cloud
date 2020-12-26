@@ -7,6 +7,21 @@ MainWindow::MainWindow(QWidget *parent)
       ui(new Ui::MainWindow),
       _app(std::bind(&MainWindow::callbackOk, this, std::placeholders::_1),
            std::bind(&MainWindow::callbackError, this, std::placeholders::_1)) {
+
+  bool _loginSuccesfull = false;
+  connect(&uiAuth, SIGNAL(login_button_clicked()), this, SLOT(authorizeUser()));
+  connect(&uiAuth, SIGNAL(destroyed()), this, SLOT(show()));
+  connect(&uiAuth, SIGNAL(register_button_clicked()), this, SLOT(registerWindowShow()));
+  connect(&uiReg, SIGNAL(register_button_clicked2()), this, SLOT(registerUser()));
+  connect(&uiReg, SIGNAL(destroyed()), &uiAuth, SLOT(show()));
+  connect(&uiReg, SIGNAL(login_button_clicked2()), this, SLOT(authWindowShow()));
+
+  connect(&uiSett, SIGNAL(logout_button_clicked()), this, SLOT(logout()));
+  connect(&uiSett, SIGNAL(change_directory_button_clicked()), this, SLOT(changeDirectory()));
+  connect(&uiSett, SIGNAL(change_password_button_clicked()), this, SLOT(changePassword()));
+  connect(&uiSett, SIGNAL(check_old_password_clicked()), this, SLOT(checkOldPassword()));
+  connect(&uiSett, SIGNAL(destroyed()), &uiSett, SLOT(close()));
+
   ui->setupUi(this);
 
   ui->centralwidget->setMinimumSize(800, 550);
@@ -96,7 +111,7 @@ void MainWindow::parseVectorFiles() {
   root->setText("Cloud YSNP");
   root->setFlags(Qt::ItemIsDropEnabled);
   root->setEnabled(true);
-  root->setIcon(QIcon("../icons/cloud.png"));
+  root->setIcon(QIcon(resourcePath() + "icons/cloud.png"));
   _cloudModel.setItem(0, 0, root);
   QModelIndex rootIndex = _cloudModel.index(0, 0);
 
@@ -133,63 +148,85 @@ void MainWindow::parseVectorFiles() {
         insertFile->setWhatsThis(listPath[j]);
         insertFile->setToolTip(QString::number(fileInfoFromVector.fileId));
         insertFile->setFlags(Qt::ItemIsEnabled);
-        if (fileInfoFromVector.fileExtension == "txt")
+        if (fileInfoFromVector.fileExtension == ".txt")
           if (fileInfoFromVector.isDownload)
-            insertFile->setIcon(QIcon("../icons/txt_download.png"));
+            insertFile->setIcon(QIcon(resourcePath() + "icons/txt_download.png"));
           else
-            insertFile->setIcon(QIcon("../icons/txt.png"));
+            insertFile->setIcon(QIcon(resourcePath() + "icons/txt.png"));
         else {
-          if ((fileInfoFromVector.fileExtension == "pptx") || (fileInfoFromVector.fileExtension == "ppt"))
+          if ((fileInfoFromVector.fileExtension == ".pptx") || (fileInfoFromVector.fileExtension == ".ppt"))
             if (fileInfoFromVector.isDownload)
-              insertFile->setIcon(QIcon("../icons/pptx_download.png"));
+              insertFile->setIcon(QIcon(resourcePath() + "icons/pptx_download.png"));
             else
-              insertFile->setIcon(QIcon("../icons/pptx.png"));
+              insertFile->setIcon(QIcon(resourcePath() + "icons/pptx.png"));
           else {
-            if ((fileInfoFromVector.fileExtension == "docx") || (fileInfoFromVector.fileExtension == "doc"))
+            if ((fileInfoFromVector.fileExtension == ".docx") ||
+                (fileInfoFromVector.fileExtension == ".doc"))
               if (fileInfoFromVector.isDownload)
-                insertFile->setIcon(QIcon("../icons/docx_download.png"));
+                insertFile->setIcon(QIcon(resourcePath() + "icons/docx_download.png"));
               else
-                insertFile->setIcon(QIcon("../icons/docx.png"));
+                insertFile->setIcon(QIcon(resourcePath() + "icons/docx.png"));
             else {
-              if (fileInfoFromVector.fileExtension == "html")
+              if (fileInfoFromVector.fileExtension == ".html")
                 if (fileInfoFromVector.isDownload)
-                  insertFile->setIcon(QIcon("../icons/html_download.png"));
+                  insertFile->setIcon(QIcon(resourcePath() + "icons/html_download.png"));
                 else
-                  insertFile->setIcon(QIcon("../icons/html.png"));
+                  insertFile->setIcon(QIcon(resourcePath() + "icons/html.png"));
               else {
-                if (fileInfoFromVector.fileExtension == "pdf")
+                if (fileInfoFromVector.fileExtension == ".pdf")
                   if (fileInfoFromVector.isDownload)
-                    insertFile->setIcon(QIcon("../icons/pdf_download.png"));
+                    insertFile->setIcon(QIcon(resourcePath() + "icons/pdf_download.png"));
                   else
-                    insertFile->setIcon(QIcon("../icons/pdf.png"));
+                    insertFile->setIcon(QIcon(resourcePath() + "icons/pdf.png"));
                 else {
-                  if (fileInfoFromVector.fileExtension == "py")
+                  if (fileInfoFromVector.fileExtension == ".py")
                     if (fileInfoFromVector.isDownload)
-                      insertFile->setIcon(QIcon("../icons/py_download.png"));
+                      insertFile->setIcon(QIcon(resourcePath() + "icons/py_download.png"));
                     else
-                      insertFile->setIcon(QIcon("../icons/py.png"));
+                      insertFile->setIcon(QIcon(resourcePath() + "icons/py.png"));
                   else {
-                    if (fileInfoFromVector.fileExtension == "cpp")
+                    if (fileInfoFromVector.fileExtension == ".cpp")
                       if (fileInfoFromVector.isDownload)
-                        insertFile->setIcon(QIcon("../icons/cpp_download.png"));
+                        insertFile->setIcon(QIcon(resourcePath() + "icons/cpp_download.png"));
                       else
-                        insertFile->setIcon(QIcon("../icons/cpp.png"));
+                        insertFile->setIcon(QIcon(resourcePath() + "icons/cpp.png"));
                     else {
-                      if ((fileInfoFromVector.fileExtension == "jpg") ||
-                          (fileInfoFromVector.fileExtension == "jpeg") ||
-                          (fileInfoFromVector.fileExtension == "png") ||
-                          (fileInfoFromVector.fileExtension == "bmp") ||
-                          (fileInfoFromVector.fileExtension == "svg") ||
-                          (fileInfoFromVector.fileExtension == "webp"))
+                      if ((fileInfoFromVector.fileExtension == ".jpg") ||
+                          (fileInfoFromVector.fileExtension == ".jpeg") ||
+                          (fileInfoFromVector.fileExtension == ".png") ||
+                          (fileInfoFromVector.fileExtension == ".bmp") ||
+                          (fileInfoFromVector.fileExtension == ".svg") ||
+                          (fileInfoFromVector.fileExtension == ".webp"))
                         if (fileInfoFromVector.isDownload)
-                          insertFile->setIcon(QIcon("../icons/image_download.png"));
+                          insertFile->setIcon(QIcon(resourcePath() + "icons/image_download.png"));
                         else
-                          insertFile->setIcon(QIcon("../icons/image.png"));
+                          insertFile->setIcon(QIcon(resourcePath() + "icons/image.png"));
                       else {
-                        if (fileInfoFromVector.isDownload)
-                          insertFile->setIcon(QIcon("../icons/file_download.png"));
-                        else
-                          insertFile->setIcon(QIcon("../icons/file.png"));
+                        if ((fileInfoFromVector.fileExtension == ".mp3") ||
+                            (fileInfoFromVector.fileExtension == ".midi") ||
+                            (fileInfoFromVector.fileExtension == ".wav") ||
+                            (fileInfoFromVector.fileExtension == ".aac"))
+                          if (fileInfoFromVector.isDownload)
+                            insertFile->setIcon(QIcon(resourcePath() + "icons/music_download.png"));
+                          else
+                            insertFile->setIcon(QIcon(resourcePath() + "icons/music.png"));
+                        else {
+                          if ((fileInfoFromVector.fileExtension == ".mp4") ||
+                              (fileInfoFromVector.fileExtension == ".mov") ||
+                              (fileInfoFromVector.fileExtension == ".wmv") ||
+                              (fileInfoFromVector.fileExtension == ".avi") ||
+                              (fileInfoFromVector.fileExtension == ".webm"))
+                            if (fileInfoFromVector.isDownload)
+                              insertFile->setIcon(QIcon(resourcePath() + "icons/video_download.png"));
+                            else
+                              insertFile->setIcon(QIcon(resourcePath() + "icons/video.png"));
+                          else {
+                            if (fileInfoFromVector.isDownload)
+                              insertFile->setIcon(QIcon(resourcePath() + "icons/file_download.png"));
+                            else
+                              insertFile->setIcon(QIcon(resourcePath() + "icons/file.png"));
+                          }
+                        }
                       }
                     }
                   }
@@ -217,7 +254,7 @@ void MainWindow::parseVectorFiles() {
             auto *insertFolder = new QStandardItem;
             insertFolder->setText(listPath[j]);
             insertFolder->setWhatsThis(listPath[j]);
-            insertFolder->setIcon(QIcon("../icons/folder.png"));
+            insertFolder->setIcon(QIcon(resourcePath() + "icons/folder.png"));
 
             parent = _cloudModel.itemFromIndex(parentIndex);
             parent->appendRow(insertFolder);
@@ -229,7 +266,7 @@ void MainWindow::parseVectorFiles() {
           auto *insertFolder = new QStandardItem;
           insertFolder->setText(listPath[j]);
           insertFolder->setWhatsThis(listPath[j]);
-          insertFolder->setIcon(QIcon("../icons/folder.png"));
+          insertFolder->setIcon(QIcon(resourcePath() + "icons/folder.png"));
 
           auto parent = _cloudModel.itemFromIndex(parentIndex);
           parent->appendRow(insertFolder);
@@ -269,6 +306,7 @@ void MainWindow::slotCustomMenuRequested(QPoint pos) {
 }
 
 void MainWindow::open_file() {
+  startLoadingLabel();
   auto fileMeta = getFile();
 
   if (fileMeta.isDownload) {
@@ -277,20 +315,23 @@ void MainWindow::open_file() {
   } else {
     printInfoBox("Открытие файлы", "Файл не скачан на устройство");
   }
+  stopLoadingLabel();
 }
 
 void MainWindow::save_file() {
+  startLoadingLabel();
   auto fileMeta = getFile();
 
   if (fileMeta.isDownload) {
-    startLoadingLabel();
     _app.ModifyFile(getAbsoluteFilePath(fileMeta));
   } else {
     printInfoBox("Сохранение", "Файл не скачан на устройство");
   }
+  stopLoadingLabel();
 }
 
 void MainWindow::rename_file() {
+  startLoadingLabel();
   auto fileMeta = getFile();
 
   if (fileMeta.isDownload) {
@@ -308,14 +349,15 @@ void MainWindow::rename_file() {
     QString newPath = QString::fromStdString(getAbsoluteFilePath(fileMeta));
 
     QFile::rename(oldPath, newPath);
-    startLoadingLabel();
     _app.RenameFile(oldPath.toStdString(), newPath.toStdString());
   } else {
     printInfoBox("Переименование", "Файл не скачан на устройство");
   }
+  stopLoadingLabel();
 }
 
 void MainWindow::download_on_device() {
+  startLoadingLabel();
   auto fileMeta = getFile();
 
   if (!fileMeta.isDownload) {
@@ -323,6 +365,7 @@ void MainWindow::download_on_device() {
     reply = QMessageBox::question(this, "Скачивание", "Вы действительно хотите скачать файл?",
                                   QMessageBox::Cancel | QMessageBox::Ok);
     if (reply == QMessageBox::Cancel) {
+      stopLoadingLabel();
       return;
     }
 
@@ -331,9 +374,11 @@ void MainWindow::download_on_device() {
   } else {
     printInfoBox("Скачивание", "Файл уже скачан на устройство");
   }
+  stopLoadingLabel();
 }
 
 void MainWindow::delete_from_device() {
+  startLoadingLabel();
   auto fileMeta = getFile();
 
   if (fileMeta.isDownload) {
@@ -342,97 +387,65 @@ void MainWindow::delete_from_device() {
                                   QMessageBox::Cancel | QMessageBox::Ok);
 
     if (reply == QMessageBox::Cancel) {
+      stopLoadingLabel();
       return;
     }
 
     QString path = QString::fromStdString(getAbsoluteFilePath(fileMeta));
 
     QFile::remove(path);
-    startLoadingLabel();
     _app.DeleteFile(path.toStdString());
   } else {
     printInfoBox("Удаление", "Файл не скачан на устройство");
   }
+  stopLoadingLabel();
 }
 
 void MainWindow::view_properties() {
   auto fileMeta = getFile();
 
-  if (fileMeta.isDownload) {
-    QString actionsWithFile;
-    QString isDownload = (fileMeta.isDownload) ? "да" : "нет";
+  QString actionsWithFile;
+  QString isDownload = (fileMeta.isDownload) ? "да" : "нет";
 
-    QString fileSizeName;
-    QStringList sizeName = {"Байт", "Кб", "Мб", "Гб"};
-    auto fileSize = fileMeta.fileSize;
-    int i = 0;
+  QString fileSizeName;
+  QStringList sizeName = {"Байт", "Кб", "Мб", "Гб"};
+  auto fileSize = fileMeta.fileSize;
+  int i = 0;
 
-    while (fileSize) {
-      if (fileSize < 1024) {
-        fileSizeName = sizeName[i];
-        break;
-      }
-
-      fileSize /= 1024;
-      i++;
+  while (fileSize) {
+    if (fileSize < 1024) {
+      fileSizeName = sizeName[i];
+      break;
     }
 
-    QString size = "Размер файла: " + QString::number(fileSize) + ' ' + fileSizeName + "\n";
-    QString version = "Версия файла: " + QString::number(fileMeta.version) + "\n";
-    QString download = "Файл скачан на устройство: " + isDownload + "\n";
-    QString dateUpdate = "Дата изменения: " + QString::fromStdString(fileMeta.updateDate) + "\n";
-    QString dateCreate = "Дата создания: " + QString::fromStdString(fileMeta.createDate) + "\n";
-    actionsWithFile.append(size);
-    actionsWithFile.append(version);
-    actionsWithFile.append(download);
-    actionsWithFile.append(dateUpdate);
-    actionsWithFile.append(dateCreate);
-
-    QMessageBox msg;
-    QFont f;
-    f.setPointSize(16);
-    msg.setWindowTitle("Свойства");
-    msg.setText(actionsWithFile);
-    msg.setFont(f);
-    msg.exec();
-  } else {
-    printInfoBox("Свойства", "Файл не скачан на устройство");
+    fileSize /= 1024;
+    i++;
   }
+
+  QString size = "Размер файла: " + QString::number(fileSize) + ' ' + fileSizeName + "\n";
+  QString version = "Версия файла: " + QString::number(fileMeta.version) + "\n";
+  QString download = "Файл скачан на устройство: " + isDownload + "\n";
+  QString dateUpdate = "Дата изменения: " + QString::fromStdString(fileMeta.updateDate) + "\n";
+  QString dateCreate = "Дата создания: " + QString::fromStdString(fileMeta.createDate) + "\n";
+  actionsWithFile.append(size);
+  actionsWithFile.append(version);
+  actionsWithFile.append(download);
+  actionsWithFile.append(dateUpdate);
+  actionsWithFile.append(dateCreate);
+
+  QMessageBox msg;
+  QFont f;
+  f.setPointSize(16);
+  msg.setWindowTitle("Свойства");
+  msg.setText(actionsWithFile);
+  msg.setFont(f);
+  msg.exec();
 }
 
 void MainWindow::onBtnSettings() {
-  _settingsForm = new QWidget();
-  _settingsForm->setAttribute(Qt::WA_DeleteOnClose, true);
-
-  auto *changeDirLayout = new QHBoxLayout(_settingsForm);
-
-  QFont f;
-  f.setPointSize(14);
-  f.setBold(true);
-  auto *labelDir = new QLabel(_settingsForm);
-  labelDir->setText("Директория сохранения: ");
-  labelDir->setFont(f);
-
-  f.setBold(false);
-  auto *dirPath = new QLabel(_settingsForm);
-  dirPath->setFont(f);
-  dirPath->setText(QString::fromStdString(_app.GetSyncFolder()));
-
-  auto *buttonChangeDir = new QPushButton(_settingsForm);
-  connect(buttonChangeDir, SIGNAL(clicked(bool)), this, SLOT(changeDirectory()));
-  buttonChangeDir->setText("Изменить");
-  buttonChangeDir->setFont(f);
-
-  changeDirLayout->addWidget(labelDir);
-  changeDirLayout->addWidget(dirPath);
-  changeDirLayout->addWidget(buttonChangeDir);
-  changeDirLayout->setSpacing(5);
-  changeDirLayout->setAlignment(Qt::AlignLeft | Qt::AlignTop);
-
-  _settingsForm->setContentsMargins(0, 0, 0, 0);
-  _settingsForm->setFixedSize(700, 200);
-  _settingsForm->setWindowTitle("Настройки");
-  _settingsForm->show();
+  uiSett.SetDirectory(QString::fromStdString(_app.GetSyncFolder()));
+  uiSett.SetLogin("Name loading"); //TODO получить логин
+  uiSett.show();
 }
 
 void MainWindow::onBtnRefresh() {
@@ -482,7 +495,7 @@ void MainWindow::slotShortcutCMDR() {
 }
 
 void MainWindow::startLoadingLabel() {
-  _movie = new QMovie("../icons/ajax-loader.gif");
+  _movie = new QMovie(resourcePath() + "icons/ajax-loader.gif");
   ui->lb_loading->setMovie(_movie);
   ui->lb_loading->setVisible(true);
   ui->lb_loading->setAlignment(Qt::AlignCenter);
@@ -503,8 +516,73 @@ void MainWindow::changeDirectory() {
     for (auto &file : dialog.selectedFiles()) {
       _app.UpdateSyncFolder(file.toStdString());
     }
-    _settingsForm->close();
-    onBtnSettings();
+    uiSett.SetDirectory(QString::fromStdString(_app.GetSyncFolder()));
+    _msg = "Директория успешно изменена";
+    printMsgBox();
   }
+}
 
+void MainWindow::on_treeView_doubleClicked(const QModelIndex &index) {
+  if (index.flags() == 32)
+    open_file();
+}
+
+void MainWindow::authorizeUser() {
+  //TODO(Sergey): проверить, что правильные данные
+  uiAuth.close();
+  uiReg.close();
+  this->show();
+}
+
+void MainWindow::registerUser() {
+  if (uiReg.CheckPass()) {
+    //TODO(Sergey): добавить пользователя
+    uiReg.hide();
+    uiAuth.show();
+  } else {
+    printInfoBox("Регистрация пароля", "Пароли не сопадают");
+  }
+}
+
+void MainWindow::registerWindowShow() {
+  uiAuth.hide();
+  uiReg.show();
+}
+
+void MainWindow::authWindowShow() {
+  uiReg.hide();
+  uiAuth.show();
+}
+
+void MainWindow::Display() {
+  uiAuth.show();
+}
+
+void MainWindow::logout() {
+  uiSett.close();
+  // TODO(Sergey): удалить пользователя из базы
+  this->close();
+  uiAuth.show();
+}
+
+void MainWindow::changePassword() {
+  if (uiSett.CheckPass()) {
+    QString newPass = uiSett.GetNewPassword();
+    //TODO(Sergey): записать новый пароль, сообщение об успехе
+    _msg = "Пароль успешно изменен";
+    printMsgBox();
+    uiSett.SendStopChange();
+  } else {
+    printInfoBox("Изменение пароля", "Пароли не сопадают");
+  }
+}
+
+void MainWindow::checkOldPassword() {
+  QString oldPass = uiSett.GetOldPassword();
+  //TODO(Sergey): так ли проверять правильность пароля
+  if (oldPass == _userpass) {
+    uiSett.SendCanChange();
+  } else {
+    printInfoBox("Изменение пароля", "Старый пароль не сопадает");
+  }
 }

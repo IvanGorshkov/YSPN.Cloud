@@ -11,6 +11,15 @@ UploadChunkCommand::UploadChunkCommand(const std::shared_ptr<pt::ptree> &request
 std::shared_ptr<pt::ptree> UploadChunkCommand::Do() {
   BOOST_LOG_TRIVIAL(debug) << "UploadChunkCommand: Do";
 
+  try {
+    _db.Connect();
+    BOOST_LOG_TRIVIAL(info) << "UploadChunkCommand: connect to database";
+  } catch (MongoExceptions &er) {
+    BOOST_LOG_TRIVIAL(error) << "UploadChunkCommand: " << er.what();
+    auto answer = SerializerAnswer(_chunk.GetRequestId(), "Database error");
+    return std::make_shared<pt::ptree>(answer.GetJson());
+  }
+
   std::vector<Chunk> requestVector;
   try {
     requestVector = _chunk.GetChunk();
@@ -50,6 +59,15 @@ DownloadChunkCommand::DownloadChunkCommand(const std::shared_ptr<pt::ptree> &req
 
 std::shared_ptr<pt::ptree> DownloadChunkCommand::Do() {
   BOOST_LOG_TRIVIAL(debug) << "DownloadChunkCommand: Do";
+
+  try {
+    _db.Connect();
+    BOOST_LOG_TRIVIAL(info) << "DownloadChunkCommand: connect to database";
+  } catch (MongoExceptions &er) {
+    BOOST_LOG_TRIVIAL(error) << "DownloadChunkCommand: " << er.what();
+    auto answer = SerializerAnswer(_userChunk.GetRequestId(), "Database error");
+    return std::make_shared<pt::ptree>(answer.GetJson());
+  }
 
   std::vector<UserChunk> requestVector;
   try {

@@ -26,6 +26,9 @@ struct sqlite3_stmt_deleter {
   }
 };
 
+
+// TODO(Ivan): написать функцию получения логина
+
 class InternalDB {
  public:
   explicit InternalDB(std::string databaseName);

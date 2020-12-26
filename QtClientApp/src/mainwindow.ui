@@ -21,7 +21,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>../icons/project.png</normaloff>../icons/project.png</iconset>
+    <normaloff>icons/project.png</normaloff>icons/project.png</iconset>
   </property>
   <property name="autoFillBackground">
    <bool>false</bool>
@@ -35,7 +35,7 @@
      <rect>
       <x>20</x>
       <y>50</y>
-      <width>561</width>
+      <width>671</width>
       <height>471</height>
      </rect>
     </property>
@@ -72,10 +72,10 @@
    <widget class="QPushButton" name="btn_refresh">
     <property name="geometry">
      <rect>
-      <x>630</x>
+      <x>730</x>
       <y>50</y>
-      <width>151</width>
-      <height>31</height>
+      <width>51</width>
+      <height>51</height>
      </rect>
     </property>
     <property name="font">
@@ -85,16 +85,26 @@
      </font>
     </property>
     <property name="text">
-     <string>Обновить</string>
+     <string/>
+    </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>icons/refresh.png</normaloff>icons/refresh.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>35</width>
+      <height>35</height>
+     </size>
     </property>
    </widget>
    <widget class="QPushButton" name="btn_AddFile">
     <property name="geometry">
      <rect>
-      <x>590</x>
-      <y>100</y>
-      <width>191</width>
-      <height>31</height>
+      <x>730</x>
+      <y>120</y>
+      <width>51</width>
+      <height>51</height>
      </rect>
     </property>
     <property name="font">
@@ -104,16 +114,26 @@
      </font>
     </property>
     <property name="text">
-     <string>Добавить файл</string>
+     <string/>
+    </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>icons/add-file.png</normaloff>icons/add-file.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>35</width>
+      <height>35</height>
+     </size>
     </property>
    </widget>
    <widget class="QPushButton" name="btn_About">
     <property name="geometry">
      <rect>
-      <x>671</x>
-      <y>490</y>
-      <width>111</width>
-      <height>31</height>
+      <x>731</x>
+      <y>470</y>
+      <width>51</width>
+      <height>51</height>
      </rect>
     </property>
     <property name="font">
@@ -122,16 +142,26 @@
      </font>
     </property>
     <property name="text">
-     <string>О программе</string>
+     <string/>
+    </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>icons/info.png</normaloff>icons/info.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>35</width>
+      <height>35</height>
+     </size>
     </property>
    </widget>
    <widget class="QPushButton" name="btn_Settings">
     <property name="geometry">
      <rect>
-      <x>651</x>
-      <y>440</y>
-      <width>131</width>
-      <height>31</height>
+      <x>730</x>
+      <y>400</y>
+      <width>51</width>
+      <height>51</height>
      </rect>
     </property>
     <property name="font">
@@ -140,7 +170,17 @@
      </font>
     </property>
     <property name="text">
-     <string>Настройки</string>
+     <string/>
+    </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>icons/setting.png</normaloff>icons/setting.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>35</width>
+      <height>35</height>
+     </size>
     </property>
    </widget>
    <widget class="QLabel" name="lb_loading">
