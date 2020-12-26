@@ -528,17 +528,25 @@ void MainWindow::on_treeView_doubleClicked(const QModelIndex &index) {
 }
 
 void MainWindow::authorizeUser() {
+  _app.LoginUser(uiAuth.GetLogin().toStdString(), uiAuth.GetPass().toStdString());
+
   //TODO(Sergey): проверить, что правильные данные
-  uiAuth.close();
-  uiReg.close();
-  this->show();
+  if (_app.IsLogin()) {
+    uiAuth.close();
+    uiReg.close();
+    this->show();
+  }
 }
 
 void MainWindow::registerUser() {
   if (uiReg.CheckPass()) {
+    _app.RegisterUser(uiReg.GetName().toStdString(), uiReg.GetPass().toStdString());
+
     //TODO(Sergey): добавить пользователя
-    uiReg.hide();
-    uiAuth.show();
+    if (_app.IsLogin()) {
+      uiReg.hide();
+      uiAuth.show();
+    }
   } else {
     printInfoBox("Регистрация пароля", "Пароли не сопадают");
   }
@@ -555,12 +563,16 @@ void MainWindow::authWindowShow() {
 }
 
 void MainWindow::Display() {
-  uiAuth.show();
+  if (!_app.IsLogin()) {
+    uiAuth.show();
+  } else {
+    this->show();
+  }
 }
 
 void MainWindow::logout() {
+  _app.Logout();
   uiSett.close();
-  // TODO(Sergey): удалить пользователя из базы
   this->close();
   uiAuth.show();
 }
