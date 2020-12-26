@@ -32,6 +32,7 @@ void ClientWorker::getRequest(const std::shared_ptr<UserSession> &user) {
     auto pairRequest = std::make_shared<std::pair<std::shared_ptr<UserSession>, pt::ptree>>(
         std::make_pair(user, userRequest));
 
+    BOOST_LOG_TRIVIAL(info) << "ClientWorker: get new request from user";
     _request.Push(pairRequest);
   }
 }
@@ -41,6 +42,7 @@ void ClientWorker::sendResponse() {
   BOOST_LOG_TRIVIAL(debug) << "ClientWorker: sendResponse";
   auto pairResponse = _response.Pop();
   if (pairResponse->first->Sock().is_open()) {
+    BOOST_LOG_TRIVIAL(info) << "ClientWorker: send new response to user";
     pairResponse->first->SendResponse(pairResponse->second);
   } else {
     BOOST_LOG_TRIVIAL(error) << "ClientWorker: lost connection to user while sending response";
@@ -53,8 +55,9 @@ void ClientWorker::sendResponse() {
   while (true) {
     if (_usersConnections.Empty()) {
       BOOST_LOG_TRIVIAL(debug) << "ClientWorker: sleep request";
+      std::this_thread::sleep_for(std::chrono::seconds(2));
     } else {
-      BOOST_LOG_TRIVIAL(debug) << "ClientWorker: get request";
+      BOOST_LOG_TRIVIAL(info) << "ClientWorker: get user connection";
       if (!_usersConnections.Empty()) {
         getRequest((_usersConnections.Pop()));
       }
@@ -70,7 +73,7 @@ void ClientWorker::sendResponse() {
       BOOST_LOG_TRIVIAL(debug) << "ClientWorker: sleep response";
       std::this_thread::sleep_for(std::chrono::seconds(2));
     } else {
-      BOOST_LOG_TRIVIAL(debug) << "ClientWorker: send response";
+      BOOST_LOG_TRIVIAL(info) << "ClientWorker: send response to user";
       if (!_response.Empty()) {
         sendResponse();
       }
