@@ -27,6 +27,9 @@
 #include <vector>
 #include "App.h"
 #include "AppExceptions.h"
+#include "auth_window.h"
+#include "reg_window.h"
+#include "settings.h"
 #include "structs/FileMeta.h"
 
 QT_BEGIN_NAMESPACE
@@ -39,6 +42,7 @@ class MainWindow : public QMainWindow, public QStandardItem {
  public:
   explicit MainWindow(QWidget *parent = nullptr);
   ~MainWindow() override;
+  void Display();
 
  private:
   void parseVectorFiles();
@@ -67,6 +71,15 @@ class MainWindow : public QMainWindow, public QStandardItem {
  private slots:
   void slotShortcutCMDR();
 
+  void authorizeUser();
+  void registerUser();
+  void registerWindowShow();
+  void authWindowShow();
+
+  void logout();
+  void changePassword();
+  void checkOldPassword();
+
   void slotCustomMenuRequested(QPoint pos);
   void changeDirectory();
   void open_file();
@@ -80,8 +93,18 @@ class MainWindow : public QMainWindow, public QStandardItem {
   void onBtnRefresh();
   static void onBtnAbout();
 
- private:
+  void on_treeView_doubleClicked(const QModelIndex &index);
+
+private:
   Ui::MainWindow *ui;
+
+  auth_window uiAuth;
+  reg_window uiReg;
+  settings uiSett;
+
+  QString _username;
+  QString _userpass;
+
   QShortcut *keyCMDR;
   QWidget *_settingsForm;
   QMovie *_movie;

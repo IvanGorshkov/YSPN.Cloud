@@ -38,6 +38,15 @@ add_executable(${PROJECT_NAME}
         src/mainwindow.cpp
         include/mainwindow.h
         src/mainwindow.ui
+        src/auth_window.ui
+        src/auth_window.cpp
+        include/auth_window.h
+        src/reg_window.cpp
+        src/reg_window.ui
+        include/reg_window.h
+        src/settings.cpp
+        src/settings.ui
+        include/settings.h
         )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Widgets App-dev)
