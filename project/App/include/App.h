@@ -18,11 +18,14 @@ namespace fs = boost::filesystem;
 
 class App {
  public:
-  App(const std::function<void(const std::string &msg)> &callbackOk,
-      const std::function<void(const std::string &msg)> &callbackError);
+  App(std::function<void(const std::string &msg)> callbackOk,
+      std::function<void(const std::string &msg)> callbackError);
   ~App();
 
   bool IsLogin() const;
+  void LoginUser(std::string login, std::string password);
+  void RegisterUser(std::string login, std::string password);
+  void Logout();
 
   void Refresh();
 
@@ -38,6 +41,11 @@ class App {
   std::string GetSyncFolder();
 
  private:
+  void createFile(const fs::path &path);
+  void renameFile(const fs::path &oldPath, const fs::path &newPath);
+  void deleteFile(const fs::path &path);
+  void modifyFile(const fs::path &path);
+
   void runWorker();
 
   void runWatcher();

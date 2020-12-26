@@ -46,6 +46,114 @@ bool BaseCommand::visitAnswer(const std::variant<StatusOk, StatusError> &respons
   return isError;
 }
 
+LoginUserCommand::LoginUserCommand(std::function<void(const std::string &)> callbackOk,
+                                   std::function<void(const std::string &)> callbackError,
+                                   std::shared_ptr<InternalDB> internalDB,
+                                   std::string login,
+                                   std::string password)
+    : BaseCommand(std::move(callbackOk), std::move(callbackError), std::move(internalDB)),
+      _login(std::move(login)),
+      _password(std::move(password)) {
+  BOOST_LOG_TRIVIAL(debug) << "LoginUserCommand: create command";
+}
+
+void LoginUserCommand::Do() {
+  BOOST_LOG_TRIVIAL(debug) << "LoginUserCommand: Do";
+
+  auto syncConfig = ClientConfig::getSyncConfig();
+  auto network = ClientNetwork();
+
+  auto request = SerializerUserInfo(0, UserInfo{.login = _login, .password = _password}, "LoginUser").GetJson();
+
+  std::stringstream ssRequest;
+  pt::write_json(ssRequest, request);
+  BOOST_LOG_TRIVIAL(info) << "LoginUserCommand: request " << ssRequest.str();
+
+  pt::ptree response;
+  try {
+    sendAndReceive(network, syncConfig, request, response);
+  } catch (NetworkException &er) {
+    callbackError(er.what());
+    return;
+  }
+
+  std::stringstream ssResponse;
+  pt::write_json(ssResponse, response);
+  BOOST_LOG_TRIVIAL(info) << "LoginUserCommand: response " << ssResponse.str();
+
+  try {
+    auto userIds = SerializerUserIds(response).GetUserIds();
+
+    std::string path = std::getenv("HOME");
+    path += "/cloud";
+    boost::filesystem::create_directories(path);
+    _internalDB->InsertUser(User{.userId = userIds.id, .syncFolder = path});
+
+    callbackOk("Все ок");
+    return;
+  } catch (ParseException &er) {
+    BOOST_LOG_TRIVIAL(error) << "LoginUserCommand: " << er.what();
+    auto responseSerializer = SerializerAnswer(response);
+    auto error = std::get<StatusError>(responseSerializer.GetStatus());
+    callbackError(error.msg);
+    return;
+  }
+}
+
+RegisterUserCommand::RegisterUserCommand(std::function<void(const std::string &)> callbackOk,
+                                         std::function<void(const std::string &)> callbackError,
+                                         std::shared_ptr<InternalDB> internalDB,
+                                         std::string login,
+                                         std::string password)
+    : BaseCommand(std::move(callbackOk), std::move(callbackError), std::move(internalDB)),
+      _login(std::move(login)),
+      _password(std::move(password)) {
+  BOOST_LOG_TRIVIAL(debug) << "RegisterUserCommand: create command";
+}
+
+void RegisterUserCommand::Do() {
+  BOOST_LOG_TRIVIAL(debug) << "RegisterUserCommand: Do";
+
+  auto syncConfig = ClientConfig::getSyncConfig();
+  auto network = ClientNetwork();
+
+  auto request = SerializerUserInfo(0, UserInfo{.login = _login, .password = _password}, "RegisterUser").GetJson();
+
+  std::stringstream ssRequest;
+  pt::write_json(ssRequest, request);
+  BOOST_LOG_TRIVIAL(info) << "RegisterUserCommand: request " << ssRequest.str();
+
+  pt::ptree response;
+  try {
+    sendAndReceive(network, syncConfig, request, response);
+  } catch (NetworkException &er) {
+    callbackError(er.what());
+    return;
+  }
+
+  std::stringstream ssResponse;
+  pt::write_json(ssResponse, response);
+  BOOST_LOG_TRIVIAL(info) << "RegisterUserCommand: response " << ssResponse.str();
+
+  try {
+    auto userIds = SerializerUserIds(response).GetUserIds();
+
+    std::string path = std::getenv("HOME");
+    path += "/cloud";
+    boost::filesystem::create_directories(path);
+    _internalDB->InsertUser(User{.userId = userIds.id, .syncFolder = path});
+
+    callbackOk("Вы зарегестрированны");
+    return;
+  } catch (ParseException &er) {
+    BOOST_LOG_TRIVIAL(error) << "RegisterUserCommand: " << er.what();
+    auto responseSerializer = SerializerAnswer(response);
+    auto error = std::get<StatusError>(responseSerializer.GetStatus());
+    callbackError(error.msg);
+    return;
+  }
+}
+
 RefreshCommand::RefreshCommand(std::function<void(const std::string &msg)> callbackOk,
                                std::function<void(const std::string &msg)> callbackError,
                                std::shared_ptr<InternalDB> internalDB)
