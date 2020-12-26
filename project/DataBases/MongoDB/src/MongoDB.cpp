@@ -1,8 +1,9 @@
 #include "MongoDB.h"
 #include <boost/log/trivial.hpp>
 #include <mongocxx/exception/exception.hpp>
-MongoDB::MongoDB(){
 
+MongoDB::MongoDB() {
+  mongocxx::instance _instance{};
 }
 
 MongoDB &MongoDB::shared() {
@@ -10,22 +11,20 @@ MongoDB &MongoDB::shared() {
   return shared;
 }
 
-MongoDB::~MongoDB() = default;
-
 void MongoDB::InsertChunk(const std::vector<Chunk> &chunks) const {
   BOOST_LOG_TRIVIAL(debug) << "MongoDB: Insert Chunks";
   std::vector<bsoncxx::document::value> inChunks;
   bsoncxx::stdx::optional<bsoncxx::document::value> cursor;
   for (const auto &chunk : chunks) {
-	try {
-	  cursor =
-		  _database["chunks"].find_one(
-			  document{} << "id_user" << chunk.userId
-						 << "id_chunk" << chunk.chunkId << finalize);
-	} catch (mongocxx::exception & exception) {
-	BOOST_LOG_TRIVIAL(error) << "MongoDB: " + std::string(exception.what());
-	throw MongoExceptions("MongoDB: " + std::string(exception.what()));
-  }
+    try {
+      cursor =
+          _database["chunks"].find_one(
+              document{} << "id_user" << chunk.userId
+                         << "id_chunk" << chunk.chunkId << finalize);
+    } catch (mongocxx::exception &exception) {
+      BOOST_LOG_TRIVIAL(error) << "MongoDB: " + std::string(exception.what());
+      throw MongoExceptions("MongoDB: " + std::string(exception.what()));
+    }
 
     if (cursor) {
       throw MongoExceptions(
@@ -44,10 +43,10 @@ void MongoDB::InsertChunk(const std::vector<Chunk> &chunks) const {
                    << "data" << b_binary << finalize);
   }
   try {
- 	 _database["chunks"].insert_many(inChunks);
-  } catch (mongocxx::exception & exception) {
-	BOOST_LOG_TRIVIAL(error) << "MongoDB: " + std::string(exception.what());
-	throw MongoExceptions("MongoDB: " + std::string(exception.what()));
+    _database["chunks"].insert_many(inChunks);
+  } catch (mongocxx::exception &exception) {
+    BOOST_LOG_TRIVIAL(error) << "MongoDB: " + std::string(exception.what());
+    throw MongoExceptions("MongoDB: " + std::string(exception.what()));
   }
 }
 
@@ -56,16 +55,16 @@ std::vector<Chunk> MongoDB::GetChunk(const std::vector<UserChunk> &userChunks) c
   std::vector<Chunk> users;
   for (const auto &userChunk : userChunks) {
     Chunk chunk;
-	bsoncxx::stdx::optional<bsoncxx::document::value> cursor;
-	try {
-   cursor =
-        _database["chunks"].find_one(
-            document{} << "id_user" << userChunk.userId
-                       << "id_chunk" << userChunk.chunkId << finalize);
-	} catch (mongocxx::exception & exception) {
-	  BOOST_LOG_TRIVIAL(error) << "MongoDB: " + std::string(exception.what());
-	  throw MongoExceptions("MongoDB: " + std::string(exception.what()));
-	}
+    bsoncxx::stdx::optional<bsoncxx::document::value> cursor;
+    try {
+      cursor =
+          _database["chunks"].find_one(
+              document{} << "id_user" << userChunk.userId
+                         << "id_chunk" << userChunk.chunkId << finalize);
+    } catch (mongocxx::exception &exception) {
+      BOOST_LOG_TRIVIAL(error) << "MongoDB: " + std::string(exception.what());
+      throw MongoExceptions("MongoDB: " + std::string(exception.what()));
+    }
     if (cursor) {
       bsoncxx::document::value value = (*cursor);
       bsoncxx::document::view view = value.view();
@@ -89,14 +88,15 @@ std::vector<Chunk> MongoDB::GetChunk(const std::vector<UserChunk> &userChunks) c
   return users;
 }
 void MongoDB::Connect() {
+  BOOST_LOG_TRIVIAL(debug) << "MongoDB: Connect";
+
   try {
-	mongocxx::instance _instance;
-	mongocxx::uri _uri{};
-	_client = mongocxx::client(_uri);
-	_database = _client["cloud"];
-	BOOST_LOG_TRIVIAL(debug) << "MongoDB: Init DB";
-  } catch (std::exception & exceptions) {
-	BOOST_LOG_TRIVIAL(error) << "MongoDB: " + std::string(exceptions.what());
-	throw MongoExceptions("MongoDB: Faild to connect");
+    mongocxx::uri _uri{};
+    _client = mongocxx::client(_uri);
+    _database = _client["cloud"];
+    BOOST_LOG_TRIVIAL(debug) << "MongoDB: Init DB";
+  } catch (std::exception &exceptions) {
+    BOOST_LOG_TRIVIAL(error) << "MongoDB: " + std::string(exceptions.what());
+    throw MongoExceptions("MongoDB: Faild to connect");
   }
 }
