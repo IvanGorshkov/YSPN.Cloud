@@ -29,6 +29,7 @@
 #include "AppExceptions.h"
 #include "auth_window.h"
 #include "reg_window.h"
+#include "resourcePath.h"
 #include "settings.h"
 #include "structs/FileMeta.h"
 
@@ -95,7 +96,7 @@ class MainWindow : public QMainWindow, public QStandardItem {
 
   void on_treeView_doubleClicked(const QModelIndex &index);
 
-private:
+ private:
   Ui::MainWindow *ui;
 
   auth_window uiAuth;

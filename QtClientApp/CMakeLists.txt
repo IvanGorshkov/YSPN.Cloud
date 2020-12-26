@@ -11,7 +11,10 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-SET(CMAKE_PREFIX_PATH "/Users/ivangorshkov/Qt5.12.3/5.12.3/clang_64/lib/cmake")
+FIND_PACKAGE(Boost COMPONENTS system REQUIRED)
+INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
+
+SET(CMAKE_PREFIX_PATH "/Users/s.alekhin/Qt/5.15.2/clang_64/lib/cmake")
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
 FIND_LIBRARY(App-dev REQUIRED)
@@ -35,6 +38,7 @@ INCLUDE_DIRECTORIES(include)
 
 add_executable(${PROJECT_NAME}
         src/main.cpp
+        src/resourcePath.cpp
         src/mainwindow.cpp
         include/mainwindow.h
         src/mainwindow.ui
@@ -49,4 +53,4 @@ add_executable(${PROJECT_NAME}
         include/settings.h
         )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Widgets App-dev)
+target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Widgets App-dev ${Boost_LIBRARIES})

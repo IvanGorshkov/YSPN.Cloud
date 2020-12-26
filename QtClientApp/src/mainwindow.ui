@@ -21,7 +21,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>../icons/project.png</normaloff>../icons/project.png</iconset>
+    <normaloff>icons/project.png</normaloff>icons/project.png</iconset>
   </property>
   <property name="autoFillBackground">
    <bool>false</bool>
@@ -89,7 +89,7 @@
     </property>
     <property name="icon">
      <iconset>
-      <normaloff>../icons/refresh.png</normaloff>../icons/refresh.png</iconset>
+      <normaloff>icons/refresh.png</normaloff>icons/refresh.png</iconset>
     </property>
     <property name="iconSize">
      <size>
@@ -118,7 +118,7 @@
     </property>
     <property name="icon">
      <iconset>
-      <normaloff>../icons/add-file.png</normaloff>../icons/add-file.png</iconset>
+      <normaloff>icons/add-file.png</normaloff>icons/add-file.png</iconset>
     </property>
     <property name="iconSize">
      <size>
@@ -146,7 +146,7 @@
     </property>
     <property name="icon">
      <iconset>
-      <normaloff>../icons/info.png</normaloff>../icons/info.png</iconset>
+      <normaloff>icons/info.png</normaloff>icons/info.png</iconset>
     </property>
     <property name="iconSize">
      <size>
@@ -174,7 +174,7 @@
     </property>
     <property name="icon">
      <iconset>
-      <normaloff>../icons/setting.png</normaloff>../icons/setting.png</iconset>
+      <normaloff>icons/setting.png</normaloff>icons/setting.png</iconset>
     </property>
     <property name="iconSize">
      <size>
