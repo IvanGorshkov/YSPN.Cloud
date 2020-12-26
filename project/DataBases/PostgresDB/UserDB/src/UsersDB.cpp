@@ -1,6 +1,15 @@
 #include "UsersDB.h"
 #include <boost/lexical_cast.hpp>
 
+UsersDB::UsersDB(std::string_view info)
+    : PostgresSQLDB(info) {
+}
+
+UsersDB &UsersDB::shared(std::string_view info) {
+  static UsersDB shared(info);
+  return shared;
+}
+
 UserIds UsersDB::Login(const UserInfo &userInfo) {
   try {
     pqExec("begin;", PostgresExceptions("invalid to start transaction"));  // Начало транзакции
@@ -8,7 +17,7 @@ UserIds UsersDB::Login(const UserInfo &userInfo) {
     std::string query = "SELECT count(*) Users Where login like '" + userInfo.login + "' ;";
     userExist(query);
     query =
-        "SELECT count(id) from Users Where login like '" + userInfo.login + "' and password like '" + userInfo.password
+        "SELECT id from Users Where login like '" + userInfo.login + "' and password like '" + userInfo.password
             + "';";
     int id = getUserId(query, PostgresExceptions("Password is not the same"));
     UserIds usr{.id = id};
@@ -18,6 +27,7 @@ UserIds UsersDB::Login(const UserInfo &userInfo) {
     throw PostgresExceptions(exceptions.what());
   }
 }
+
 UserIds UsersDB::Registration(const UserInfo &userInfo) {
   try {
     pqExec("begin;", PostgresExceptions("invalid to start transaction"));  // Начало транзакции
@@ -36,12 +46,6 @@ UserIds UsersDB::Registration(const UserInfo &userInfo) {
     throw PostgresExceptions(exceptions.what());
   }
 }
-UsersDB::UsersDB(std::string_view info) : PostgresSQLDB(info) {}
-
-UsersDB &UsersDB::shared(std::string_view info) {
-  static UsersDB shared(info);
-  return shared;
-}
 
 int UsersDB::getUserId(const std::string &query, PostgresExceptions exceptions) {
   PGresult *res = PQexec(_conn, query.c_str());
@@ -55,7 +59,7 @@ int UsersDB::getUserId(const std::string &query, PostgresExceptions exceptions) 
   return id;
 }
 
-int UsersDB::userExist(const std::string &query) {
+void UsersDB::userExist(const std::string &query) {
   PGresult *res = PQexec(_conn, query.c_str());
   if (PQresultStatus(res) != PGRES_TUPLES_OK) {
     PQexec(_conn, "rollback to savepoint f_savepoint;");

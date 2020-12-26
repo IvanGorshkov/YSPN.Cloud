@@ -19,6 +19,6 @@ class UsersDB : public PostgresSQLDB {
   UsersDB(const UsersDB &users_db);
   UsersDB &operator=(const UsersDB &users_db);
 
-  int userExist(const std::string &query);
+  void userExist(const std::string &query);
   int getUserId(const std::string &query, PostgresExceptions exceptions);
 };
