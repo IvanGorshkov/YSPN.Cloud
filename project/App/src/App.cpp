@@ -24,7 +24,7 @@ bool App::IsLogin() const {
   return _internalDB->IsExistUser();
 }
 
-void App::LoginUser(std::string login, std::string password) {
+void App::LoginUser(std::string login, const std::string& password) {
   BOOST_LOG_TRIVIAL(debug) << "App: LoginUser";
 
   auto loginUser = LoginUserCommand(appCallbackOk,
@@ -35,7 +35,7 @@ void App::LoginUser(std::string login, std::string password) {
   loginUser.Do();
 }
 
-void App::RegisterUser(std::string login, std::string password) {
+void App::RegisterUser(std::string login, const std::string& password) {
   BOOST_LOG_TRIVIAL(debug) << "App: RegisterUser";
 
   auto registerUser = RegisterUserCommand(appCallbackOk,
@@ -50,6 +50,17 @@ void App::Logout() {
   BOOST_LOG_TRIVIAL(debug) << "App: Logout";
 
   _internalDB->DeleteUser();
+}
+
+std::string App::hash(const std::string &password) {
+  unsigned char digest[MD5_DIGEST_LENGTH];
+  MD5(reinterpret_cast<const unsigned char *>(password.c_str()), password.size(), digest);
+
+  std::stringstream result;
+  for (unsigned char i : digest)
+    result << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(i);
+
+  return result.str();
 }
 
 void App::Refresh() {
@@ -224,28 +235,32 @@ void App::stopWatcher() {
 }
 
 void App::execEvent() {
-  BOOST_LOG_TRIVIAL(debug) << "App: execEvent";
+  BOOST_LOG_TRIVIAL(info) << "App: execEvent";
 
   auto event = _events.front();
   _events.pop();
 
   switch (event.event) {
     case CREATE: {
+      BOOST_LOG_TRIVIAL(info) << "App: createFile";
       createFile(event.path);
       break;
     }
 
     case RENAME: {
+      BOOST_LOG_TRIVIAL(info) << "App: renameFile";
       renameFile(event.path, event.new_path.value());
       break;
     }
 
     case MODIFY: {
+      BOOST_LOG_TRIVIAL(info) << "App: modifyFile";
       modifyFile(event.path);
       break;
     }
 
     case DELETE: {
+      BOOST_LOG_TRIVIAL(info) << "App: deleteFile";
       deleteFile(event.path);
       break;
     }
@@ -260,7 +275,7 @@ void App::execEvent() {
 void App::watcherCallback(const CloudNotification &event) {
   BOOST_LOG_TRIVIAL(debug) << "App: watcherCallback";
 
-  BOOST_LOG_TRIVIAL(info) << "App: new event" << event.event;
+  BOOST_LOG_TRIVIAL(info) << "App: new event " << event.event;
   _events.push(event);
 
   execEvent();

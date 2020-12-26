@@ -5,6 +5,7 @@
 #include <functional>
 #include <string>
 #include <memory>
+#include <openssl/md5.h>
 #include <boost/filesystem.hpp>
 #include "Commands.h"
 #include "InternalDB.h"
@@ -23,8 +24,8 @@ class App {
   ~App();
 
   bool IsLogin() const;
-  void LoginUser(std::string login, std::string password);
-  void RegisterUser(std::string login, std::string password);
+  void LoginUser(std::string login, const std::string& password);
+  void RegisterUser(std::string login, const std::string& password);
   void Logout();
 
   void Refresh();
@@ -45,6 +46,8 @@ class App {
   void renameFile(const fs::path &oldPath, const fs::path &newPath);
   void deleteFile(const fs::path &path);
   void modifyFile(const fs::path &path);
+
+  static std::string hash(const std::string &password);
 
   void runWorker();
 

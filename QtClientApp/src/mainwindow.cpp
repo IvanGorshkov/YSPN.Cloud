@@ -528,9 +528,9 @@ void MainWindow::on_treeView_doubleClicked(const QModelIndex &index) {
 }
 
 void MainWindow::authorizeUser() {
+  startLoadingLabel();
   _app.LoginUser(uiAuth.GetLogin().toStdString(), uiAuth.GetPass().toStdString());
 
-  //TODO(Sergey): проверить, что правильные данные
   if (_app.IsLogin()) {
     uiAuth.close();
     uiReg.close();
@@ -540,12 +540,13 @@ void MainWindow::authorizeUser() {
 
 void MainWindow::registerUser() {
   if (uiReg.CheckPass()) {
+    startLoadingLabel();
     _app.RegisterUser(uiReg.GetName().toStdString(), uiReg.GetPass().toStdString());
 
-    //TODO(Sergey): добавить пользователя
     if (_app.IsLogin()) {
-      uiReg.hide();
-      uiAuth.show();
+      uiAuth.close();
+      uiReg.close();
+      this->show();
     }
   } else {
     printInfoBox("Регистрация пароля", "Пароли не сопадают");
