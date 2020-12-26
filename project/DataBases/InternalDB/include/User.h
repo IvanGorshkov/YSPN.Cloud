@@ -3,10 +3,10 @@
 #include <string>
 
 struct User {
-  size_t userId;
+  int userId;
   std::string login;
   std::string password;
-  size_t deviceId;
+  int deviceId;
   std::string deviceName;
   std::string syncFolder;
   std::string lastUpdate;

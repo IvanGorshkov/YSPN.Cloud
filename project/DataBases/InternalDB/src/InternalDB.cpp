@@ -13,20 +13,14 @@ InternalDB::InternalDB(std::string databaseName)
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Init DB";
   if (connect()) {
     createTable();
-    if (existUser()) {
+
+    if (IsExistUser()) {
       _userId = selectUserId();
       _deviceId = selectDeviceId();
       _syncFolder = selectFolder();
       _lastUpdate = selectLastUpdate();
-    } else {
-      std::string path = std::getenv("HOME");
-      path += "/cloud";
-      boost::filesystem::create_directories(path);
-      User user = {.userId = 1,
-          .deviceId = 1,
-          .syncFolder = path};
-      InsertUser(user);
     }
+
     close();
   }
 }
@@ -370,10 +364,12 @@ FileMeta InternalDB::SelectFile(const int &fileId) {
 
 // MARK: Работа с User
 
-void InternalDB::DeleteUser(const int &userId) {
+void InternalDB::DeleteUser() {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
-  std::string query = "DELETE FROM User WHERE user_id = " + std::to_string(userId) + ";";
+
+  std::string query = "DELETE FROM User ;";
   deleteInfo(query);
+
   close();
 }
 
@@ -395,9 +391,14 @@ void InternalDB::UpdatePassword(const std::string &newPassword) {
   close();
 }
 
-bool InternalDB::existUser() {
+bool InternalDB::IsExistUser() {
+  if (!connect()) { throw InternalExceptions("Don't connect"); }
+
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Check exist user";
   auto query = "SELECT count(*) FROM User;";
+
+  close();
+
   return selectId(query) != 0;
 }
 

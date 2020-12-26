@@ -61,12 +61,12 @@ class InternalDB {
   void InsertFileInfo(const FileInfo &fileInfo);
   void UpdateFileInfo(const FileInfo &fileInfo);
 
-  void DeleteUser(const int &userId);
+  bool IsExistUser();
+  void DeleteUser();
   std::string SelectUserPassword();
   void UpdatePassword(const std::string &newPassword);
 
  private:
-  bool existUser();
   int selectUserId();
   int selectDeviceId();
   std::string selectFolder();
