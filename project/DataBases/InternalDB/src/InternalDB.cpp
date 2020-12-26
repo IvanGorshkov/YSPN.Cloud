@@ -465,6 +465,8 @@ void InternalDB::insertFileMeta(const FileMeta &fileMeta) {
 void InternalDB::updateFileMeta(const FileMeta &fileMeta) {
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: updateFileMeta";
 
+  // TODO(Ivan): записать в базу is_download
+
   auto query = "Update Files SET "
                "file_name = '" + fileMeta.fileName +
       "', file_extention = '" + fileMeta.fileExtension +
