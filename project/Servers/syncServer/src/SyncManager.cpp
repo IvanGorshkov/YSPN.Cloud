@@ -46,5 +46,13 @@ std::unique_ptr<Command> SyncManager::getCommand(const pt::ptree &val) {
     return std::make_unique<UploadFileCommand>(sh);
   }
 
+  if (command == "LoginUser") {
+    return std::make_unique<LoginUser>(sh);
+  }
+
+  if (command == "RegisterUser") {
+    return std::make_unique<RegisterUser>(sh);
+  }
+
   throw WrongCommand("Wrong command");
 }
