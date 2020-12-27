@@ -4,6 +4,7 @@
 #include <sys/epoll.h>
 #include <queue>
 #include <string>
+#include <fcntl.h>
 #include <map>
 #include <vector>
 #include <boost/filesystem.hpp>
@@ -33,6 +34,10 @@ class Watcher : public WatcherInterface {
   int _inotifyFd;
   int _epollFd;
   epoll_event _inotifyEpollEvent;
+  epoll_event _stopPipeEpollEvent;
+  int _stopPipeFd[2];
+  const int _pipeReadIdx;
+  const int _pipeWriteIdx;
   boost::bimap<int, boost::filesystem::path> _directorieMap;
   std::queue<FileSystemEvent> _eventQueue;
   std::queue<std::exception_ptr> _exceptionQueue;
@@ -51,6 +56,7 @@ class Watcher : public WatcherInterface {
   void UnwatcFile(const boost::filesystem::path &file);
   boost::optional<FileSystemEvent> getNextEvent();
   bool hasStopped() const;
+  void sendStopSignal();
   void runOnce();
   ssize_t readEventsIntoBuffer(std::vector<uint8_t> &);
   void readEventsFromBuffer(uint8_t *, int, std::vector<FileSystemEvent> &);
