@@ -7,7 +7,8 @@ MainWindow::MainWindow(QWidget *parent)
       ui(new Ui::MainWindow),
       _app(std::bind(&MainWindow::callbackOk, this, std::placeholders::_1),
            std::bind(&MainWindow::callbackError, this, std::placeholders::_1),
-           std::bind(&MainWindow::callbackLoadingLabel, this)) {
+           std::bind(&MainWindow::callbackLoadingLabel, this),
+           std::bind(&MainWindow::callbackRefresh, this, std::placeholders::_1)) {
 
   bool _loginSuccesfull = false;
   connect(&uiAuth, SIGNAL(login_button_clicked()), this, SLOT(authorizeUser()));
@@ -282,6 +283,10 @@ void MainWindow::parseVectorFiles() {
       }
     }
   }
+}
+
+void MainWindow::callbackRefresh(const std::string &msg){
+    updateFiles();
 }
 
 void MainWindow::slotCustomMenuRequested(QPoint pos) {

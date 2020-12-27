@@ -57,6 +57,7 @@ class MainWindow : public QMainWindow, public QStandardItem {
   void stopLoadingLabel();
 
  private:
+  void callbackRefresh(const std::string &msg);
   void callbackOk(const std::string &msg);
   void callbackError(const std::string &msg);
   void callbackLoadingLabel();

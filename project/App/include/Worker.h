@@ -6,5 +6,5 @@
 
 class Worker {
  public:
-  static void Run(std::queue<std::shared_ptr<BaseCommand>> &queue, bool &isWorking);
+  static void Run(std::queue<std::shared_ptr<BaseCommand>> &queue, bool &isWorking, const std::function<void()> &loadingLabel);
 };
