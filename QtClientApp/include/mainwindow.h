@@ -59,6 +59,7 @@ class MainWindow : public QMainWindow, public QStandardItem {
  private:
   void callbackOk(const std::string &msg);
   void callbackError(const std::string &msg);
+  void callbackLoadingLabel();
 
  private:
   void printMsgBox();
@@ -68,6 +69,7 @@ class MainWindow : public QMainWindow, public QStandardItem {
 
  signals:
   void printMsgBoxSignal();
+  void printLoadingLabel();
 
  private slots:
   void slotShortcutCMDR();
@@ -88,6 +90,7 @@ class MainWindow : public QMainWindow, public QStandardItem {
   void rename_file();
   void download_on_device();
   void delete_from_device();
+  void delete_from_cloud();
   void view_properties();
   void onBtnAddFile();
   void onBtnSettings();
