@@ -10,9 +10,15 @@ Watcher::Watcher() :
     _inotifyFd(0),
     _stopped(false),
     _isReanameEvent(false),
-    _eventBuffer(MAX_EVENTS * (EVENT_SIZE + 16), 0) {
+    _eventBuffer(MAX_EVENTS * (EVENT_SIZE + 16), 0),
+    _pipeReadIdx(0),
+    _pipeWriteIdx(1){
   _inotifyFd = inotify_init1(IN_NONBLOCK);
   if (_inotifyFd == -1) {
+    throw InotifyInitError();
+  }
+
+  if (pipe2(_stopPipeFd, O_NONBLOCK) == -1) {
     throw InotifyInitError();
   }
 
@@ -26,15 +32,24 @@ Watcher::Watcher() :
   if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, _inotifyFd, &_inotifyEpollEvent) == -1) {
     throw EpollFDError();
   }
+
+  _stopPipeEpollEvent.events = EPOLLIN | EPOLLET;
+  _stopPipeEpollEvent.data.fd = _stopPipeFd[_pipeReadIdx];
+  if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, _stopPipeFd[_pipeReadIdx], &_stopPipeEpollEvent) == -1) {
+    throw EpollFDError();
+  }
 }
 
 Watcher::~Watcher() {
   epoll_ctl(_epollFd, EPOLL_CTL_DEL, _inotifyFd, nullptr);
+  epoll_ctl(_epollFd, EPOLL_CTL_DEL, _stopPipeFd[_pipeReadIdx], 0);
   for (boost::bimap<int, boost::filesystem::path>::left_map::const_iterator iter = _directorieMap.left.begin(),
            iend = _directorieMap.left.end();
        iter != iend; ++iter) {
     removeWatch(iter->first);
   }
+  close(_stopPipeFd[_pipeReadIdx]);
+  close(_stopPipeFd[_pipeWriteIdx]);
 }
 
 void Watcher::Run(const boost::filesystem::path &path,
@@ -66,7 +81,8 @@ void Watcher::Run(const boost::filesystem::path &path,
         removeWatch(iter->first);
       }
       _directorieMap.clear();
-      _eventBuffer.clear();
+      //_eventBuffer.clear();
+      _stopped = false;
       break;
     }
     runOnce();
@@ -85,7 +101,6 @@ void Watcher::runOnce() {
 
   Event currentEvent = static_cast<Event>(newEvent->mask);
   CloudEvent clevent;
-
   switch (currentEvent) {
     case 1073742080:watchDirectory(newEvent->path);
       currentEvent = Event::_ignored;
@@ -118,10 +133,17 @@ void Watcher::runOnce() {
     case 512:clevent = DELETE;
       break;
     case 2:
-    case 8:
-      if (!_eventQueue.empty() && (_eventQueue.front().mask == 128 || _eventQueue.front().mask == 32)) {
+      if (!_eventQueue.empty()) {
+        if(_eventQueue.size() == 2){
+          while (!_eventQueue.empty())
+            _eventQueue.pop();
+          currentEvent = Event::_ignored;
+          break;
+        }
         while (!_eventQueue.empty())
           _eventQueue.pop();
+      } else {
+        currentEvent = Event::_ignored;
       }
       clevent = MODIFY;
       break;
@@ -149,8 +171,14 @@ bool Watcher::hasStopped() const {
   return _stopped;
 }
 
+void Watcher::sendStopSignal(){
+  std::vector<std::uint8_t> buf(1,0);
+  write(_stopPipeFd[_pipeWriteIdx], buf.data(), buf.size());
+}
+
 void Watcher::Stop() {
   _stopped = true;
+  sendStopSignal();
 }
 
 void Watcher::watchFile(bfs::path file) {
@@ -197,6 +225,9 @@ ssize_t Watcher::readEventsIntoBuffer(std::vector<uint8_t> &eventBuffer) {
     return length;
   }
   for (auto n = 0; n < nFdsReady; ++n) {
+    if (_epollEvents[n].data.fd == _stopPipeFd[_pipeReadIdx]) {
+      break;
+    }
     length = read(_epollEvents[n].data.fd, eventBuffer.data(), eventBuffer.size());
     if (length == -1) {
       break;
@@ -209,9 +240,14 @@ void Watcher::readEventsFromBuffer(
     uint8_t *buffer, int length, std::vector<FileSystemEvent> &events) {
   int i = 0;
   while (i < length) {
+    bfs::path path;
     inotify_event *event = ((struct inotify_event *) &buffer[i]);
-
-    auto path = wdToPath(event->wd);
+    if(_directorieMap.left.find(event->wd) != _directorieMap.left.end())
+      path = wdToPath(event->wd);
+    else{
+      i += EVENT_SIZE + event->len;
+      continue;
+    }
 
     if (event->name[0] == '.') {
       i += EVENT_SIZE + event->len;
