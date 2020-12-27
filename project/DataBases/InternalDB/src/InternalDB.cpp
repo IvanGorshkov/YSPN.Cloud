@@ -234,16 +234,16 @@ void InternalDB::InsertAndIndexFile(FileMeta &file) {
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: InsertAndIndexFile";
 
   if (!connect()) { throw InternalExceptions("Don't connect"); }
-
   file.version = 1;
   auto date = getTime(file.updateDate);
   auto query = "INSERT INTO Files (file_name, file_extention, file_size, file_path,"
-               " count_chunks, version, is_download, update_date, create_date) VALUES ('"
+               " count_chunks, version, is_download,is_current, update_date, create_date) VALUES ('"
       + file.fileName + "', '" + file.fileExtension
       + "', " + std::to_string(file.fileSize)
       + ", '" + file.filePath + "', " +
       std::to_string(file.chunksCount) + ", 1, "
-      + std::to_string(file.isDownload) + ", '"
+      + std::to_string(file.isDownload) + ", "
+	  + std::to_string(file.isCurrent) + ", '"
       + date + "', '" + date + "');";
   file.updateDate = date;
   file.createDate = date;
@@ -366,7 +366,7 @@ void InternalDB::RenameFileInfo(const FileInfo &fileInfo) {
 FileMeta InternalDB::SelectFile(const int &fileId) {
   FileMeta file;
   if (!connect()) { throw InternalExceptions("Don't connect"); }
-  std::string query = "SELECT * FROM Files Where id = " + std::to_string(fileId) + ";";
+  std::string query = "SELECT * FROM Files Where id = " + std::to_string(fileId) + " and is_current=1;";
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Select File by id = " << std::to_string(fileId);
   auto pStmt = _stmt.get();
   sqlite3_prepare_v2(_database.get(), query.c_str(), query.size(), &pStmt, nullptr);
@@ -482,12 +482,12 @@ void InternalDB::insertFileMeta(const FileMeta &fileMeta) {
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: insertFileMeta";
 
   auto query = "INSERT INTO Files (file_name, file_extention, file_size, file_path,"
-               " count_chunks, version, is_download, update_date, create_date) VALUES ('"
+               " count_chunks, version, is_download, is_current, update_date, create_date) VALUES ('"
       + fileMeta.fileName + "', '" + fileMeta.fileExtension
       + "', " + std::to_string(fileMeta.fileSize)
       + ", '" + fileMeta.filePath + "', " +
       std::to_string(fileMeta.chunksCount) + ", " + std::to_string(fileMeta.version) + ", "
-      + std::to_string(fileMeta.isDownload) + ", '"
+      + std::to_string(fileMeta.isDownload) + ", " + std::to_string(fileMeta.isCurrent) + ", '"
       + fileMeta.updateDate + "', '" + fileMeta.createDate + "');";
 
   insert(query);
@@ -504,6 +504,7 @@ void InternalDB::updateFileMeta(const FileMeta &fileMeta) {
       "', count_chunks = " + std::to_string(fileMeta.chunksCount) +
       ", version=" + std::to_string(fileMeta.version) +
       ", is_download=" + std::to_string(fileMeta.isDownload) +
+	  ", is_current=" + std::to_string(fileMeta.isCurrent) +
       ", update_date = '" + fileMeta.updateDate +
       "', create_date = '" + fileMeta.createDate +
       "'" " WHERE id=" + std::to_string(fileMeta.fileId) + ";";

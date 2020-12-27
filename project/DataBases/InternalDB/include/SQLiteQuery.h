@@ -11,6 +11,7 @@ const std::string createQueryFiles = "CREATE TABLE IF NOT EXISTS  \"Files\" (\n"
                                      "\t\"count_chunks\"\tINTEGER NOT NULL,\n"
                                      "\t\"version\"\tINTEGER NOT NULL,\n"
                                      "\t\"is_download\"\tBOOLEAN NOT NULL,\n"
+									 "\t\"is_current\"\tBOOLEAN NOT NULL,\n"
                                      "\t\"update_date\"\tTEXT NOT NULL,\n"
                                      "\t\"create_date\"\tTEXT NOT NULL\n"
                                      ");";

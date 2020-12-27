@@ -95,7 +95,7 @@ int MetaDataDB::getLastIdOfFileUser(const std::string &query, PostgresExceptions
 std::vector<FileInfo> MetaDataDB::GetUserFilesByTime(const UserDate &userDate) {
   std::vector<FileInfo> filesInfo;
   BOOST_LOG_TRIVIAL(debug) << "PostgresSQLDB: GetUserFilesByTime";
-  std::string query = "Select * from Files Where is_current = 1 and id_user = " + std::to_string(userDate.userId)
+  std::string query = "Select * from Files Where id_user = " + std::to_string(userDate.userId)
       + " and update_date > '" + userDate.date + "';";
   PGresult *res = PQexec(_conn, query.c_str());
   if (PQresultStatus(res) != PGRES_TUPLES_OK) {
