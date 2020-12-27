@@ -90,8 +90,14 @@ class DownloadFileCommand : public BaseCommand {
   explicit DownloadFileCommand(std::function<void(const std::string &msg)> callbackOk,
                                std::function<void(const std::string &msg)> callbackError,
                                std::shared_ptr<InternalDB> internalDB,
-                               FileMeta file);
+                               FileMeta file,
+                               std::function<void()> stopWatcher,
+                               std::function<void()> runWatcher);
   void Do() override;
+
+ private:
+  std::function<void()> stopWatcher;
+  std::function<void()> runWatcher;
 
  private:
   FileMeta _file;

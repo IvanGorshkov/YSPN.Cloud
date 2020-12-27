@@ -120,7 +120,12 @@ void App::DownloadFile(int fileId) {
 
   BOOST_LOG_TRIVIAL(info) << "App: download file " << file.filePath + file.fileName + file.fileExtension;
 
-  auto sh = std::make_shared<DownloadFileCommand>(appCallbackOk, appCallbackError, _internalDB, file);
+  auto sh = std::make_shared<DownloadFileCommand>(appCallbackOk,
+                                                  appCallbackError,
+                                                  _internalDB,
+                                                  file,
+                                                  std::bind(&App::stopWatcher, this),
+                                                  std::bind(&App::runWatcher, this));
   _commands.emplace(sh);
 
   runWorker();
@@ -271,9 +276,9 @@ void App::stopWatcher() {
   BOOST_LOG_TRIVIAL(debug) << "App: stopWatcher";
 
   _watcher.Stop();
-  _watcherThread.join();
-
   BOOST_LOG_TRIVIAL(info) << "App: join watcher with id = " << _watcherThread.get_id();
+
+  _watcherThread.join();
 }
 
 void App::execEvent() {

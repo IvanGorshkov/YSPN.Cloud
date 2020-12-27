@@ -240,9 +240,13 @@ void RefreshCommand::Do() {
 DownloadFileCommand::DownloadFileCommand(std::function<void(const std::string &msg)> callbackOk,
                                          std::function<void(const std::string &msg)> callbackError,
                                          std::shared_ptr<InternalDB> internalDB,
-                                         FileMeta file)
+                                         FileMeta file,
+                                         std::function<void()> stopWatcher,
+                                         std::function<void()> runWatcher)
     : BaseCommand(std::move(callbackOk), std::move(callbackError), std::move(internalDB)),
-      _file(std::move(file)) {
+      _file(std::move(file)),
+      stopWatcher(std::move(stopWatcher)),
+      runWatcher(std::move(runWatcher)) {
   BOOST_LOG_TRIVIAL(debug) << "DownloadFileCommand: create command";
 }
 
@@ -278,9 +282,11 @@ void DownloadFileCommand::Do() {
     auto filePath = _internalDB->GetSyncFolder() + _file.GetFilePath();
     BOOST_LOG_TRIVIAL(info) << "DownloadFileCommand: download file " << filePath;
 
+    stopWatcher();
     File file(filePath);
     Chunker chunker(file);
     chunker.MergeFile(chunks);
+    runWatcher();
 
     _internalDB->DownloadFile(_file.fileId);
     callbackOk("Загрузка завершена");
