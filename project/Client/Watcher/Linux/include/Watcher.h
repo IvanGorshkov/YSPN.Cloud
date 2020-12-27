@@ -2,9 +2,9 @@
 
 #include <sys/inotify.h>
 #include <sys/epoll.h>
+#include <fcntl.h>
 #include <queue>
 #include <string>
-#include <fcntl.h>
 #include <map>
 #include <vector>
 #include <boost/filesystem.hpp>

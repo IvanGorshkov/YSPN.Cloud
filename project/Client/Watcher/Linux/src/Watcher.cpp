@@ -12,7 +12,7 @@ Watcher::Watcher() :
     _isReanameEvent(false),
     _eventBuffer(MAX_EVENTS * (EVENT_SIZE + 16), 0),
     _pipeReadIdx(0),
-    _pipeWriteIdx(1){
+    _pipeWriteIdx(1) {
   _inotifyFd = inotify_init1(IN_NONBLOCK);
   if (_inotifyFd == -1) {
     throw InotifyInitError();
@@ -81,7 +81,7 @@ void Watcher::Run(const boost::filesystem::path &path,
         removeWatch(iter->first);
       }
       _directorieMap.clear();
-      //_eventBuffer.clear();
+      // _eventBuffer.clear();
       _stopped = false;
       break;
     }
@@ -134,7 +134,7 @@ void Watcher::runOnce() {
       break;
     case 2:
       if (!_eventQueue.empty()) {
-        if(_eventQueue.size() == 2){
+        if (_eventQueue.size() == 2) {
           while (!_eventQueue.empty())
             _eventQueue.pop();
           currentEvent = Event::_ignored;
@@ -171,8 +171,8 @@ bool Watcher::hasStopped() const {
   return _stopped;
 }
 
-void Watcher::sendStopSignal(){
-  std::vector<std::uint8_t> buf(1,0);
+void Watcher::sendStopSignal() {
+  std::vector<std::uint8_t> buf(1, 0);
   write(_stopPipeFd[_pipeWriteIdx], buf.data(), buf.size());
 }
 
@@ -242,9 +242,9 @@ void Watcher::readEventsFromBuffer(
   while (i < length) {
     bfs::path path;
     inotify_event *event = ((struct inotify_event *) &buffer[i]);
-    if(_directorieMap.left.find(event->wd) != _directorieMap.left.end())
+    if (_directorieMap.left.find(event->wd) != _directorieMap.left.end()) {
       path = wdToPath(event->wd);
-    else{
+    } else {
       i += EVENT_SIZE + event->len;
       continue;
     }
