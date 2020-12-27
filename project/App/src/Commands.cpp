@@ -87,7 +87,11 @@ void LoginUserCommand::Do() {
     std::string path = std::getenv("HOME");
     path += "/cloud";
     boost::filesystem::create_directories(path);
-    _internalDB->InsertUser(User{.userId = userIds.id, .syncFolder = path});
+    _internalDB->InsertUser(User{
+        .userId = userIds.id,
+        .login = _login,
+        .password = _password,
+        .syncFolder = path});
 
     callbackOk("Все ок");
     return;
@@ -141,7 +145,11 @@ void RegisterUserCommand::Do() {
     std::string path = std::getenv("HOME");
     path += "/cloud";
     boost::filesystem::create_directories(path);
-    _internalDB->InsertUser(User{.userId = userIds.id, .syncFolder = path});
+    _internalDB->InsertUser(User{
+        .userId = userIds.id,
+        .login = _login,
+        .password = _password,
+        .syncFolder = path});
 
     callbackOk("Вы зарегестрированны");
     return;
@@ -203,6 +211,11 @@ void RefreshCommand::Do() {
         auto fileDB = _internalDB->SelectFile(oneFileInfo.file.fileId);
         if (fileDB.isDownload) {
           File::Delete(_internalDB->GetSyncFolder() + fileDB.GetFilePath());
+        }
+
+        if (oneFileInfo.fileChunksMeta.empty()) {
+          _internalDB->RenameFileInfo(oneFileInfo);
+          return;
         }
 
         _internalDB->UpdateFileInfo(oneFileInfo);

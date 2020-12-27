@@ -1,11 +1,11 @@
 #pragma once
 
+#include <openssl/md5.h>
 #include <vector>
 #include <queue>
 #include <functional>
 #include <string>
 #include <memory>
-#include <openssl/md5.h>
 #include <boost/filesystem.hpp>
 #include "Commands.h"
 #include "InternalDB.h"
@@ -20,12 +20,16 @@ namespace fs = boost::filesystem;
 class App {
  public:
   App(std::function<void(const std::string &msg)> callbackOk,
-      std::function<void(const std::string &msg)> callbackError);
+      std::function<void(const std::string &msg)> callbackError,
+      std::function<void()> callbackLoadingLabel);
   ~App();
 
   bool IsLogin() const;
-  void LoginUser(std::string login, const std::string& password);
-  void RegisterUser(std::string login, const std::string& password);
+  std::string GetLogin() const;
+  void LoginUser(std::string login, const std::string &password);
+  void RegisterUser(std::string login, const std::string &password);
+  void ChangePassword(const std::string &password);
+  bool IsConfirmPassword(const std::string &password);
   void Logout();
 
   void Refresh();
@@ -59,8 +63,11 @@ class App {
  private:
   std::function<void(const std::string &msg)> appCallbackOk;
   std::function<void(const std::string &msg)> appCallbackError;
+  std::function<void()> appCallbackLoadingLabel;
 
  private:
+  bool _isWorkingWorker;
+
   std::queue<std::shared_ptr<BaseCommand>> _commands;
   std::shared_ptr<InternalDB> _internalDB;
 

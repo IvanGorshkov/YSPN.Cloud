@@ -4,14 +4,19 @@
 #include <boost/log/trivial.hpp>
 
 App::App(std::function<void(const std::string &msg)> callbackOk,
-         std::function<void(const std::string &msg)> callbackError)
+         std::function<void(const std::string &msg)> callbackError,
+         std::function<void()> callbackLoadingLabel)
     : _internalDB(std::make_shared<InternalDB>("myDB.sqlite")),
       appCallbackOk(std::move(callbackOk)),
-      appCallbackError(std::move(callbackError)) {
+      appCallbackError(std::move(callbackError)),
+      appCallbackLoadingLabel(std::move(callbackLoadingLabel)),
+      _isWorkingWorker(false) {
   BOOST_LOG_TRIVIAL(debug) << "App: create app";
 //  ClientConfig::Log("release");
 
-  runWatcher();
+  if (IsLogin()) {
+    runWatcher();
+  }
 }
 
 App::~App() {
@@ -24,32 +29,54 @@ bool App::IsLogin() const {
   return _internalDB->IsExistUser();
 }
 
-void App::LoginUser(std::string login, const std::string& password) {
+std::string App::GetLogin() const {
+  BOOST_LOG_TRIVIAL(debug) << "App: GetLogin";
+  return _internalDB->GetLogin();
+}
+
+void App::LoginUser(std::string login, const std::string &password) {
   BOOST_LOG_TRIVIAL(debug) << "App: LoginUser";
 
   auto loginUser = LoginUserCommand(appCallbackOk,
                                     appCallbackError,
                                     _internalDB,
                                     std::move(login),
-                                    std::move(password));
+                                    hash(password));
   loginUser.Do();
+
+  runWatcher();
 }
 
-void App::RegisterUser(std::string login, const std::string& password) {
+void App::RegisterUser(std::string login, const std::string &password) {
   BOOST_LOG_TRIVIAL(debug) << "App: RegisterUser";
 
   auto registerUser = RegisterUserCommand(appCallbackOk,
                                           appCallbackError,
                                           _internalDB,
                                           std::move(login),
-                                          std::move(password));
+                                          hash(password));
   registerUser.Do();
+
+  runWatcher();
+}
+
+void App::ChangePassword(const std::string &password) {
+  BOOST_LOG_TRIVIAL(debug) << "App: ChangePassword";
+
+  // TODO(Sergey): change password command
+}
+
+bool App::IsConfirmPassword(const std::string &password) {
+  BOOST_LOG_TRIVIAL(debug) << "App: IsConfirmPassword";
+
+  return hash(password) == _internalDB->GetPassword();
 }
 
 void App::Logout() {
   BOOST_LOG_TRIVIAL(debug) << "App: Logout";
 
   _internalDB->DeleteUser();
+  stopWatcher();
 }
 
 std::string App::hash(const std::string &password) {
@@ -154,6 +181,8 @@ void App::ModifyFile(const fs::path &path) {
 void App::createFile(const fs::path &path) {
   BOOST_LOG_TRIVIAL(debug) << "App: createFile";
 
+  Refresh();
+
   auto sh = std::make_shared<CreateFileCommand>(appCallbackOk, appCallbackError, _internalDB, path);
   _commands.emplace(sh);
 
@@ -162,6 +191,8 @@ void App::createFile(const fs::path &path) {
 
 void App::renameFile(const fs::path &oldPath, const fs::path &newPath) {
   BOOST_LOG_TRIVIAL(debug) << "App: renameFile";
+
+  Refresh();
 
   auto sh = std::make_shared<RenameFileCommand>(appCallbackOk, appCallbackError, _internalDB, oldPath, newPath);
   _commands.emplace(sh);
@@ -172,6 +203,8 @@ void App::renameFile(const fs::path &oldPath, const fs::path &newPath) {
 void App::deleteFile(const fs::path &path) {
   BOOST_LOG_TRIVIAL(debug) << "App: deleteFile";
 
+  Refresh();
+
   auto sh = std::make_shared<DeleteFileCommand>(appCallbackOk, appCallbackError, _internalDB, path);
   _commands.emplace(sh);
 
@@ -181,6 +214,8 @@ void App::deleteFile(const fs::path &path) {
 void App::modifyFile(const fs::path &path) {
   BOOST_LOG_TRIVIAL(debug) << "App: modifyFile";
 
+  Refresh();
+
   auto sh = std::make_shared<ModifyFileCommand>(appCallbackOk, appCallbackError, _internalDB, path);
   _commands.emplace(sh);
 
@@ -189,8 +224,6 @@ void App::modifyFile(const fs::path &path) {
 
 void App::UpdateSyncFolder(const fs::path &path) {
   BOOST_LOG_TRIVIAL(debug) << "App: UpdateSyncFolder";
-  _watcher.Stop();
-  _watcherThread.join();
 
   if (!fs::exists(path)) {
     throw FolderNotExistsException("this folder does not exist");
@@ -214,8 +247,13 @@ std::string App::GetSyncFolder() {
 void App::runWorker() {
   BOOST_LOG_TRIVIAL(debug) << "App: runWorker";
 
-  auto worker = std::thread(&Worker::Run, std::ref(_commands));
-  worker.detach();
+  if (!_isWorkingWorker) {
+    BOOST_LOG_TRIVIAL(info) << "App: run worker";
+
+    auto worker = std::thread(&Worker::Run, std::ref(_commands), std::ref(_isWorkingWorker));
+    BOOST_LOG_TRIVIAL(info) << "App: run worker with id = " << worker.get_id();
+    worker.detach();
+  }
 }
 
 void App::runWatcher() {
@@ -225,6 +263,8 @@ void App::runWatcher() {
     _watcher.Run(_internalDB->GetSyncFolder(),
                  std::bind(&App::watcherCallback, this, std::placeholders::_1));
   });
+
+  BOOST_LOG_TRIVIAL(info) << "App: run watcher with id = " << _watcherThread.get_id();
 }
 
 void App::stopWatcher() {
@@ -232,6 +272,8 @@ void App::stopWatcher() {
 
   _watcher.Stop();
   _watcherThread.join();
+
+  BOOST_LOG_TRIVIAL(info) << "App: join watcher with id = " << _watcherThread.get_id();
 }
 
 void App::execEvent() {
@@ -243,24 +285,28 @@ void App::execEvent() {
   switch (event.event) {
     case CREATE: {
       BOOST_LOG_TRIVIAL(info) << "App: createFile";
+      appCallbackLoadingLabel();
       createFile(event.path);
       break;
     }
 
     case RENAME: {
       BOOST_LOG_TRIVIAL(info) << "App: renameFile";
+      appCallbackLoadingLabel();
       renameFile(event.path, event.new_path.value());
       break;
     }
 
     case MODIFY: {
       BOOST_LOG_TRIVIAL(info) << "App: modifyFile";
+      appCallbackLoadingLabel();
       modifyFile(event.path);
       break;
     }
 
     case DELETE: {
       BOOST_LOG_TRIVIAL(info) << "App: deleteFile";
+      appCallbackLoadingLabel();
       deleteFile(event.path);
       break;
     }
