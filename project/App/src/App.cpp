@@ -5,11 +5,13 @@
 
 App::App(std::function<void(const std::string &msg)> callbackOk,
          std::function<void(const std::string &msg)> callbackError,
-         std::function<void()> callbackLoadingLabel)
+         std::function<void()> callbackLoadingLabel,
+         std::function<void(const std::string &msg)> callbackRefresh)
     : _internalDB(std::make_shared<InternalDB>("myDB.sqlite")),
       appCallbackOk(std::move(callbackOk)),
       appCallbackError(std::move(callbackError)),
       appCallbackLoadingLabel(std::move(callbackLoadingLabel)),
+      appCallbackRefresh(std::move(callbackRefresh)),
       _isWorkingWorker(false) {
   BOOST_LOG_TRIVIAL(debug) << "App: create app";
 //  ClientConfig::Log("release");
@@ -93,7 +95,7 @@ std::string App::hash(const std::string &password) {
 void App::Refresh() {
   BOOST_LOG_TRIVIAL(debug) << "App: Refresh";
 
-  auto sh = std::make_shared<RefreshCommand>(appCallbackOk, appCallbackError, _internalDB);
+  auto sh = std::make_shared<RefreshCommand>(appCallbackRefresh, appCallbackError, _internalDB);
   _commands.emplace(sh);
 
   runWorker();
@@ -187,7 +189,6 @@ void App::createFile(const fs::path &path) {
   BOOST_LOG_TRIVIAL(debug) << "App: createFile";
 
   Refresh();
-
   auto sh = std::make_shared<CreateFileCommand>(appCallbackOk, appCallbackError, _internalDB, path);
   _commands.emplace(sh);
 
@@ -198,7 +199,6 @@ void App::renameFile(const fs::path &oldPath, const fs::path &newPath) {
   BOOST_LOG_TRIVIAL(debug) << "App: renameFile";
 
   Refresh();
-
   auto sh = std::make_shared<RenameFileCommand>(appCallbackOk, appCallbackError, _internalDB, oldPath, newPath);
   _commands.emplace(sh);
 
@@ -255,7 +255,7 @@ void App::runWorker() {
   if (!_isWorkingWorker) {
     BOOST_LOG_TRIVIAL(info) << "App: run worker";
 
-    auto worker = std::thread(&Worker::Run, std::ref(_commands), std::ref(_isWorkingWorker));
+    auto worker = std::thread(&Worker::Run, std::ref(_commands), std::ref(_isWorkingWorker), std::ref(appCallbackLoadingLabel));
     BOOST_LOG_TRIVIAL(info) << "App: run worker with id = " << worker.get_id();
     worker.detach();
   }

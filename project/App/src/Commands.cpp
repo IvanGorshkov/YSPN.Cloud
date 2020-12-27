@@ -93,7 +93,7 @@ void LoginUserCommand::Do() {
         .password = _password,
         .syncFolder = path});
 
-    callbackOk("Все ок");
+    callbackOk("Добро пожаловать!");
     return;
   } catch (ParseException &er) {
     BOOST_LOG_TRIVIAL(error) << "LoginUserCommand: " << er.what();

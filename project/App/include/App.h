@@ -21,7 +21,9 @@ class App {
  public:
   App(std::function<void(const std::string &msg)> callbackOk,
       std::function<void(const std::string &msg)> callbackError,
-      std::function<void()> callbackLoadingLabel);
+      std::function<void()> callbackLoadingLabel,
+      std::function<void(const std::string &msg)> callbackRefresh
+      );
   ~App();
 
   bool IsLogin() const;
@@ -64,6 +66,8 @@ class App {
   std::function<void(const std::string &msg)> appCallbackOk;
   std::function<void(const std::string &msg)> appCallbackError;
   std::function<void()> appCallbackLoadingLabel;
+  std::function<void(const std::string &msg)> appCallbackRefresh;
+
 
  private:
   bool _isWorkingWorker;
