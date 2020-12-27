@@ -46,12 +46,12 @@ class App {
   std::string GetSyncFolder();
 
  private:
+  static std::string hash(const std::string &password);
+
   void createFile(const fs::path &path);
   void renameFile(const fs::path &oldPath, const fs::path &newPath);
   void deleteFile(const fs::path &path);
   void modifyFile(const fs::path &path);
-
-  static std::string hash(const std::string &password);
 
   void runWorker();
 
