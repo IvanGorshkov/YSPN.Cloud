@@ -93,3 +93,91 @@ std::shared_ptr<pt::ptree> UploadFileCommand::Do() {
   auto answer = SerializerAnswer(_fileInfo.GetRequestId());
   return std::make_shared<pt::ptree>(answer.GetJson());
 }
+
+LoginUser::LoginUser(const std::shared_ptr<pt::ptree> &request)
+    : _request(request),
+      _db(UsersDB::shared("user=ysnp dbname=ysnpcloud")),
+      _userInfo(*request) {
+  BOOST_LOG_TRIVIAL(debug) << "LoginUser: create command";
+}
+
+std::shared_ptr<pt::ptree> LoginUser::Do() {
+  BOOST_LOG_TRIVIAL(debug) << "LoginUser: Do";
+
+  try {
+    _db.Connect();
+    BOOST_LOG_TRIVIAL(info) << "LoginUser: connect to database";
+  } catch (PostgresExceptions &er) {
+    BOOST_LOG_TRIVIAL(error) << "LoginUser: " << er.what();
+    auto answer = SerializerAnswer(_userInfo.GetRequestId(), "Database error");
+    return std::make_shared<pt::ptree>(answer.GetJson());
+  }
+
+  UserInfo requestUserInfo;
+  try {
+    requestUserInfo = _userInfo.GetUserInfo();
+    BOOST_LOG_TRIVIAL(info) << "LoginUser: parse json, user = " << requestUserInfo.login;
+  } catch (ParseException &er) {
+    BOOST_LOG_TRIVIAL(error) << "LoginUser: " << er.what();
+    auto answer = SerializerAnswer(_userInfo.GetRequestId(), "Error in json");
+    return std::make_shared<pt::ptree>(answer.GetJson());
+  }
+
+  UserIds responseUserIds{};
+  try {
+    responseUserIds = _db.Login(requestUserInfo);
+    BOOST_LOG_TRIVIAL(info) << "LoginUser: insert file to database";
+  } catch (PostgresExceptions &er) {
+    BOOST_LOG_TRIVIAL(error) << "LoginUser: " << er.what();
+    auto answer = SerializerAnswer(_userInfo.GetRequestId(), "Invalid login or password");
+    return std::make_shared<pt::ptree>(answer.GetJson());
+  }
+
+  BOOST_LOG_TRIVIAL(info) << "LoginUser: Status Ok";
+  auto answer = SerializerUserIds(_userInfo.GetRequestId(), responseUserIds, "");
+  return std::make_shared<pt::ptree>(answer.GetJson());
+}
+
+RegisterUser::RegisterUser(const std::shared_ptr<pt::ptree> &request)
+    : _request(request),
+      _db(UsersDB::shared("user=ysnp dbname=ysnpcloud")),
+      _userInfo(*request) {
+  BOOST_LOG_TRIVIAL(debug) << "RegisterUser: create command";
+}
+
+std::shared_ptr<pt::ptree> RegisterUser::Do() {
+  BOOST_LOG_TRIVIAL(debug) << "RegisterUser: Do";
+
+  try {
+    _db.Connect();
+    BOOST_LOG_TRIVIAL(info) << "RegisterUser: connect to database";
+  } catch (PostgresExceptions &er) {
+    BOOST_LOG_TRIVIAL(error) << "RegisterUser: " << er.what();
+    auto answer = SerializerAnswer(_userInfo.GetRequestId(), "Database error");
+    return std::make_shared<pt::ptree>(answer.GetJson());
+  }
+
+  UserInfo requestUserInfo;
+  try {
+    requestUserInfo = _userInfo.GetUserInfo();
+    BOOST_LOG_TRIVIAL(info) << "RegisterUser: parse json, user = " << requestUserInfo.login;
+  } catch (ParseException &er) {
+    BOOST_LOG_TRIVIAL(error) << "RegisterUser: " << er.what();
+    auto answer = SerializerAnswer(_userInfo.GetRequestId(), "Error in json");
+    return std::make_shared<pt::ptree>(answer.GetJson());
+  }
+
+  UserIds responseUserIds{};
+  try {
+    responseUserIds = _db.Registration(requestUserInfo);
+    BOOST_LOG_TRIVIAL(info) << "RegisterUser: insert file to database";
+  } catch (PostgresExceptions &er) {
+    BOOST_LOG_TRIVIAL(error) << "RegisterUser: " << er.what();
+    auto answer = SerializerAnswer(_userInfo.GetRequestId(), "Login is already exist");
+    return std::make_shared<pt::ptree>(answer.GetJson());
+  }
+
+  BOOST_LOG_TRIVIAL(info) << "RegisterUser: Status Ok";
+  auto answer = SerializerUserIds(_userInfo.GetRequestId(), responseUserIds, "");
+  return std::make_shared<pt::ptree>(answer.GetJson());
+}

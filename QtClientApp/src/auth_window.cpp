@@ -20,7 +20,13 @@ void auth_window::on_inp_password_textEdited(const QString &arg1) {
 }
 
 void auth_window::on_btn_login_clicked() {
-  emit login_button_clicked();
+  if (!_username.isEmpty() && !_userpass.isEmpty()) {
+    emit login_button_clicked();
+  } else {
+    QMessageBox msg;
+    msg.setText("Заполните форму");
+    msg.exec();
+  }
 }
 
 void auth_window::on_btn_register_clicked() {

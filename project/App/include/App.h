@@ -1,5 +1,6 @@
 #pragma once
 
+#include <openssl/md5.h>
 #include <vector>
 #include <queue>
 #include <functional>
@@ -18,11 +19,18 @@ namespace fs = boost::filesystem;
 
 class App {
  public:
-  App(const std::function<void(const std::string &msg)> &callbackOk,
-      const std::function<void(const std::string &msg)> &callbackError);
+  App(std::function<void(const std::string &msg)> callbackOk,
+      std::function<void(const std::string &msg)> callbackError,
+      std::function<void()> callbackLoadingLabel);
   ~App();
 
   bool IsLogin() const;
+  std::string GetLogin() const;
+  void LoginUser(std::string login, const std::string &password);
+  void RegisterUser(std::string login, const std::string &password);
+  void ChangePassword(const std::string &password);
+  bool IsConfirmPassword(const std::string &password);
+  void Logout();
 
   void Refresh();
 
@@ -38,6 +46,13 @@ class App {
   std::string GetSyncFolder();
 
  private:
+  void createFile(const fs::path &path);
+  void renameFile(const fs::path &oldPath, const fs::path &newPath);
+  void deleteFile(const fs::path &path);
+  void modifyFile(const fs::path &path);
+
+  static std::string hash(const std::string &password);
+
   void runWorker();
 
   void runWatcher();
@@ -48,8 +63,11 @@ class App {
  private:
   std::function<void(const std::string &msg)> appCallbackOk;
   std::function<void(const std::string &msg)> appCallbackError;
+  std::function<void()> appCallbackLoadingLabel;
 
  private:
+  bool _isWorkingWorker;
+
   std::queue<std::shared_ptr<BaseCommand>> _commands;
   std::shared_ptr<InternalDB> _internalDB;
 

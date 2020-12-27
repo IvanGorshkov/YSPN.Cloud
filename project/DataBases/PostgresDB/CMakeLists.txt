@@ -19,17 +19,15 @@ ADD_LIBRARY(MetDataDB-dev SHARED
         Base/src/PostgreSQLDB.cpp
         MetaDataDB/src/MetaDataDB.cpp
         )
-
-# Add include directories to your target. PRIVATE is useful with multi-target projects - see documentation of target_include_directories for more info
 target_include_directories(MetDataDB-dev PRIVATE ${PostgreSQL_INCLUDE_DIRS})
-
-# Add libraries to link your target againts. Again, PRIVATE is important for multi-target projects
 target_link_libraries(MetDataDB-dev PRIVATE ${PostgreSQL_LIBRARIES} ${Boost_LIBRARIES})
 
-ADD_LIBRARY(UserDB SHARED
+ADD_LIBRARY(UserDB-dev SHARED
         Base/src/PostgreSQLDB.cpp
         UserDB/src/UsersDB.cpp
         )
+target_include_directories(UserDB-dev PRIVATE ${PostgreSQL_INCLUDE_DIRS})
+target_link_libraries(UserDB-dev PRIVATE ${PostgreSQL_LIBRARIES} ${Boost_LIBRARIES})
 
 ADD_EXECUTABLE(PostgresDB
         main.cpp

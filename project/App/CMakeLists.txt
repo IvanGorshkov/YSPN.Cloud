@@ -36,6 +36,20 @@ else ()
     INCLUDE_DIRECTORIES(../Client/Watcher/Linux/include)
 endif ()
 
+find_package(OpenSSL REQUIRED)
+if (OPENSSL_FOUND)
+    if (APPLE)
+        include_directories(/usr/local/Cellar/openssl@1.1/1.1.1h/include)
+        list(APPEND LIB_LIST /usr/local/Cellar/openssl@1.1/1.1.1h/lib/libssl.dylib)
+        list(APPEND LIB_LIST /usr/local/Cellar/openssl@1.1/1.1.1h/lib/libcrypto.dylib)
+        message(STATUS "OpenSSL Version: ${OPENSSL_VERSION} ${OPENSSL_INCLUDE_DIR} ${OPENSSL_LIBRARIES}")
+    else ()
+        include_directories(${OPENSSL_INCLUDE_DIR})
+        list(APPEND LIB_LIST ${OPENSSL_LIBRARIES})
+        message(STATUS "OpenSSL Version: ${OPENSSL_VERSION} ${OPENSSL_INCLUDE_DIR} ${OPENSSL_LIBRARIES}")
+    endif ()
+endif ()
+
 INCLUDE_DIRECTORIES(include)
 
 ADD_LIBRARY(${PROJECT_NAME}-dev
@@ -45,7 +59,7 @@ ADD_LIBRARY(${PROJECT_NAME}-dev
         src/ClientConfig.cpp
         )
 if (APPLE)
-    TARGET_LINK_LIBRARIES(${PROJECT_NAME}-dev ${Boost_LIBRARIES} InternalDB-dev ClientNetwork-dev Utils-dev Indexer-dev WatcherApple-dev Chunker-dev)
+    TARGET_LINK_LIBRARIES(${PROJECT_NAME}-dev ${Boost_LIBRARIES} OpenSSL::Crypto InternalDB-dev ClientNetwork-dev Utils-dev Indexer-dev WatcherApple-dev Chunker-dev)
 else ()
-    TARGET_LINK_LIBRARIES(${PROJECT_NAME}-dev ${Boost_LIBRARIES} InternalDB-dev ClientNetwork-dev Utils-dev Indexer-dev WatcherLinux-dev Chunker-dev)
+    TARGET_LINK_LIBRARIES(${PROJECT_NAME}-dev ${Boost_LIBRARIES} OpenSSL::Crypto InternalDB-dev ClientNetwork-dev Utils-dev Indexer-dev WatcherLinux-dev Chunker-dev)
 endif ()

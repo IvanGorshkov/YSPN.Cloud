@@ -39,7 +39,13 @@ void reg_window::on_inp_confirmPassword_textEdited(const QString &arg1) {
 }
 
 void reg_window::on_btn_register_clicked() {
-  emit register_button_clicked2();
+  if (!_userName.isEmpty() && !_userPass.isEmpty() && !_confirmation.isEmpty()) {
+    emit register_button_clicked2();
+  } else {
+    QMessageBox msg;
+    msg.setText("Заполните форму");
+    msg.exec();
+  }
 }
 
 void reg_window::on_btn_login_clicked() {

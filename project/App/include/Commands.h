@@ -15,7 +15,10 @@
 #include "SerializerUserChunk.h"
 #include "SerializerUserDate.h"
 #include "SerializerFileInfo.h"
+#include "SerializerUserInfo.h"
+#include "SerializerUserIds.h"
 #include "SerializerExceptions.h"
+#include "User.h"
 #include "Indexer.h"
 #include "File.h"
 #include "Chunker.h"
@@ -44,6 +47,34 @@ class BaseCommand {
 
  protected:
   std::shared_ptr<InternalDB> _internalDB;
+};
+
+class LoginUserCommand : public BaseCommand {
+ public:
+  explicit LoginUserCommand(std::function<void(const std::string &msg)> callbackOk,
+                            std::function<void(const std::string &msg)> callbackError,
+                            std::shared_ptr<InternalDB> internalDB,
+                            std::string login,
+                            std::string password);
+  void Do() override;
+
+ private:
+  std::string _login;
+  std::string _password;
+};
+
+class RegisterUserCommand : public BaseCommand {
+ public:
+  explicit RegisterUserCommand(std::function<void(const std::string &msg)> callbackOk,
+                               std::function<void(const std::string &msg)> callbackError,
+                               std::shared_ptr<InternalDB> internalDB,
+                               std::string login,
+                               std::string password);
+  void Do() override;
+
+ private:
+  std::string _login;
+  std::string _password;
 };
 
 class RefreshCommand : public BaseCommand {

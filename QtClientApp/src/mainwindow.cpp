@@ -6,7 +6,8 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
       ui(new Ui::MainWindow),
       _app(std::bind(&MainWindow::callbackOk, this, std::placeholders::_1),
-           std::bind(&MainWindow::callbackError, this, std::placeholders::_1)) {
+           std::bind(&MainWindow::callbackError, this, std::placeholders::_1),
+           std::bind(&MainWindow::callbackLoadingLabel, this)) {
 
   bool _loginSuccesfull = false;
   connect(&uiAuth, SIGNAL(login_button_clicked()), this, SLOT(authorizeUser()));
@@ -40,6 +41,7 @@ MainWindow::MainWindow(QWidget *parent)
   connect(ui->btn_About, SIGNAL(clicked(bool)), this, SLOT(onBtnAbout()));
   connect(ui->btn_Settings, SIGNAL(clicked(bool)), this, SLOT(onBtnSettings()));
   connect(this, &MainWindow::printMsgBoxSignal, this, &MainWindow::printMsgBox);
+  connect(this, &MainWindow::printLoadingLabel, this, &MainWindow::startLoadingLabel);
 
   keyCMDR = new QShortcut(this);
   keyCMDR->setKey(Qt::Key_R);
@@ -104,6 +106,10 @@ void MainWindow::callbackOk(const std::string &msg) {
 void MainWindow::callbackError(const std::string &msg) {
   _msg = QString::fromStdString(msg);
   Q_EMIT printMsgBoxSignal();
+}
+
+void MainWindow::callbackLoadingLabel() {
+  Q_EMIT printLoadingLabel();
 }
 
 void MainWindow::parseVectorFiles() {
@@ -281,10 +287,11 @@ void MainWindow::parseVectorFiles() {
 void MainWindow::slotCustomMenuRequested(QPoint pos) {
   auto *menu = new QMenu(this);
   auto *openFile = new QAction(trUtf8("Открыть"), this);
-  auto *saveFile = new QAction(trUtf8("Сохранить"), this);
+  auto *saveFile = new QAction(trUtf8("Сохранить изменения"), this);
   auto *renameFile = new QAction(trUtf8("Переименовать"), this);
   auto *downloadToDevice = new QAction(trUtf8("Скачать на устройство"), this);
   auto *deleteFromDevice = new QAction(trUtf8("Удалить с устройства"), this);
+  auto *deleteFromCloud = new QAction(trUtf8("Удалить из облака"), this);
   auto *properties = new QAction(trUtf8("Свойства"), this);
 
   connect(openFile, SIGNAL(triggered()), this, SLOT(open_file()));
@@ -292,6 +299,7 @@ void MainWindow::slotCustomMenuRequested(QPoint pos) {
   connect(renameFile, SIGNAL(triggered()), this, SLOT(rename_file()));
   connect(downloadToDevice, SIGNAL(triggered()), this, SLOT(download_on_device()));
   connect(deleteFromDevice, SIGNAL(triggered()), this, SLOT(delete_from_device()));
+  connect(deleteFromCloud, SIGNAL(triggered()), this, SLOT(delete_from_cloud()));
   connect(properties, SIGNAL(triggered()), this, SLOT(view_properties()));
 
   menu->addAction(openFile);
@@ -299,6 +307,7 @@ void MainWindow::slotCustomMenuRequested(QPoint pos) {
   menu->addAction(renameFile);
   menu->addAction(downloadToDevice);
   menu->addAction(deleteFromDevice);
+  menu->addAction(deleteFromCloud);
   menu->addAction(properties);
 
   if (ui->treeView->indexAt(pos).flags() == 32)
@@ -306,7 +315,6 @@ void MainWindow::slotCustomMenuRequested(QPoint pos) {
 }
 
 void MainWindow::open_file() {
-  startLoadingLabel();
   auto fileMeta = getFile();
 
   if (fileMeta.isDownload) {
@@ -315,23 +323,20 @@ void MainWindow::open_file() {
   } else {
     printInfoBox("Открытие файлы", "Файл не скачан на устройство");
   }
-  stopLoadingLabel();
 }
 
 void MainWindow::save_file() {
-  startLoadingLabel();
   auto fileMeta = getFile();
 
   if (fileMeta.isDownload) {
+    startLoadingLabel();
     _app.ModifyFile(getAbsoluteFilePath(fileMeta));
   } else {
     printInfoBox("Сохранение", "Файл не скачан на устройство");
   }
-  stopLoadingLabel();
 }
 
 void MainWindow::rename_file() {
-  startLoadingLabel();
   auto fileMeta = getFile();
 
   if (fileMeta.isDownload) {
@@ -349,15 +354,14 @@ void MainWindow::rename_file() {
     QString newPath = QString::fromStdString(getAbsoluteFilePath(fileMeta));
 
     QFile::rename(oldPath, newPath);
+    startLoadingLabel();
     _app.RenameFile(oldPath.toStdString(), newPath.toStdString());
   } else {
     printInfoBox("Переименование", "Файл не скачан на устройство");
   }
-  stopLoadingLabel();
 }
 
 void MainWindow::download_on_device() {
-  startLoadingLabel();
   auto fileMeta = getFile();
 
   if (!fileMeta.isDownload) {
@@ -369,16 +373,14 @@ void MainWindow::download_on_device() {
       return;
     }
 
+    startLoadingLabel();
     _app.DownloadFile(fileMeta.fileId);
-
   } else {
     printInfoBox("Скачивание", "Файл уже скачан на устройство");
   }
-  stopLoadingLabel();
 }
 
 void MainWindow::delete_from_device() {
-  startLoadingLabel();
   auto fileMeta = getFile();
 
   if (fileMeta.isDownload) {
@@ -394,11 +396,27 @@ void MainWindow::delete_from_device() {
     QString path = QString::fromStdString(getAbsoluteFilePath(fileMeta));
 
     QFile::remove(path);
+    startLoadingLabel();
     _app.DeleteFile(path.toStdString());
   } else {
     printInfoBox("Удаление", "Файл не скачан на устройство");
   }
-  stopLoadingLabel();
+}
+
+void MainWindow::delete_from_cloud() {
+  auto fileMeta = getFile();
+
+  QMessageBox::StandardButton reply;
+  reply = QMessageBox::question(this, "Удаление", "Вы действительно хотите удалить файл из облака?",
+                                QMessageBox::Cancel | QMessageBox::Ok);
+
+  if (reply == QMessageBox::Cancel) {
+    stopLoadingLabel();
+    return;
+  }
+
+  startLoadingLabel();
+  _app.DeleteFile(getAbsoluteFilePath(fileMeta));
 }
 
 void MainWindow::view_properties() {
@@ -444,7 +462,7 @@ void MainWindow::view_properties() {
 
 void MainWindow::onBtnSettings() {
   uiSett.SetDirectory(QString::fromStdString(_app.GetSyncFolder()));
-  uiSett.SetLogin("Name loading"); //TODO получить логин
+  uiSett.SetLogin(QString::fromStdString(_app.GetLogin()));
   uiSett.show();
 }
 
@@ -458,7 +476,6 @@ void MainWindow::onBtnAddFile() {
   dialog.setDirectory(QString::fromStdString(_app.GetSyncFolder()));
   dialog.setFileMode(QFileDialog::AnyFile);
   if (dialog.exec()) {
-    startLoadingLabel();
     for (auto &filePath : dialog.selectedFiles()) {
       QFileInfo file(filePath);
       std::string newFilePath = filePath.toStdString();
@@ -517,8 +534,7 @@ void MainWindow::changeDirectory() {
       _app.UpdateSyncFolder(file.toStdString());
     }
     uiSett.SetDirectory(QString::fromStdString(_app.GetSyncFolder()));
-    _msg = "Директория успешно изменена";
-    printMsgBox();
+    printInfoBox("Изменение директории", "Директория успешно изменена");
   }
 }
 
@@ -528,17 +544,32 @@ void MainWindow::on_treeView_doubleClicked(const QModelIndex &index) {
 }
 
 void MainWindow::authorizeUser() {
-  //TODO(Sergey): проверить, что правильные данные
-  uiAuth.close();
-  uiReg.close();
-  this->show();
+  startLoadingLabel();
+  _app.LoginUser(uiAuth.GetLogin().toStdString(), uiAuth.GetPass().toStdString());
+
+  if (_app.IsLogin()) {
+    uiAuth.close();
+    uiReg.close();
+    this->show();
+
+    startLoadingLabel();
+    _app.Refresh();
+  }
 }
 
 void MainWindow::registerUser() {
   if (uiReg.CheckPass()) {
-    //TODO(Sergey): добавить пользователя
-    uiReg.hide();
-    uiAuth.show();
+    startLoadingLabel();
+    _app.RegisterUser(uiReg.GetName().toStdString(), uiReg.GetPass().toStdString());
+
+    if (_app.IsLogin()) {
+      uiAuth.close();
+      uiReg.close();
+      this->show();
+
+      startLoadingLabel();
+      _app.Refresh();
+    }
   } else {
     printInfoBox("Регистрация пароля", "Пароли не сопадают");
   }
@@ -555,12 +586,19 @@ void MainWindow::authWindowShow() {
 }
 
 void MainWindow::Display() {
-  uiAuth.show();
+  if (!_app.IsLogin()) {
+    uiAuth.show();
+  } else {
+    this->show();
+
+    startLoadingLabel();
+    _app.Refresh();
+  }
 }
 
 void MainWindow::logout() {
+  _app.Logout();
   uiSett.close();
-  // TODO(Sergey): удалить пользователя из базы
   this->close();
   uiAuth.show();
 }
@@ -568,9 +606,8 @@ void MainWindow::logout() {
 void MainWindow::changePassword() {
   if (uiSett.CheckPass()) {
     QString newPass = uiSett.GetNewPassword();
-    //TODO(Sergey): записать новый пароль, сообщение об успехе
-    _msg = "Пароль успешно изменен";
-    printMsgBox();
+    _app.ChangePassword(newPass.toStdString());
+
     uiSett.SendStopChange();
   } else {
     printInfoBox("Изменение пароля", "Пароли не сопадают");
@@ -579,8 +616,9 @@ void MainWindow::changePassword() {
 
 void MainWindow::checkOldPassword() {
   QString oldPass = uiSett.GetOldPassword();
-  //TODO(Sergey): так ли проверять правильность пароля
-  if (oldPass == _userpass) {
+
+  // TODO(Varia): Если ввести пароль и закрыть окно, то при открытии пароль будет на месте (его надо сбрасывать при закрытии окна)
+  if (_app.IsConfirmPassword(oldPass.toStdString())) {
     uiSett.SendCanChange();
   } else {
     printInfoBox("Изменение пароля", "Старый пароль не сопадает");
