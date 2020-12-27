@@ -91,8 +91,7 @@ FileInfo Indexer::GetFileInfo(const FileMeta &fileMeta, std::vector<Chunk> &chun
 FileInfo Indexer::GetRenameFileInfo(const FileMeta &fileMeta) {
   FileInfo fileInfo{
       .userId = _internalDB->GetUserId(),
-      .file = fileMeta,
-      .fileChunksMeta = _internalDB->GetFileChunksMeta(fileMeta.fileId)
+      .file = fileMeta
   };
 
   return fileInfo;
