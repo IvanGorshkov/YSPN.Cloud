@@ -26,14 +26,13 @@ struct sqlite3_stmt_deleter {
   }
 };
 
-
-// TODO(Ivan): написать функцию получения логина
-
 class InternalDB {
  public:
   explicit InternalDB(std::string databaseName);
   int GetUserId() const;
   int GetDeviceId() const;
+  std::string GetLogin();
+  std::string GetPassword();
   void InsertUser(const User &user);
   std::string GetSyncFolder() const;
   void UpdateSyncFolder(const std::string &newFolder);
@@ -52,6 +51,7 @@ class InternalDB {
 
   void DeleteFile(const int &fileId);
   void DownloadFile(const int &fileId);
+
   void InsertAndIndexFile(FileMeta &file);
   void UpdateAndIndexFile(FileMeta &file);
   void DeleteAndIndexFile(FileMeta &file);
@@ -60,15 +60,17 @@ class InternalDB {
 
   void InsertFileInfo(const FileInfo &fileInfo);
   void UpdateFileInfo(const FileInfo &fileInfo);
+  void RenameFileInfo(const FileInfo &fileInfo);
 
   bool IsExistUser();
   void DeleteUser();
-  std::string SelectUserPassword();
   void UpdatePassword(const std::string &newPassword);
 
  private:
   int selectUserId();
   int selectDeviceId();
+  std::string selectLogin();
+  std::string selectPassword();
   std::string selectFolder();
   std::string selectLastUpdate();
 
@@ -94,6 +96,7 @@ class InternalDB {
   std::string _databaseName;
   int _userId;
   int _deviceId;
+  std::string _login;
   std::string _syncFolder;
   std::string _lastUpdate;
   std::string _lastTMPUpdate;

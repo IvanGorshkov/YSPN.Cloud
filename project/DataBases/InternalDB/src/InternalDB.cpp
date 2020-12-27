@@ -19,6 +19,7 @@ InternalDB::InternalDB(std::string databaseName)
       _deviceId = selectDeviceId();
       _syncFolder = selectFolder();
       _lastUpdate = selectLastUpdate();
+      _login = selectLogin();
     }
 
     close();
@@ -33,6 +34,16 @@ int InternalDB::GetUserId() const {
 int InternalDB::GetDeviceId() const {
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: GetDeviceId";
   return _deviceId;
+}
+
+std::string InternalDB::GetLogin() {
+  BOOST_LOG_TRIVIAL(debug) << "InternalDB: GetLogin";
+  return _login;
+}
+
+std::string InternalDB::GetPassword() {
+  BOOST_LOG_TRIVIAL(debug) << "InternalDB: GetLogin";
+  return selectPassword();
 }
 
 void InternalDB::InsertUser(const User &user) {
@@ -51,8 +62,9 @@ void InternalDB::InsertUser(const User &user) {
   insert(query);
   _userId = user.userId;
   _deviceId = user.deviceId;
+  _login = user.login;
   _syncFolder = user.syncFolder;
-  _lastUpdate = "1970-Dec-31 12:30:02";
+  _lastUpdate = "1970-12-31 12:30:02";
   close();
 }
 
@@ -207,7 +219,7 @@ void InternalDB::DeleteFile(const int &fileId) {
 }
 
 void InternalDB::DownloadFile(const int &fileId) {
-  BOOST_LOG_TRIVIAL(debug) << "InternalDB: v";
+  BOOST_LOG_TRIVIAL(debug) << "InternalDB: DownloadFile";
 
   if (!connect()) { throw InternalExceptions("Don't connect"); }
 
@@ -341,6 +353,16 @@ void InternalDB::UpdateFileInfo(const FileInfo &fileInfo) {
   close();
 }
 
+void InternalDB::RenameFileInfo(const FileInfo &fileInfo) {
+  BOOST_LOG_TRIVIAL(debug) << "InternalDB: RenameFileInfo";
+
+  if (!connect()) { throw InternalExceptions("Don't connect"); }
+
+  updateFileMeta(fileInfo.file);
+
+  close();
+}
+
 FileMeta InternalDB::SelectFile(const int &fileId) {
   FileMeta file;
   if (!connect()) { throw InternalExceptions("Don't connect"); }
@@ -373,15 +395,6 @@ void InternalDB::DeleteUser() {
   close();
 }
 
-std::string InternalDB::SelectUserPassword() {
-  if (!connect()) { throw InternalExceptions("Don't connect"); }
-  std::string query = "Select password from User where user_id = " + std::to_string(_userId) + ";";
-  BOOST_LOG_TRIVIAL(debug) << "InternalDB: Prepare to select user password";
-  std::string password = selectStr(query);
-  close();
-  return password;
-}
-
 void InternalDB::UpdatePassword(const std::string &newPassword) {
   if (!connect()) { throw InternalExceptions("Don't connect"); }
   std::string
@@ -397,23 +410,40 @@ bool InternalDB::IsExistUser() {
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Check exist user";
   auto query = "SELECT count(*) FROM User;";
 
+  auto id = selectId(query);
   close();
 
-  return selectId(query) != 0;
+  return id != 0;
 }
 
 int InternalDB::selectUserId() {
   std::string query = "SELECT user_id FROM User;";
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Prepare to select user_id";
-  int id = selectId(query);
-  return id;
+  return selectId(query);
 }
 
 int InternalDB::selectDeviceId() {
   std::string query = "SELECT device_id FROM User;";
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: Prepare to select device_id";
-  int id = selectId(query);
-  return id;
+  return selectId(query);
+}
+
+std::string InternalDB::selectLogin() {
+  BOOST_LOG_TRIVIAL(debug) << "InternalDB: selectLogin";
+
+  auto query = "SELECT login FROM User;";
+  BOOST_LOG_TRIVIAL(info) << "InternalDB: Prepare to select login";
+
+  return selectStr(query);
+}
+
+std::string InternalDB::selectPassword() {
+  BOOST_LOG_TRIVIAL(debug) << "InternalDB: selectPassword";
+
+  auto query = "Select password from User where user_id = " + std::to_string(_userId) + ";";
+  BOOST_LOG_TRIVIAL(info) << "InternalDB: Prepare to select password";
+
+  return selectStr(query);
 }
 
 std::string InternalDB::selectFolder() {
@@ -466,15 +496,14 @@ void InternalDB::insertFileMeta(const FileMeta &fileMeta) {
 void InternalDB::updateFileMeta(const FileMeta &fileMeta) {
   BOOST_LOG_TRIVIAL(debug) << "InternalDB: updateFileMeta";
 
-  // TODO(Ivan): записать в базу is_download
-
   auto query = "Update Files SET "
                "file_name = '" + fileMeta.fileName +
       "', file_extention = '" + fileMeta.fileExtension +
       "', file_size = " + std::to_string(fileMeta.fileSize) +
-      ",file_path = '" + fileMeta.filePath +
+      ", file_path = '" + fileMeta.filePath +
       "', count_chunks = " + std::to_string(fileMeta.chunksCount) +
       ", version=" + std::to_string(fileMeta.version) +
+      ", is_download=" + std::to_string(fileMeta.isDownload) +
       ", update_date = '" + fileMeta.updateDate +
       "', create_date = '" + fileMeta.createDate +
       "'" " WHERE id=" + std::to_string(fileMeta.fileId) + ";";
