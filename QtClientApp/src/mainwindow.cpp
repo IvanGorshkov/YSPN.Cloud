@@ -7,7 +7,6 @@ MainWindow::MainWindow(QWidget *parent)
       ui(new Ui::MainWindow),
       _app(std::bind(&MainWindow::callbackOk, this, std::placeholders::_1),
            std::bind(&MainWindow::callbackError, this, std::placeholders::_1),
-           std::bind(&MainWindow::callbackLoadingLabel, this),
            std::bind(&MainWindow::callbackRefresh, this, std::placeholders::_1)) {
 
   bool _loginSuccesfull = false;
@@ -42,7 +41,6 @@ MainWindow::MainWindow(QWidget *parent)
   connect(ui->btn_About, SIGNAL(clicked(bool)), this, SLOT(onBtnAbout()));
   connect(ui->btn_Settings, SIGNAL(clicked(bool)), this, SLOT(onBtnSettings()));
   connect(this, &MainWindow::printMsgBoxSignal, this, &MainWindow::printMsgBox);
-  connect(this, &MainWindow::printLoadingLabel, this, &MainWindow::startLoadingLabel);
 
   keyCMDR = new QShortcut(this);
   keyCMDR->setKey(Qt::Key_R);
@@ -82,7 +80,7 @@ std::string MainWindow::getAbsoluteFilePath(const FileMeta &file) {
 }
 
 std::string MainWindow::getFilePath(const FileMeta &file) {
-  return (file.filePath.empty() ? file.filePath : file.filePath + '/') + file.fileName + file.fileExtension;
+  return (file.filePath.empty() ? "/" : file.filePath + '/') + file.fileName + file.fileExtension;
 }
 
 bool MainWindow::compareFileMeta(const FileMeta &x, const FileMeta &y) {
@@ -107,10 +105,6 @@ void MainWindow::callbackOk(const std::string &msg) {
 void MainWindow::callbackError(const std::string &msg) {
   _msg = QString::fromStdString(msg);
   Q_EMIT printMsgBoxSignal();
-}
-
-void MainWindow::callbackLoadingLabel() {
-  Q_EMIT printLoadingLabel();
 }
 
 void MainWindow::parseVectorFiles() {
@@ -285,8 +279,8 @@ void MainWindow::parseVectorFiles() {
   }
 }
 
-void MainWindow::callbackRefresh(const std::string &msg){
-    updateFiles();
+void MainWindow::callbackRefresh(const std::string &msg) {
+  updateFiles();
 }
 
 void MainWindow::slotCustomMenuRequested(QPoint pos) {
@@ -513,7 +507,8 @@ void MainWindow::onBtnAbout() {
 }
 
 void MainWindow::slotShortcutCMDR() {
-  updateFiles();
+  startLoadingLabel();
+  _app.Refresh();
 }
 
 void MainWindow::startLoadingLabel() {
