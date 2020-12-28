@@ -81,8 +81,14 @@ class RefreshCommand : public BaseCommand {
  public:
   explicit RefreshCommand(std::function<void(const std::string &msg)> callbackOk,
                           std::function<void(const std::string &msg)> callbackError,
-                          std::shared_ptr<InternalDB> internalDB);
+                          std::shared_ptr<InternalDB> internalDB,
+                          std::function<void()> stopWatcher,
+                          std::function<void()> runWatcher);
   void Do() override;
+
+ private:
+  std::function<void()> stopWatcher;
+  std::function<void()> runWatcher;
 };
 
 class DownloadFileCommand : public BaseCommand {

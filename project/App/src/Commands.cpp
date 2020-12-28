@@ -164,8 +164,12 @@ void RegisterUserCommand::Do() {
 
 RefreshCommand::RefreshCommand(std::function<void(const std::string &msg)> callbackOk,
                                std::function<void(const std::string &msg)> callbackError,
-                               std::shared_ptr<InternalDB> internalDB)
-    : BaseCommand(std::move(callbackOk), std::move(callbackError), std::move(internalDB)) {
+                               std::shared_ptr<InternalDB> internalDB,
+                               std::function<void()> stopWatcher,
+                               std::function<void()> runWatcher)
+    : BaseCommand(std::move(callbackOk), std::move(callbackError), std::move(internalDB)),
+      stopWatcher(std::move(stopWatcher)),
+      runWatcher(std::move(runWatcher)) {
   BOOST_LOG_TRIVIAL(debug) << "RefreshCommand: create command";
 }
 
@@ -210,7 +214,9 @@ void RefreshCommand::Do() {
       if (_internalDB->IsFileExist(oneFileInfo.file.fileId)) {
         auto fileDB = _internalDB->SelectFile(oneFileInfo.file.fileId);
         if (fileDB.isDownload) {
+          stopWatcher();
           File::Delete(_internalDB->GetSyncFolder() + fileDB.GetFilePath());
+          runWatcher();
         }
 
         if (oneFileInfo.fileChunksMeta.empty()) {

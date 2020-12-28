@@ -5,12 +5,10 @@
 
 App::App(std::function<void(const std::string &msg)> callbackOk,
          std::function<void(const std::string &msg)> callbackError,
-         std::function<void()> callbackLoadingLabel,
          std::function<void(const std::string &msg)> callbackRefresh)
     : _internalDB(std::make_shared<InternalDB>("myDB.sqlite")),
       appCallbackOk(std::move(callbackOk)),
       appCallbackError(std::move(callbackError)),
-      appCallbackLoadingLabel(std::move(callbackLoadingLabel)),
       appCallbackRefresh(std::move(callbackRefresh)),
       _isWorkingWorker(false) {
   BOOST_LOG_TRIVIAL(debug) << "App: create app";
@@ -95,7 +93,11 @@ std::string App::hash(const std::string &password) {
 void App::Refresh() {
   BOOST_LOG_TRIVIAL(debug) << "App: Refresh";
 
-  auto sh = std::make_shared<RefreshCommand>(appCallbackRefresh, appCallbackError, _internalDB);
+  auto sh = std::make_shared<RefreshCommand>(appCallbackRefresh,
+                                             appCallbackError,
+                                             _internalDB,
+                                             std::bind(&App::stopWatcher, this),
+                                             std::bind(&App::runWatcher, this));
   _commands.emplace(sh);
 
   runWorker();
@@ -255,7 +257,8 @@ void App::runWorker() {
   if (!_isWorkingWorker) {
     BOOST_LOG_TRIVIAL(info) << "App: run worker";
 
-    auto worker = std::thread(&Worker::Run, std::ref(_commands), std::ref(_isWorkingWorker), std::ref(appCallbackLoadingLabel));
+    auto worker =
+        std::thread(&Worker::Run, std::ref(_commands), std::ref(_isWorkingWorker));
     BOOST_LOG_TRIVIAL(info) << "App: run worker with id = " << worker.get_id();
     worker.detach();
   }
@@ -290,28 +293,24 @@ void App::execEvent() {
   switch (event.event) {
     case CREATE: {
       BOOST_LOG_TRIVIAL(info) << "App: createFile";
-      appCallbackLoadingLabel();
       createFile(event.path);
       break;
     }
 
     case RENAME: {
       BOOST_LOG_TRIVIAL(info) << "App: renameFile";
-      appCallbackLoadingLabel();
       renameFile(event.path, event.new_path.value());
       break;
     }
 
     case MODIFY: {
       BOOST_LOG_TRIVIAL(info) << "App: modifyFile";
-      appCallbackLoadingLabel();
       modifyFile(event.path);
       break;
     }
 
     case DELETE: {
       BOOST_LOG_TRIVIAL(info) << "App: deleteFile";
-      appCallbackLoadingLabel();
       deleteFile(event.path);
       break;
     }
