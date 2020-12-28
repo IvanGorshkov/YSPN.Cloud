@@ -61,16 +61,6 @@ void Watcher::Run(const boost::filesystem::path &path,
     Stop();
   }
 
-//  auto events = {Event::_moved_to,
-//                 Event::_moved_from,
-//                 Event::_create,
-//                 Event::_remove,
-//                 Event::_modify,
-//                 Event::_close_write};
-//  for (auto event : events) {
-//    _eventMask = _eventMask | static_cast<std::uint32_t>(event);
-//    _eventCallbacks[event] = callBack;
-//  }
   _eventCallback = std::move(callBack);
 
   while (true) {
@@ -101,6 +91,7 @@ void Watcher::runOnce() {
 
   Event currentEvent = static_cast<Event>(newEvent->mask);
   CloudEvent clevent;
+  boost::optional<boost::filesystem::path> new_path = boost::none;
   switch (currentEvent) {
     case 1073742080:watchDirectory(newEvent->path);
       currentEvent = Event::_ignored;
@@ -115,7 +106,7 @@ void Watcher::runOnce() {
       break;
     case 64:
       if (!_eventQueue.empty() && _eventQueue.front().mask == 128) {
-        boost::filesystem::path new_path(_eventQueue.front().path);
+        new_path = boost::filesystem::path(_eventQueue.front().path);
         _eventQueue.pop();
         clevent = RENAME;
       } else {
@@ -151,19 +142,11 @@ void Watcher::runOnce() {
       break;
   }
 
-  // Notification notification{currentEvent, newEvent->path, newEvent->eventTime};
-
-//  for (auto &eventAndCallback : _eventCallbacks) {
-//    auto &event = eventAndCallback.first;
-//    auto &callbackFunc = eventAndCallback.second;
-//
-//    if (event == currentEvent) {
-
   if (currentEvent != Event::_ignored) {
-    CloudNotification notification{.event = clevent, .path = newEvent->path, .time = newEvent->eventTime};
+    CloudNotification
+        notification{.event = clevent, .path = newEvent->path, .new_path = new_path, .time = newEvent->eventTime};
     _eventCallback(notification);
   }
-  // callbackFunc(notification);
   return;
 }
 
