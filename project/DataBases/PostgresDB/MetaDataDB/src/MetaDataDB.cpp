@@ -13,10 +13,10 @@ MetaDataDB &MetaDataDB::shared(std::string_view info) {
 
 void MetaDataDB::InsertFile(const FileInfo &fileMeta) {
   BOOST_LOG_TRIVIAL(debug) << "PostgresSQLDB: InsertFile";
-  auto updateDate = fileMeta.file.updateDate;
-  std::string dateUpdate = getTime(updateDate);
-  auto createDate = fileMeta.file.createDate;
-  std::string dateCreateDate = getTime(createDate);
+  // auto updateDate = fileMeta.file.updateDate;
+  // std::string dateUpdate = getTime(updateDate);
+  // auto createDate = fileMeta.file.createDate;
+  // std::string dateCreateDate = getTime(createDate);
 
   try {
     pqExec("begin;", PostgresExceptions("invalid to start transaction"));  // Начало транзакции
@@ -42,7 +42,7 @@ void MetaDataDB::InsertFile(const FileInfo &fileMeta) {
             + ", " + std::to_string(fileMeta.file.version)
             + ", '" + std::to_string(fileMeta.file.isCurrent)
             + "', '" + std::to_string(fileMeta.file.isDeleted)
-            + "', " + "'" + dateUpdate + "'," + "'" + dateCreateDate + "');";
+            + "', " + "'" + fileMeta.file.updateDate + "'," + "'" + fileMeta.file.createDate + "');";
     BOOST_LOG_TRIVIAL(debug) << "PostgresSQLDB: Insert file";
     pqExec(query, PostgresExceptions("invalid to insert data to db"));  // Добавление нового файла
 
@@ -95,8 +95,8 @@ int MetaDataDB::getLastIdOfFileUser(const std::string &query, PostgresExceptions
 std::vector<FileInfo> MetaDataDB::GetUserFilesByTime(const UserDate &userDate) {
   std::vector<FileInfo> filesInfo;
   BOOST_LOG_TRIVIAL(debug) << "PostgresSQLDB: GetUserFilesByTime";
-  std::string query = "Select * from Files Where is_current = 1 and id_user = " + std::to_string(userDate.userId)
-      + " and update_date > '" + userDate.date + "';";
+  std::string query = "Select * from Files Where id_user = " + std::to_string(userDate.userId)
+      + " and update_date > '" + userDate.date + "' ORDER BY id;";
   PGresult *res = PQexec(_conn, query.c_str());
   if (PQresultStatus(res) != PGRES_TUPLES_OK) {
     printf("No data retrieved\n");
@@ -135,6 +135,8 @@ std::vector<FileInfo> MetaDataDB::GetUserFilesByTime(const UserDate &userDate) {
 
     filesInfo.push_back(fileInfo);
   }
+
+  BOOST_LOG_TRIVIAL(info) << "PostgresSQLDB: count files = " << filesInfo.size();
 
   return filesInfo;
 }
