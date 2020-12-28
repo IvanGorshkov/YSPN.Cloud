@@ -71,7 +71,6 @@ void Watcher::Run(const boost::filesystem::path &path,
         removeWatch(iter->first);
       }
       _directorieMap.clear();
-      // _eventBuffer.clear();
       _stopped = false;
       break;
     }
@@ -98,7 +97,7 @@ void Watcher::runOnce() {
       break;
     case 1073741888:break;
     case 256:
-      if (!_eventQueue.empty() /*&& _eventQueue.front().mask == 32*/) {
+      if (!_eventQueue.empty()) {
         while (!_eventQueue.empty())
           _eventQueue.pop();
       }
@@ -234,22 +233,23 @@ void Watcher::readEventsFromBuffer(
 
     if (event->name[0] == '.') {
       i += EVENT_SIZE + event->len;
-      // _directorieMap.left.erase(event->wd);
       continue;
     }
 
     if (bfs::is_directory(path)) {
       path = path / std::string(event->name);
     }
+
     if ((path.extension() == "" || path.extension() == ".tmp" || path.extension().string().back() == '~')
         && event->mask != 1073742080 && event->mask != 1073741888) {
       i += EVENT_SIZE + event->len;
       continue;
     }
-    // printf(path.extension().string().c_str());
+
     if (bfs::is_directory(path)) {
       event->mask |= IN_ISDIR;
     }
+
     FileSystemEvent fsEvent(event->wd, event->mask, path, std::chrono::steady_clock::now());
 
     if (!fsEvent.path.empty()) {
