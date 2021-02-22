@@ -1,0 +1,56 @@
+image: gcc
+
+before_script:
+  - apt-get update --yes
+  - apt-get install --yes cmake
+variables:
+  BIN_NAME: YSNP
+
+stages:
+  - test_style
+  #  - build
+  - pages
+
+test_style:
+  stage: test_style
+  script:
+    - ./linters/run.sh
+
+#build:
+#  stage: build
+#  script:
+#    - apt-get install --yes libboost-dev libboost-log-dev libboost-filesystem-dev libboost-system-dev libboost-program-options-dev
+#    - apt-get install --yes postgresql postgresql-contrib
+#    - apt-get install --yes libgtest-dev
+#    - apt-get install --yes libgmock-dev
+#    - apt-get install --yes libmongoc-1.0-0
+#    - apt-get install --yes libbson-1.0-0
+#    - curl -OL https://github.com/mongodb/mongo-cxx-driver/releases/download/r3.6.2/mongo-cxx-driver-r3.6.2.tar.gz
+#    - tar -xzf mongo-cxx-driver-r3.6.2.tar.gz
+#    - cd mongo-cxx-driver-r3.6.2/build
+#    - cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local
+#    - cmake --build . --target install
+#    - cd ../../
+#    - mkdir build
+#    - cd build
+#    - cmake -DPostgreSQL_TYPE_INCLUDE_DIR=/usr/include/postgresql ..
+#    - cmake --build .
+#  artifacts:
+#    paths:
+#      - "build"
+
+pages:
+  stage: pages
+  script:
+    # Устанавливаем пакеты
+    - apt-get --yes install doxygen
+    - apt-get --yes install graphviz
+    # Прогоняем Doxygen
+    - doxygen doc/Doxyfile.cfg
+    # Диплоим
+    - mv doc/html/ public/
+  artifacts:
+    paths:
+      - public
+  only:
+    - dev
